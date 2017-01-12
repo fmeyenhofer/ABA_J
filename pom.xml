@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+		http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<repositories>
+		<repository>
+			<id>imagej.public</id>
+			<url>http://maven.imagej.net/content/groups/public</url>
+		</repository>
+	</repositories>
+
+	<parent>
+		<groupId>net.imagej</groupId>
+		<artifactId>pom-imagej</artifactId>
+		<version>16.6.0</version>
+		<relativePath />
+	</parent>
+
+	<properties>
+		<scijava.jvm.version>1.8</scijava.jvm.version>
+	</properties>
+
+	<groupId>ch.imagej</groupId>
+    <artifactId>allen-brain-atlas-imagej-2d</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>ABA-J 2D</name>
+    <description>
+		Toolkit to register histological brain sections to the Allen Brain Atlas.
+		Additional functionality includes overlay of annotations from the reference atlas
+		and correlation analysis with mapped already mapped genes.
+	</description>
+	<packaging>jar</packaging>
+
+	<licenses>
+		<license>
+			<name>GPL3</name>
+			<url>http://www.gnu.org/licenses/gpl-3.0.en.html</url>
+			<distribution>Common Development and Distribution License (CDDL-1.0)</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<id>f.meyenhofer</id>
+			<name>Felix Meyenhofer</name>
+			<email>f.meyenhofer@me.com</email>
+			<timezone>+2</timezone>
+		</developer>
+	</developers>
+
+	<dependencies>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-legacy</artifactId>
+		</dependency>
+		<!--<dependency>-->
+			<!--<groupId>net.imagej</groupId>-->
+			<!--<artifactId>ij</artifactId>-->
+		<!--</dependency>-->
+		<!--<dependency>-->
+			<!--<groupId>net.imglib2</groupId>-->
+			<!--<artifactId>imglib2-ij</artifactId>-->
+			<!--&lt;!&ndash;<version>2.0.0-beta-31</version>&ndash;&gt;-->
+		<!--</dependency>-->
+
+		<!--SVG format handler-->
+		<dependency>
+			<groupId>batik</groupId>
+			<artifactId>batik</artifactId>
+			<version>1.8</version>
+		</dependency>
+
+		<!--REST service stuff-->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.7.1</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.ws.rs</groupId>
+			<artifactId>javax.ws.rs-api</artifactId>
+			<version>2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20160212</version>
+		</dependency>
+		<!--<dependency>-->
+			<!--<groupId>net.imglib2</groupId>-->
+			<!--<artifactId>imglib2-ij</artifactId>-->
+			<!--<version>2.0.0-beta-31</version>-->
+		<!--</dependency>-->
+		<!--<dependency>-->
+			<!--<groupId>com.sun.jersey</groupId>-->
+			<!--<artifactId>jersey-json</artifactId>-->
+			<!--<version>1.9</version>-->
+		<!--</dependency>-->
+		<!--<dependency>-->
+			<!--<groupId>com.sun.jersey</groupId>-->
+			<!--<artifactId>jersey-client</artifactId>-->
+			<!--<version>1.9</version>-->
+		<!--</dependency>-->
+	</dependencies>
+
+</project>
