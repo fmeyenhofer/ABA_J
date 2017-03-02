@@ -63,7 +63,7 @@ class AllenSvg extends AllenFile {
      */
     @Override
     void load(File file) throws IOException, URISyntaxException {
-        load(getUrl().toURI().toString());
+        load(file.toURI().toString());
     }
 
     /**
@@ -71,13 +71,12 @@ class AllenSvg extends AllenFile {
      */
     @Override
     void load(URL url) throws IOException {
-        load(getFile().toURI().toString());
+        load(url.toString());
     }
 
     /**
      * Loading always works with the URI...
      *
-     * @param uri
      * @throws IOException
      */
     private void load(String uri) throws IOException {
@@ -222,22 +221,20 @@ class AllenSvg extends AllenFile {
      */
     public static void main(String[] args) throws IOException, TransformerException, URISyntaxException {
 //        URL query = new URL("http://api.brain-map.org/api/v2/svg_download/100960335?downsample=3");
+        File home = new File(System.getProperty("user.home"), "allen-cache");
         URL query = new URL("http://api.brain-map.org/api/v2/svg_download/100960333?downsample=3");
-        File file = new File("/Users/meyenhof/allen-cache/1/100960333.svg");
+        File file = new File(home, "100960333.svg");
 
         AllenSvg svg = new AllenSvg(query, file);
 
-        File cfile = new File("/Users/meyenhof/allen-cache/1/100960333_contour.svg");
+        File cfile = new File(home,"100960333_contour.svg");
         svg.createGrayMatterSvg(cfile);
 
         Node path = svg.findPath(PATH_CONTOUR_ATTRIBUTE, PATH_CONTOUR_VALUE);
         String d = path.getAttributes().getNamedItem("d").getNodeValue();
 
-
-
         BezierPath bp = new BezierPath();
         bp.parsePathString(d);
-
 
         SvgDisplay disp = new SvgDisplay(true);
         disp.setSource(cfile);
