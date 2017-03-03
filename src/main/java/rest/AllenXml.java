@@ -24,7 +24,8 @@ public class AllenXml extends AllenFile {
     private Document dom;
 
     /**
-     * Constructor
+     * Constructor to instantiate a xml file without
+     * saving it.
      *
      * @param url to query the Allen API
      * @throws TransformerException
@@ -47,6 +48,21 @@ public class AllenXml extends AllenFile {
      */
     AllenXml(File file) throws IOException, URISyntaxException {
         super(file);
+    }
+
+    /**
+     * Constructor to create and save a new xml document from
+     * an {@link Element}
+     *
+     * @param element root xml element
+     * @param file xml file
+     * @throws TransformerException
+     * @throws IOException
+     */
+    AllenXml(Element element, File file) throws TransformerException, IOException {
+        this.setFile(file);
+        this.dom = new Document((Element)element.clone());
+        this.save();
     }
 
     /**
@@ -147,15 +163,15 @@ public class AllenXml extends AllenFile {
      * @param element xml element that is searched
      * @return tag value
      */
-    Object getValue(String tag_name, Element element) {
+    String getValue(String tag_name, Element element) {
         if (element.getName().equals(tag_name)) {
-            return element.getContent();
+            return element.getValue();
         }
 
         List children = element.getChildren();
         if (children.size() > 0) {
             for (Object obj : children) {
-                Object value = getValue(tag_name, (Element) obj);
+                String value = getValue(tag_name, (Element) obj);
                 if (value != null) {
                     return value;
                 }
@@ -171,7 +187,7 @@ public class AllenXml extends AllenFile {
      * @param tag_name of the xml tag
      * @return tag content
      */
-    List getValues(String tag_name) {
+    ArrayList<List> getValues(String tag_name) {
         return getValues(tag_name, this.dom.getRootElement());
     }
 
@@ -182,7 +198,7 @@ public class AllenXml extends AllenFile {
      * @param element xml content
      * @return tag content
      */
-    List getValues(String tag_name, Element element) {
+    ArrayList<List> getValues(String tag_name, Element element) {
         ArrayList<List> result = new ArrayList<>();
         getValues(tag_name, element, result);
         return result;
@@ -195,7 +211,7 @@ public class AllenXml extends AllenFile {
      * @param element xml content
      * @param result collector for the xml values
      */
-    void getValues(String tag_name, Element element, ArrayList<List> result) {
+    private void getValues(String tag_name, Element element, ArrayList<List> result) {
         if (element.getName().equals(tag_name)) {
             result.add(element.getContent());
         }
@@ -204,6 +220,68 @@ public class AllenXml extends AllenFile {
         if (children.size() > 0) {
             for (Object obj : children) {
                 getValues(tag_name, (Element) obj, result);
+            }
+        }
+    }
+
+    /**
+     * Get all the elements of the queries data model.
+     * This is usually the grand-child of the root element:
+     *
+     * [root]
+     *    |- [model]s
+     *       |- [model]
+     *          |- element 1
+     *          |- element 2
+     *          |- ...
+     *
+     * @return list of elements/nodes
+     */
+    List<Element> getElements() {
+        Element root = dom.getRootElement();
+        Element only_child = (Element) root.getChildren().get(0);
+
+        List<Element> elements = new ArrayList<>();
+        for (Object obj : only_child.getChildren()) {
+            elements.add((Element) obj);
+        }
+
+        return elements;
+    }
+
+    /**
+     * Get the values of all the tags in a given depth in the
+     * xml tree.
+     *
+     * @param tag_name of the xml tag
+     * @param max_depth in the xml tree
+     * @return collector of the xml elements
+     */
+    private ArrayList<List> getValues(String tag_name, int max_depth) {
+        ArrayList<List> results = new ArrayList<>();
+        getValues(tag_name, this.dom.getRootElement(), results, 0, max_depth);
+        return results;
+    }
+
+    /**
+     * Get the values of all the tags in a given depth in the
+     * xml tree.
+     *
+     * @param tag_name
+     * @param element
+     * @param results
+     * @param depth
+     * @param max_depth
+     */
+    private void getValues(String tag_name, Element element, ArrayList<List> results, int depth, int max_depth) {
+        if (element.getName().equals(tag_name)) {
+            results.add(element.getContent());
+        }
+
+        if (depth < max_depth) {
+            List children = element.getChildren();
+            for (Object obj : children) {
+                getValues(tag_name, (Element) obj, results, depth++, max_depth);
             }
         }
     }

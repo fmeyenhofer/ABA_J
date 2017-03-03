@@ -8,6 +8,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 /**
+ * Base class for file handling.
+ * The constructors allow to do the most common task during
+ * the instantiation of the class (usually load or save the data).
+ * The procedures are here implemented in the constructors. Subclasses
+ * need then to implement the load and save methods.
+ *
  * @author Felix Meyenhofer
  */
 abstract class AllenFile {
@@ -52,6 +58,11 @@ abstract class AllenFile {
     }
 
     /**
+     * Empty constructor. Does not provide any of the functionality.
+     */
+    AllenFile() {}
+
+    /**
      * Load local copy {@link AllenFile#file}
      * respectively
      *
@@ -75,7 +86,7 @@ abstract class AllenFile {
      * @throws TransformerException
      * @throws FileNotFoundException
      */
-    abstract void save() throws TransformerException, FileNotFoundException, IOException;
+    abstract void save() throws TransformerException, IOException;
 
     /**
      * Get the status message
@@ -106,7 +117,7 @@ abstract class AllenFile {
         return url;
     }
 
-    private void setFile(File file) {
+    protected void setFile(File file) {
         this.file = file;
     }
 

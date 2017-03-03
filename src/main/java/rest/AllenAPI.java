@@ -3,20 +3,19 @@ package rest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
-import java.util.ArrayList;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
+import org.jdom.Element;
 import org.xml.sax.SAXException;
 
 /**
  * Collection of api arguments that can be put together
- * to form an URL to access certain data.
- *
- * This class together with {@link AllenAtlas} aggregates the hardcoded parts of the
- * Allen API (urls, arguments etc.). It's a convenience Class to easily generate
- * the commands for the RESTful API.
+ * to form an URL to access certain data. It's a convenience Class
+ * to easily generate the commands for the RESTful API.
+ * Thus all the conventions the applications relies on are coded here as
+ * well as the assumptions about the API that are made.
  *
  * For reference:
  * http://help.brain-map.org/display/api/Allen+Brain+Atlas+API
@@ -27,7 +26,7 @@ import org.xml.sax.SAXException;
 class AllenAPI {
 
     /** Base URL of the Allen Atlas REST API */
-    static final String BASE_URL = "http://api.brain-map.org/api/v2/";
+    static final String BASE_URL = "http://api.brain-map.org/";
 
 
     /**
@@ -36,7 +35,7 @@ class AllenAPI {
     static class RMA {
 
         /** Sub URL for the RMA queries */
-        private static final String SUB_URL = "data/";
+        private static final String SUB_URL = "api/v2/data/";
 
         /** Query function and arguments */
         private static final String FUN_QUERY = "query";
@@ -49,35 +48,110 @@ class AllenAPI {
         private static final String SEPARATOR = "__";
 
         /** Response format of the service */
-        private static final String ARG_OUTPUT_FORMAT = ".json";
+        static final String FILE_EXTENSION = ".xml";
 
-        static URL adjustResponseSize(URL url) throws IOException, TransformerException, URISyntaxException {
-            URL query = new URL(url.toString() + ARG_OPTIONS + "[only$eq" + URLEncoder.encode("'id'", "UTF-8") + "]");
-            AllenJson json = new AllenJson(query);
-            Object numRows = json.getResponseSize();
-
-            return new URL(url.toString() + ARG_OPTIONS + "[num_rows$eq" + numRows + "]");
+        static URL createModelQueryUrl(String model_name) throws IOException {
+            return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
+                    ARG_MODEL + model_name);
         }
 
         static URL createProductQueryUrl(Atlas.Species species) throws IOException {
-            return new URL(BASE_URL + SUB_URL + FUN_QUERY + ARG_OUTPUT_FORMAT +
+            return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
                     ARG_MODEL + "Product" +
                     ARG_CRITERIA + "[name$il" + URLEncoder.encode("'*" + species + "*'", "UTF-8") + "]");
         }
 
-        static URL createDataSetsQueryUrl(int productId, Atlas.PlaneOfSection pos) throws MalformedURLException, UnsupportedEncodingException {
-            return new URL(BASE_URL + SUB_URL + FUN_QUERY + ARG_OUTPUT_FORMAT +
-                    ARG_MODEL + "DataSet" +
-                    ARG_CRITERIA + "[failed$eq" + URLEncoder.encode("'false'", "UTF-8") +
-                    "],products[id$eq" + URLEncoder.encode("'" + productId + "'", "UTF-8") +
-                    "],plane_of_section[name$eq+" + URLEncoder.encode("'" + pos + "'", "UTF-8") +  "]" +
-                    ARG_INCLUDE + "reference_space(atlases),probes(gene)");
+        static URL createProductQueryUrl(String product_id) throws IOException {
+            return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
+                    ARG_MODEL + "Product" +
+                    ARG_CRITERIA + "[id$eq" + URLEncoder.encode("'" + product_id + "'", "UTF-8") + "]");
         }
 
-        static URL createSectionImagesQueryUrl(int dataSetId) throws MalformedURLException {
-            return new URL(BASE_URL + SUB_URL + FUN_QUERY + ARG_OUTPUT_FORMAT +
+        static URL createDataSetsQueryUrl(int product_id, Atlas.PlaneOfSection section) throws MalformedURLException, UnsupportedEncodingException {
+            return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
+                    ARG_MODEL + "DataSet" +
+                    ARG_CRITERIA + "[failed$eq" + URLEncoder.encode("'false'", "UTF-8") +
+                    "],products[id$eq" + URLEncoder.encode("'" + product_id + "'", "UTF-8") +
+                    "],plane_of_section[name$eq" + URLEncoder.encode("'" + section + "'", "UTF-8") +  "]" +
+                    ARG_INCLUDE + "reference_space(atlases(atlas_infos(structure_graph,treatment))),probes,treatments");
+        }
+
+        static URL createSectionDataSetsQuery(String treatment_name, Atlas.PlaneOfSection section) throws MalformedURLException {
+            return addSectionDataSetInclusionAttributes(
+                    new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
+                    ARG_MODEL + "SectionDataSet" +
+                    ARG_CRITERIA + "[failed$eqfalse]," +
+                                   "plane_of_section[name$eq" + section + "]," +
+                                   "treatments[name$il" + treatment_name + "]"));
+        }
+
+        static URL createSectionDataSetsQuery(Integer product_id, Atlas.PlaneOfSection section) throws MalformedURLException {
+            return addSectionDataSetInclusionAttributes(
+                    new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
+                    ARG_MODEL + "SectionDataSet" +
+                    ARG_CRITERIA + "[failed$eqfalse]," +
+                                   "products[id$eq" + product_id + "]," +
+                                   "plane_of_section[name$eq" + section + "]"));
+        }
+
+        static URL createSectionDataSetsQuery(Integer dataset_id) throws MalformedURLException {
+            return addSectionDataSetInclusionAttributes(
+                    new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
+                            ARG_MODEL + "SectionDataSet" +
+                            ARG_CRITERIA + "[id$eq" + dataset_id + "]"));
+        }
+
+        private static URL addSectionDataSetInclusionAttributes(URL query) throws MalformedURLException {
+            return new URL(query.toString() +
+                    ARG_INCLUDE +
+                    "alignment3d," +
+                    "genes," +
+                    "probes," +
+                    "reference_space," +
+                    "treatments," +
+                    "specimen," +
+                    "reference_space");
+        }
+
+        static URL createSectionImagesQuery(String dataset_id) throws MalformedURLException {
+            return addSectionImageInclusionAttributes(
+                    new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
+                            ARG_MODEL + "SectionImage" +
+                            ARG_CRITERIA + "data_set[id$eq" + dataset_id + "]"));
+        }
+
+        static URL createSectionImageQuery(String image_id) throws MalformedURLException {
+            return addSectionImageInclusionAttributes(
+                    new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
+                            ARG_MODEL + "SectionImage" +
+                            ARG_CRITERIA + "[id$eq" + image_id + "]"));
+        }
+
+        private static URL addSectionImageInclusionAttributes(URL query) throws MalformedURLException {
+            return new URL(query.toString() +
+                    ARG_INCLUDE + "alignment2d,associates,structure");
+        }
+
+        static URL createSubImagesQueryUrl(String dataset_id) throws MalformedURLException {
+            return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
                     ARG_MODEL + "SectionImage" +
-                    ARG_CRITERIA + "[data_set_id$eq" + dataSetId  + "]");
+                    ARG_CRITERIA + "[data_set_id$eq" + dataset_id + "]");
+        }
+
+        static URL createReferenceAtlasQueryUrl(Atlas.Species species) throws MalformedURLException {
+            return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
+                    ARG_MODEL + "Product" +
+                    ARG_CRITERIA + "[name$il*Reference*]" + "[name$il*" + species + "*]");
+        }
+
+        static URL adjustResponseSize(URL url) throws IOException, TransformerException, URISyntaxException {
+            String[] parts = url.toString().split(ARG_INCLUDE);
+            URL query = new URL(parts[0] + ARG_OPTIONS + "[only$eq" + URLEncoder.encode("'id'", "UTF-8") + "]");
+
+            AllenXml xml = new AllenXml(query);
+            Object numRows = xml.getResponseSize();
+
+            return new URL(url.toString() + ARG_OPTIONS + "[num_rows$eq" + numRows + "]");
         }
 
         static String url2filename(URL url) throws UnsupportedEncodingException {
@@ -107,21 +181,21 @@ class AllenAPI {
                 include = SEPARATOR + parts[1];
             }
 
-            return model + criteria + include + ARG_OUTPUT_FORMAT;
+            return model + criteria + include + FILE_EXTENSION;
         }
 
         static URL filename2url(String str) throws MalformedURLException, UnsupportedEncodingException {
-            String[] parts = str.replace(ARG_OUTPUT_FORMAT, "").split(SEPARATOR);
+            String[] parts = str.replace(FILE_EXTENSION, "").split(SEPARATOR);
             String model = ARG_MODEL + parts[0];
 
             String criteria = "";
             if (parts.length > 1) {
-                criteria += ARG_CRITERIA;
+                criteria += ARG_CRITERIA.substring(0, ARG_CRITERIA.length()-1);
 
                 for (String criterium: parts[1].split(",")) {
                     String[] args = criterium.split("\\$");
                     String lhs = args[0];
-                    String ope = args[1].substring(0, 1);
+                    String ope = args[1].substring(0, 2);
                     String rhs = URLEncoder.encode(args[1].substring(2, args[1].length() - 1), "UTF-8");
                     criteria += "," + lhs + "$" + ope + rhs + "]";
                 }
@@ -129,11 +203,14 @@ class AllenAPI {
 
             String include = (parts.length > 2) ? ARG_INCLUDE + parts[2] : "";
 
-            return new URL(BASE_URL + SUB_URL + FUN_QUERY + ARG_OUTPUT_FORMAT + model + criteria + include);
+            return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION + model + criteria + include);
         }
     }
 
 
+    /**
+     * Aggregation of all download functionality
+     */
     static class Download {
 
         /** Number of down-samplings [0...]. Each down-sampling halves the original data (1 -> 1/2 size) */
@@ -157,11 +234,11 @@ class AllenAPI {
         static String url2filename(URL url) {
             String str = url.toString();
 
-            String fileExtension = "";
+            String fileExtension;
             if (str.contains(SVG.SUB_URL)) {
-                fileExtension = AllenDataTypes.SVG.getFileExtension();
+                fileExtension = SVG.FILE_EXTENSION;
             } else {
-                fileExtension = AllenDataTypes.IMG.getFileExtension();
+                fileExtension = Image.FILE_EXTENSION;
             }
 
             str = str.replace(BASE_URL, "")
@@ -176,35 +253,115 @@ class AllenAPI {
 
 
         /**
+         * URL's to retrieve expression grid data
+         * Reference: http://help.brain-map.org/display/api/Downloading+3-D+Expression+Grid+Data
+         */
+        static class GRID {
+
+            static final String FILE_EXTENSION = ".zip";
+
+            /** Sub-URL for the expression grid data download */
+            private static final String SUB_URL = "grid_data/download/";
+
+            private static final String INCLUDE = "?include=intensity";
+
+            static URL createUrl(String dataset_id) throws MalformedURLException {
+                return new URL(BASE_URL + SUB_URL + dataset_id + INCLUDE);
+            }
+        }
+
+
+        /**
+         * URL's to retrieve the reference volumes
+         */
+        static class RefVol {
+
+            static final String FILE_EXTENSION = ".nrrd";
+
+            enum VoxelResolution {
+                TEN(10),
+                TWENTYFIVE(25),
+                FIFTY(50),
+                HUNDRED(100);
+
+                private Integer resolution;
+
+                VoxelResolution(int res) {
+                    this.resolution = res;
+                }
+
+                String getString() {
+                    return this.resolution.toString();
+                }
+            }
+
+            enum DataType {
+                template("average_template/", "average_template_"),
+                nissl("ara_nissl/", "ara_nissl_"),
+                annotation("annotation/ccf_2016/", "annotation_");
+
+                private String suburl;
+                private String filename;
+
+                DataType(String sub_url, String filename) {
+                    this.suburl = sub_url;
+                    this.filename = filename;
+                }
+
+                String getSubUrl() {
+                    return this.suburl;
+                }
+
+                String getFileTrunk() {
+                    return this.filename;
+                }
+            }
+
+            private static final String BASE_URL = "http://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/";
+
+
+            static URL createUrl(DataType type, VoxelResolution resolution) throws MalformedURLException {
+                return new URL(BASE_URL + type.getSubUrl() + createFileName(type, resolution));
+            }
+
+            static String createFileName(DataType type, VoxelResolution resolution) {
+                return type.getFileTrunk() + resolution.getString() + FILE_EXTENSION;
+            }
+        }
+
+
+        /**
          * URL's to retrieve SVG files
          */
         static class SVG {
 
+            static final String FILE_EXTENSION = ".svg";
+
             /** Sub-URL for the SVG file getSvg */
-            private static final String SUB_URL ="svg_download/";
+            private static final String SUB_URL ="api/v2/svg_download/";
 
             /** Argument for annotation group selection */
             private static final String ARG_GROUP = "?groups=";
 
-            static URL createSvgUrl(String img_id) throws MalformedURLException {
-                return new URL(BASE_URL + SUB_URL + img_id + ARG_DOWNSAMPLE + Integer.toString(ARG_DOWNSAMPLE_DEFAULT));
+            static URL createSvgUrl(String section_id) throws MalformedURLException {
+                return new URL(BASE_URL + SUB_URL + section_id + ARG_DOWNSAMPLE + Integer.toString(ARG_DOWNSAMPLE_DEFAULT));
             }
 
-            static URL createSvgUrl(String img_id, int downsample, int grp_id) throws MalformedURLException {
-                return createSvgUrl(img_id, downsample, new int[]{grp_id});
+            static URL createSvgUrl(String section_id, int downsample, int grp_id) throws MalformedURLException {
+                return createSvgUrl(section_id, downsample, new int[]{grp_id});
             }
 
-            static URL createSvgUrl(String img_id, int downsample, int[] grp_ids) throws MalformedURLException {
+            static URL createSvgUrl(String section_id, int downsample, int[] grp_ids) throws MalformedURLException {
                 String str = Integer.toString(grp_ids[0]);
                 for (int i=1; i < grp_ids.length; i++) {
                     str += "," + Integer.toString(grp_ids[i]);
                 }
 
-                return createSvgUrl(img_id, Integer.toString(downsample), str);
+                return createSvgUrl(section_id, Integer.toString(downsample), str);
             }
 
-            static URL createSvgUrl(String img_id, String downsample, String grp_id) throws MalformedURLException {
-                return new URL(BASE_URL + SUB_URL + img_id + ARG_DOWNSAMPLE + downsample + ARG_GROUP + grp_id);
+            static URL createSvgUrl(String section_id, String downsample, String grp_id) throws MalformedURLException {
+                return new URL(BASE_URL + SUB_URL + section_id + ARG_DOWNSAMPLE + downsample + ARG_GROUP + grp_id);
             }
         }
 
@@ -214,8 +371,10 @@ class AllenAPI {
          */
         static class Image {
 
+            static final String FILE_EXTENSION = ".jpg";
+
             /** sub-URL for the image getSvg */
-            private static final String SUB_URL = "image_download/";
+            private static final String SUB_URL = "api/v2/image_download/";
 
             /** Views of the image getSvg */
             private static final String ARG_VIEW_EXPR = "&view=expression";
@@ -284,25 +443,27 @@ class AllenAPI {
          */
         static class AtlasImage {
 
+            static final String FILE_EXTENSION = ".jpg";
+
             /** sub-URL for the atlas image getSvg */
-            private static final String SUB_URL = "atlas_image_download/";
+            private static final String SUB_URL = "api/v2/atlas_image_download/";
 
             /** Boolean to indicate to include annotations or not */
             private static final String ARG_ANNOTATION = "&annotation=";
 
-            /** Atlas id argument. See {@link AllenAtlas#id} */
+            /** Atlas id argument */
             private static final String ARG_ATLAS_ID = "&atlas=";
 
-            static URL createAtlasImageUrl(AllenAtlas atlas, String img_id) throws MalformedURLException {
-                return createAtlasImageUrl(atlas, img_id, ARG_DOWNSAMPLE_DEFAULT, ARG_QUALITY_DEFAULT, false);
+            static URL createAtlasImageUrl(String atlas_id, String img_id) throws MalformedURLException {
+                return createAtlasImageUrl(atlas_id, img_id, ARG_DOWNSAMPLE_DEFAULT, ARG_QUALITY_DEFAULT, false);
             }
 
-            static URL createAtlasImageUrl(AllenAtlas atlas, String img_id,  int down_sample, double quality, boolean annotation) throws MalformedURLException {
-                return new URL(BASE_URL + SUB_URL + img_id +
+            static URL createAtlasImageUrl(String atlas_id, String section_id,  int down_sample, double quality, boolean annotation) throws MalformedURLException {
+                return new URL(BASE_URL + SUB_URL + section_id +
                         ARG_DOWNSAMPLE + Integer.toString(down_sample) +
                         ARG_QUALITY + Double.toString(quality) +
                         ARG_ANNOTATION + Boolean.toString(annotation) +
-                        ARG_ATLAS_ID + atlas.getId());
+                        ARG_ATLAS_ID + atlas_id);
             }
         }
 
@@ -312,35 +473,33 @@ class AllenAPI {
          *
          * @param args something
          */
-        public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, TransformerException, URISyntaxException {
-//        List<Object> aids = AllenAPI.RMA.getAtlasImageIds(AllenAtlas.MOUSEP56C);
-//        List<Object> sids = AllenAPI.RMA.getSectionImageIds(AllenAtlas.MOUSEP56C);
-//
-//        System.out.println("# Atlas Image Ids: " + aids.size());
-//        System.out.println("# Section Image Ids: " + sids.size());
-//
-//        for (int i = 0; i < aids.size(); i++) {
-//            System.out.println("Atlas Image ID: " + aids.getResponse(i) + "\tSection Image ID: " + sids.getResponse(i));
-//        }
+        public static void main(String[] args)
+                throws IOException,
+                ParserConfigurationException,
+                SAXException,
+                TransformerException,
+                URISyntaxException {
 
             URL query = AllenAPI.RMA.createProductQueryUrl(Atlas.Species.Mouse);
-            query = AllenAPI.RMA.adjustResponseSize(query);
-            AllenJson res = new AllenJson(query);
+            URL adjusted = AllenAPI.RMA.adjustResponseSize(query);
+            AllenXml xml = new AllenXml(adjusted);
 
-
-            System.out.println(res.getUrl());
-
-            String filename = AllenAPI.RMA.url2filename(res.getUrl());
-            System.out.println(filename);
+            String filename = AllenAPI.RMA.url2filename(xml.getUrl());
             URL url = AllenAPI.RMA.filename2url(filename);
-            System.out.println(url.toString());
 
-            ArrayList<Object> names = res.getValues("name", "name");
-            ArrayList<Object> descriptions = res.getValues("description", "name");
+            System.out.println("URL handling");
+            System.out.println("\toriginal url: " + query.toString());
+            System.out.println("\tmodel: " + xml.getResponseModel());
+            System.out.println("\tresponse size: " + xml.getResponseSize());
+            System.out.println("\tadjusted url: " + xml.getUrl());
+            System.out.println("\tfile name: " + filename);
+            System.out.println("\trestored url: " + url.toString());
 
-            System.out.println("Products:");
-            for (int i = 0; i < names.size(); i++) {
-                System.out.println("\t" + names.get(i) + "\t(" + descriptions.get(i) + ")");
+
+            System.out.println("Mouse products: ");
+            for (Element product : xml.getElements()) {
+                System.out.println("\t" + product.getChild("name").getValue() +
+                        " (" + product.getChild("id").getValue() + ")");
             }
         }
     }
