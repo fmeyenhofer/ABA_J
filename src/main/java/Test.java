@@ -144,8 +144,8 @@ public class Test {
 //            ij.op().image().invert(inv, mask);
 //            ImageJFunctions.show(fill, "initialized fill");
 
-            ij.op().morphology().fillHoles(fill, mask, ConnectedComponents.StructuringElement.FOUR_CONNECTED);
-
+//            ij.op().morphology().fillHoles(fill, mask, ConnectedComponents.StructuringElement.FOUR_CONNECTED);
+            
 //
 //            Cursor<BitType> fc = fill.cursor();
 //            Cursor<BitType> mc = mask.cursor();

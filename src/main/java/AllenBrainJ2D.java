@@ -134,7 +134,7 @@ public class AllenBrainJ2D implements Command {
         try {
             // Load the section
 
-            client.getSvg(atlasName, sectionId);
+//            client.getSvg(atlasName, sectionId);
 
             // Get the atlas contours
 //            maskFile = client.createMaskFile();
@@ -167,18 +167,6 @@ public class AllenBrainJ2D implements Command {
             // Overlay the contours on the image
 
 
-        } catch (IOException e) {
-            log.error("There was a problem retrieving data from " + client.getApiUrl() +
-                    ".\n Check your internet connection.");
-            e.printStackTrace();
-        } catch (TransformerException e) {
-            e.printStackTrace();
-//        } catch (TranscoderException e) {
-//            e.printStackTrace();//TODO
-//        } catch (ImgIOException e) {
-            e.printStackTrace();//TODO
-        } catch (URISyntaxException e) {
-            e.printStackTrace();//TODO
         } catch (IncompatibleTypeException e) {
             e.printStackTrace();//TODO
         } finally {
