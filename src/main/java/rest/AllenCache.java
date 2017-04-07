@@ -218,7 +218,6 @@ class AllenCache {
         if (path.exists()) {
             return new AllenXml(path);
         } else {
-
             return new AllenXml(element, path);
         }
     }

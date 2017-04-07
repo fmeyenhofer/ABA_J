@@ -5,7 +5,6 @@ import gui.SvgDisplay;
 
 import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
 import org.apache.batik.dom.svg.SVGDOMImplementation;
-import org.apache.batik.svggen.SVGPath;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.w3c.dom.*;
 
