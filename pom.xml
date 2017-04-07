@@ -9,13 +9,15 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>13.2.1</version>
+		<version>14.0.0</version>
 		<relativePath />
 	</parent>
 
 	<packaging>jar</packaging>
 
 	<properties>
+		<package-name>ch.imagej.aba</package-name>
+		<main-class>AllenBrainJ2D</main-class>
 		<scijava.jvm.version>1.8</scijava.jvm.version>
 		<license.copyrightOwners>Felix Meyenhofer</license.copyrightOwners>
 		<license.licenseName>GPLv3</license.licenseName>
@@ -32,9 +34,12 @@
 		and correlation analysis with mapped already mapped genes.
 	</description>
 	<!--TODO: fill out general url and organisation-->
-	<url></url>
+	<url>https://github.com/Meyenhofer</url>
 	<inceptionYear>2016</inceptionYear>
-	<organization></organization>
+	<organization>
+		<name>University of Fribourg</name>
+        <url>www.unifr.ch</url>
+	</organization>
 
 	<licenses>
 		<license>
@@ -62,17 +67,24 @@
 		</developer>
 	</developers>
 
+	<contributors>
+		<contributor>
+			<name>Allen Institute</name>
+			<url>http://http://www.brain-map.org</url>
+		</contributor>
+	</contributors>
+
 	<!--TODO: fill out the scm and issue management-->
 	<scm>
-		<connection></connection>
-		<developerConnection></developerConnection>
+		<connection>https://github.com/Meyenhofer</connection>
+		<developerConnection>https://github.com/Meyenhofer</developerConnection>
         <tag>HEAD</tag>
-		<url></url>
+		<url>https://github.com/Meyenhofer</url>
 	</scm>
 
 	<issueManagement>
 		<system>GitHub Issues</system>
-		<url></url>
+		<url>https://github.com/Meyenhofer</url>
 	</issueManagement>
 
 	<mailingLists>
@@ -81,6 +93,10 @@
 			<archive>http://forum.imagej.net</archive>
 		</mailingList>
 	</mailingLists>
+
+	<ciManagement>
+		<system>None</system>
+	</ciManagement>
 
 	<repositories>
 		<repository>
@@ -110,11 +126,23 @@
 
 		<!--SVG format library-->
 		<dependency>
-			<groupId>batik</groupId>
-			<artifactId>batik</artifactId>
-			<version>1.8</version>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>batik-dom</artifactId>
 		</dependency>
-		
+		<dependency>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>batik-svg-dom</artifactId>
+			<version>1.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>batik-swing</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.xmlgraphics</groupId>
+			<artifactId>batik-transcoder</artifactId>
+		</dependency>
+
 		<!--XML library-->
 		<!--<dependency>-->
 			<!--<groupId>com.fasterxml.jackson.core</groupId>-->
@@ -122,7 +150,7 @@
 			<!--<version>2.7.1</version>-->
 		<!--</dependency>-->
 		<dependency>
-			<groupId>jdom</groupId>
+			<groupId>org.jdom</groupId>
 			<artifactId>jdom</artifactId>
 			<version>1.1</version>
 		</dependency>
