@@ -50,7 +50,7 @@ import javax.xml.transform.TransformerException;
  *
  * @author Felix Meyenhofer
  */
-class AllenCache {
+public class AllenCache {
 
     /** Root directory of the cache */
     private File root;
@@ -87,7 +87,7 @@ class AllenCache {
     /**
      * Constructor
      */
-    AllenCache() {
+    public AllenCache() {
         //TODO put this in the fiji user settings. Use a setting dialog if not defined
         this.root = getDirectory(new File(System.getProperty("user.home"), "allen-cache"));
     }
@@ -137,7 +137,7 @@ class AllenCache {
      * @param path_parts parts of the file path
      * @return {@link File}
      */
-    File getPath(DataType type, String... path_parts) {
+    public File getPath(DataType type, String... path_parts) {
         int end = path_parts.length - 1;
         String filename = path_parts[end];
 
@@ -159,7 +159,7 @@ class AllenCache {
      * @throws TransformerException
      * @throws URISyntaxException
      */
-    AllenXml getResponseXml(URL url)
+    public AllenXml getResponseXml(URL url)
             throws IOException, TransformerException, URISyntaxException {
 
         url = AllenAPI.RMA.adjustResponseSize(url);
@@ -182,7 +182,7 @@ class AllenCache {
      * @throws IOException
      * @throws URISyntaxException
      */
-    AllenXml getMetadataXml(String... path_parts)
+    public AllenXml getMetadataXml(String... path_parts)
             throws IOException, URISyntaxException, TransformerException {
         File file = getPath(DataType.xml, path_parts);
 
@@ -212,7 +212,7 @@ class AllenCache {
      * @throws TransformerException
      * @throws IOException
      */
-    AllenXml getMetadataXml(Element element, String... path_parts)
+    public AllenXml getMetadataXml(Element element, String... path_parts)
             throws TransformerException, IOException, URISyntaxException {
         File path = getPath(DataType.xml, path_parts);
         if (path.exists()) {
@@ -228,21 +228,47 @@ class AllenCache {
      * @param path_parts parts of the path of the image.
      *                   The last one is expected to be the image id.
      *                   The rest (subdirectories) is just to have a meaningful structure of the cache
-     * @return {@line AllenImage} file
+     * @return {@link AllenImage} file
      * @throws IOException
      * @throws TransformerException
      * @throws URISyntaxException
      */
-    AllenImage getImage(String... path_parts)
+    public AllenImage getImage(String... path_parts)
             throws IOException, TransformerException, URISyntaxException {
-        File path = getPath(DataType.img, path_parts);
+
+        return getImage(AllenAPI.Download.ARG_DOWNSAMPLE_DEFAULT, AllenAPI.Download.ARG_QUALITY_DEFAULT, path_parts);
+    }
+
+    /**
+     * Get an image either from the cache or from the ABA API
+     *
+     * @param downsample downsampling of the image [0...], 1 -> 0.5, 2 -> 0.25, etc
+     * @param quality jpeg quality [0...100]
+     * @param path_parts parts of the image file path. The last part is the file name.
+     *                   Downsample and quality are inserted before.
+     * @return {@link AllenImage} jpeg file
+     * @throws IOException
+     * @throws URISyntaxException
+     * @throws TransformerException
+     */
+    public AllenImage getImage(int downsample, int quality, String... path_parts)
+            throws IOException, URISyntaxException, TransformerException {
+
+        int n = path_parts.length;
+        String[] new_parts = new String[n + 2];
+        System.arraycopy(path_parts, 0, new_parts, 0, n - 1);
+        new_parts[n - 1] = "downsample-" + Integer.toString(downsample);
+        new_parts[n] = "quality-" + Integer.toString(quality);
+        new_parts[n + 1] = path_parts[n - 1];
+
+        File path = getPath(DataType.img, new_parts);
 
         if (path.exists()) {
             return new AllenImage(path);
         } else {
             int end = path_parts.length - 1;
             String image_id = path_parts[end].replace(AllenAPI.Download.Image.FILE_EXTENSION, "");
-            URL query = AllenAPI.Download.Image.createImageURL(image_id);
+            URL query = AllenAPI.Download.Image.createImageUrl(image_id, downsample, quality);
             return new AllenImage(query, path);
         }
     }
@@ -257,7 +283,7 @@ class AllenCache {
      * @throws TransformerException
      * @throws URISyntaxException
      */
-    AllenSvg getAnnotationSvg(String... path_parts)
+    public AllenSvg getAnnotationSvg(String... path_parts)
             throws IOException, TransformerException, URISyntaxException {
         File file = getPath(DataType.svg, path_parts);
 
@@ -280,7 +306,7 @@ class AllenCache {
      * @throws URISyntaxException
      * @throws TransformerException
      */
-    AllenImage getExpressionGrid(String... path_parts)
+    public AllenImage getExpressionGrid(String... path_parts)
             throws IOException, URISyntaxException, TransformerException {
         File file = getPath(DataType.grd, path_parts);
 
@@ -304,7 +330,7 @@ class AllenCache {
      * @throws URISyntaxException
      * @throws TransformerException
      */
-    AllenImage getReferenceVolume(AllenAPI.Download.RefVol.DataType type,
+    public AllenImage getReferenceVolume(AllenAPI.Download.RefVol.DataType type,
                                   AllenAPI.Download.RefVol.VoxelResolution resolution)
             throws IOException, URISyntaxException, TransformerException {
         String filename = AllenAPI.Download.RefVol.createFileName(type, resolution);

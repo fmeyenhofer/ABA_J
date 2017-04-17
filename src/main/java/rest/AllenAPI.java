@@ -67,15 +67,6 @@ class AllenAPI {
                     ARG_CRITERIA + "[id$eq" + URLEncoder.encode("'" + product_id + "'", "UTF-8") + "]");
         }
 
-        static URL createDataSetsQueryUrl(int product_id, Atlas.PlaneOfSection section) throws MalformedURLException, UnsupportedEncodingException {
-            return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
-                    ARG_MODEL + "DataSet" +
-                    ARG_CRITERIA + "[failed$eq" + URLEncoder.encode("'false'", "UTF-8") +
-                    "],products[id$eq" + URLEncoder.encode("'" + product_id + "'", "UTF-8") +
-                    "],plane_of_section[name$eq" + URLEncoder.encode("'" + section + "'", "UTF-8") +  "]" +
-                    ARG_INCLUDE + "reference_space(atlases(atlas_infos(structure_graph,treatment))),probes,treatments");
-        }
-
         static URL createSectionDataSetsQuery(String treatment_name, Atlas.PlaneOfSection section) throws MalformedURLException {
             return addSectionDataSetInclusionAttributes(
                     new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
@@ -110,7 +101,8 @@ class AllenAPI {
                     "reference_space," +
                     "treatments," +
                     "specimen," +
-                    "reference_space");
+                    "reference_space," +
+                    "products");
         }
 
         static URL createSectionImagesQuery(String dataset_id) throws MalformedURLException {
@@ -141,7 +133,21 @@ class AllenAPI {
         static URL createReferenceAtlasQueryUrl(Atlas.Species species) throws MalformedURLException {
             return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
                     ARG_MODEL + "Product" +
-                    ARG_CRITERIA + "[name$il*Reference*]" + "[name$il*" + species + "*]");
+                    ARG_CRITERIA + "[name$il*Reference*][name$il*" + species + "*]");
+        }
+
+        static URL createdRegistedSampleQuery(String dataset_id) throws MalformedURLException {
+            return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
+                    ARG_MODEL + "WellKnownFile" +
+                    ARG_CRITERIA + "[attachable_id$eq" +  dataset_id + "]" +
+                    "[well_known_file_type_id$eq" + Download.WellKonwnFileType.TYPE_ID__RESTAMPLED_IMAGES_TO_25UM_ARA + "]");
+        }
+
+        static URL createdRegistedSampleQuery() throws MalformedURLException {
+            return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
+                    ARG_MODEL + "WellKnownFile" +
+                    ARG_CRITERIA +
+                    "[well_known_file_type_id$eq" + Download.WellKonwnFileType.TYPE_ID__RESTAMPLED_IMAGES_TO_25UM_ARA + "]");
         }
 
         static URL adjustResponseSize(URL url) throws IOException, TransformerException, URISyntaxException {
@@ -217,13 +223,13 @@ class AllenAPI {
         private static final String ARG_DOWNSAMPLE = "?downsample=";
 
         /** Default down-sampling (convenient for display, otherwise it does not fit) */
-        private static final int ARG_DOWNSAMPLE_DEFAULT = 3;
+        static final int ARG_DOWNSAMPLE_DEFAULT = 2;
 
-        /** JPEG quality [0...1] */
+        /** JPEG quality [0...100] */
         private static final String ARG_QUALITY = "&quality=";
 
-        /** Default image quality value [0...100]*/
-        private static final int ARG_QUALITY_DEFAULT = 50;
+        /** Default image quality value */
+        static final int ARG_QUALITY_DEFAULT = 100;
 
         /**
          * Create a unique file name from the query URL
@@ -250,6 +256,22 @@ class AllenAPI {
 
             return parts[0] + fileExtension;
         }
+
+
+        /**
+         *
+         */
+        static class WellKonwnFileType{
+
+            static final String SUB_URL = "api/v2/well_known_file_download/";
+
+            static final String TYPE_ID__RESTAMPLED_IMAGES_TO_25UM_ARA = "268364491";
+
+            static URL createURL(String id) throws MalformedURLException {
+                return new URL(BASE_URL + SUB_URL + id);
+            }
+        }
+
 
 
         /**
@@ -382,11 +404,11 @@ class AllenAPI {
             private static final String ARG_VIEW_TUAN = "&view=tumor_feature_annotation";
             private static final String ARG_VIEW_TUBO = "&view=tumor_feature_boundary";
 
-            static URL createImageURL(String id) throws MalformedURLException {
+            static URL createImageUrl(String id) throws MalformedURLException {
                 return createImageUrl(id, ARG_DOWNSAMPLE_DEFAULT, ARG_QUALITY_DEFAULT);
             }
 
-            private static URL createImageUrl(String id, int down_sample, int quality) throws MalformedURLException {
+            static URL createImageUrl(String id, int down_sample, int quality) throws MalformedURLException {
                 return new URL(BASE_URL + SUB_URL + id +
                         ARG_DOWNSAMPLE + Integer.toString(down_sample) +
                         ARG_QUALITY + Double.toString(quality));
