@@ -53,7 +53,7 @@ public class ReferenceVolumneSlicer implements Command {
 
         // Open an image
 //        File file = new File ("/Users/turf/switchdrive/SJMCS_Thesis/data/aba/mouse-ccf-3/reference-volumes/average_template_50.nrrd");
-        File file = new File("/Users/turf/Desktop/average_template_25.tif");
+        File file = new File("/Users/turf/switchdrive/SJMCS_Thesis/data/aba/mouse-ccf-3/reference-volumes/average_template_50.tif");
         Dataset dataset = ij.scifio().datasetIO().open(file.getAbsolutePath());
         ij.display().createDisplay(dataset);
 
