@@ -3,8 +3,8 @@ package rest;
 import bezier.BezierPath;
 import gui.SvgDisplay;
 
-import org.apache.batik.dom.svg.SAXSVGDocumentFactory;
-import org.apache.batik.dom.svg.SVGDOMImplementation;
+import org.apache.batik.anim.dom.SAXSVGDocumentFactory;
+import org.apache.batik.anim.dom.SVGDOMImplementation;
 import org.apache.batik.util.XMLResourceDescriptor;
 import org.w3c.dom.*;
 
@@ -116,8 +116,13 @@ class AllenSvg extends AllenFile {
         DOMImplementation impl = SVGDOMImplementation.getDOMImplementation();
         Document doc = impl.createDocument(SVGDOMImplementation.SVG_NAMESPACE_URI, "svg", null);
         Element root = doc.getDocumentElement();
-        doc.adoptNode(node);
-        root.appendChild(node);
+
+        NodeList children = node.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node child = children.item((i));
+            doc.adoptNode(child);
+            root.appendChild(child);
+        }
 
         // Write to file
         Transformer t = TransformerFactory.newInstance().newTransformer();
