@@ -18,7 +18,7 @@ import java.io.IOException;
  */
 @SuppressWarnings("WeakerAccess")
 @Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Reference Volume Slicer")
-public class ReferenceVolumneSlicer implements Command {
+public class ReferenceVolumeSlicer implements Command {
 
     @Parameter
     DatasetIOService ioService;
@@ -58,6 +58,6 @@ public class ReferenceVolumneSlicer implements Command {
         ij.display().createDisplay(dataset);
 
         // Run the plugin
-        ij.command().run(ReferenceVolumneSlicer.class, true);
+        ij.command().run(ReferenceVolumeSlicer.class, true);
     }
 }
