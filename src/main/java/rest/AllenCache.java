@@ -59,7 +59,7 @@ public class AllenCache {
      * Organization of the different data types encountered with the
      * {@link AllenAPI}
      */
-    enum DataType {
+    public enum DataType {
         img("images", AllenAPI.Download.Image.FILE_EXTENSION),
         svg("annotations", AllenAPI.Download.SVG.FILE_EXTENSION),
         xml("metadata", AllenAPI.RMA.FILE_EXTENSION),
@@ -90,6 +90,17 @@ public class AllenCache {
     public AllenCache() {
         //TODO put this in the fiji user settings. Use a setting dialog if not defined
         this.root = getDirectory(new File(System.getProperty("user.home"), "allen-cache"));
+    }
+
+    /**
+     * Getter for the directories
+     * The {@link AllenCache#root} contains subdirectories for each type of data.
+     *
+     * @param type data type (each data type has its own sub-directory)
+     * @return subdirectory for a given data type
+     */
+    public File getDirectory(DataType type) {
+        return new File(this.root, type.getSubdirectory());
     }
 
     /**
