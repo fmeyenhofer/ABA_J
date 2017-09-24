@@ -218,8 +218,8 @@ public class AllenCache {
     /**
      * Save an xml element to a metadata file
      *
-     * @param element
-     * @param path_parts
+     * @param element xml content
+     * @param path_parts name(s) of folders plus the file name
      * @throws TransformerException
      * @throws IOException
      */
@@ -309,26 +309,42 @@ public class AllenCache {
     }
 
     /**
-     * Get expression grid data
+     * Get expression grid data.
+     * (they are stored in the expression grid data folders,
+     * file names are [ID].zip)
      *
-     * @param path_parts
-     * @return
+     * @param grid_id ID of the expression grid
+     * @return expression grid as {@link AllenImage}
      * @throws IOException
      * @throws URISyntaxException
      * @throws TransformerException
      */
-    public AllenImage getExpressionGrid(String... path_parts)
+    public AllenImage getExpressionGrid(String... grid_id)
             throws IOException, URISyntaxException, TransformerException {
-        File file = getPath(DataType.grd, path_parts);
+        File file = getPath(DataType.grd, grid_id);
 
         if (file.exists()) {
             return new AllenImage(file);
         } else {
-            int end = path_parts.length - 1;
-            String dataset_id = path_parts[end].replace(AllenAPI.Download.GRID.FILE_EXTENSION, "");
+            int end = grid_id.length - 1;
+            String dataset_id = grid_id[end].replace(AllenAPI.Download.GRID.FILE_EXTENSION, "");
             URL url = AllenAPI.Download.GRID.createUrl(dataset_id);
             return new AllenImage(url, file);
         }
+    }
+
+    /**
+     * Get the absolute path to a reference volume.
+     * For convenience this allows to define the parameter as Strings
+     * in contrast to {@link AllenCache#getReferenceVolume(AllenAPI.Download.RefVol.DataType, AllenAPI.Download.RefVol.VoxelResolution)}
+     *
+     * @param modality of the data (see {@link AllenAPI.Download.RefVol.DataType})
+     * @param resolution voxel resolution in micron of the image (see {@link AllenAPI.Download.RefVol.VoxelResolution}
+     * @return {@link File} of the reference volume image file
+     */
+    public File getReferenceVolume(String modality, String resolution) {
+        String filename = AllenAPI.Download.RefVol.getFileName(modality, resolution);
+        return getPath(DataType.vol, filename);
     }
 
     /**
@@ -336,13 +352,13 @@ public class AllenCache {
      *
      * @param type data type of the volume (see{@link AllenAPI.Download.RefVol.DataType})
      * @param resolution voxel resolution (see {@link AllenAPI.Download.RefVol.VoxelResolution}
-     * @return
+     * @return {@link File} of the reference volume image file
      * @throws IOException
      * @throws URISyntaxException
      * @throws TransformerException
      */
     public AllenImage getReferenceVolume(AllenAPI.Download.RefVol.DataType type,
-                                  AllenAPI.Download.RefVol.VoxelResolution resolution)
+                                         AllenAPI.Download.RefVol.VoxelResolution resolution)
             throws IOException, URISyntaxException, TransformerException {
         String filename = AllenAPI.Download.RefVol.createFileName(type, resolution);
         File path = getPath(DataType.vol, filename);

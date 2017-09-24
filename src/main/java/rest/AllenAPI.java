@@ -140,14 +140,14 @@ class AllenAPI {
             return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
                     ARG_MODEL + "WellKnownFile" +
                     ARG_CRITERIA + "[attachable_id$eq" +  dataset_id + "]" +
-                    "[well_known_file_type_id$eq" + Download.WellKonwnFileType.TYPE_ID__RESTAMPLED_IMAGES_TO_25UM_ARA + "]");
+                    "[well_known_file_type_id$eq" + Download.WellKnownFileType.TYPE_ID__RESTAMPLED_IMAGES_TO_25UM_ARA + "]");
         }
 
         static URL createdRegistedSampleQuery() throws MalformedURLException {
             return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
                     ARG_MODEL + "WellKnownFile" +
                     ARG_CRITERIA +
-                    "[well_known_file_type_id$eq" + Download.WellKonwnFileType.TYPE_ID__RESTAMPLED_IMAGES_TO_25UM_ARA + "]");
+                    "[well_known_file_type_id$eq" + Download.WellKnownFileType.TYPE_ID__RESTAMPLED_IMAGES_TO_25UM_ARA + "]");
         }
 
         static URL adjustResponseSize(URL url) throws IOException, TransformerException, URISyntaxException {
@@ -261,7 +261,7 @@ class AllenAPI {
         /**
          *
          */
-        static class WellKonwnFileType{
+        static class WellKnownFileType {
 
             static final String SUB_URL = "api/v2/well_known_file_download/";
 
@@ -298,6 +298,8 @@ class AllenAPI {
          */
         static class RefVol {
 
+            static final String BASE_URL = "http://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/";
+
             static final String FILE_EXTENSION = ".nrrd";
 
             enum VoxelResolution {
@@ -315,19 +317,36 @@ class AllenAPI {
                 String getString() {
                     return this.resolution.toString();
                 }
+
+                static VoxelResolution get(String resolution) {
+                    resolution = resolution.replace("um", "");
+                    if (VoxelResolution.TEN.getString().equals(resolution)) {
+                        return VoxelResolution.TEN;
+                    } else if (VoxelResolution.TWENTYFIVE.getString().equals(resolution)) {
+                        return VoxelResolution.TWENTYFIVE;
+                    } else if (VoxelResolution.FIFTY.getString().equals(resolution)) {
+                        return VoxelResolution.FIFTY;
+                    } else if (VoxelResolution.HUNDRED.getString().equals(resolution)) {
+                        return VoxelResolution.HUNDRED;
+                    } else {
+                        throw new RuntimeException("The resolution " + resolution + " does not exist in VoxelResolution.");
+                    }
+                }
             }
 
             enum DataType {
-                template("average_template/", "average_template_"),
-                nissl("ara_nissl/", "ara_nissl_"),
-                annotation("annotation/ccf_2016/", "annotation_");
+                template("average_template/", "average_template_", "auto-fluorescence"),
+                nissl("ara_nissl/", "ara_nissl_", "nissel"),
+                annotation("annotation/ccf_2016/", "annotation_", "annotation");
 
                 private String suburl;
                 private String filename;
+                private String modality;
 
-                DataType(String sub_url, String filename) {
+                DataType(String sub_url, String filename, String modality) {
                     this.suburl = sub_url;
                     this.filename = filename;
+                    this.modality = modality;
                 }
 
                 String getSubUrl() {
@@ -337,10 +356,23 @@ class AllenAPI {
                 String getFileTrunk() {
                     return this.filename;
                 }
+
+                String getModality() {
+                    return this.modality;
+                }
+
+                static DataType get(String modality) {
+                    if (DataType.template.getModality().equals(modality)) {
+                        return DataType.template;
+                    } else if (DataType.annotation.getModality().equals(modality)) {
+                        return DataType.annotation;
+                    } else if (DataType.nissl.getModality().equals(modality)) {
+                        return DataType.nissl;
+                    } else {
+                        throw new RuntimeException("The modality " + modality + " does not exist in DataType");
+                    }
+                }
             }
-
-            private static final String BASE_URL = "http://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/";
-
 
             static URL createUrl(DataType type, VoxelResolution resolution) throws MalformedURLException {
                 return new URL(BASE_URL + type.getSubUrl() + createFileName(type, resolution));
@@ -348,6 +380,13 @@ class AllenAPI {
 
             static String createFileName(DataType type, VoxelResolution resolution) {
                 return type.getFileTrunk() + resolution.getString() + FILE_EXTENSION;
+            }
+
+            static String getFileName(String modality, String resolution) {
+                DataType type = DataType.get(modality);
+                VoxelResolution voxelResolution = VoxelResolution.get(resolution);
+
+                return createFileName(type, voxelResolution);
             }
         }
 
