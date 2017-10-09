@@ -141,6 +141,18 @@ public class ImageSectionTools {
         return obj;
     }
 
+    public static int getMaskArea(RandomAccessibleInterval<BitType> msk) {
+        Cursor<BitType> cursor = Views.flatIterable(msk).cursor();
+        int area = 0;
+        while (cursor.hasNext()) {
+            if (cursor.next().valueEquals(new BitType(true))) {
+                area++;
+            }
+        }
+
+        return area;
+    }
+
 
     public static void main(String[] args) throws IOException {
         ImageJ ij = new ImageJ();

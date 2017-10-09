@@ -39,6 +39,11 @@ public class ImageProcessingTools {
         processor.setMinAndMax((double) lowerBound, (double) upperBound);
     }
 
+    public static int getMaskArea(ImageProcessor processor) {
+        int[] hist = processor.getStats().histogram;
+        return hist[hist.length - 1];
+    }
+
 
     public static void main(String[] args) throws IOException {
         final ImageJ ij = new net.imagej.ImageJ();
