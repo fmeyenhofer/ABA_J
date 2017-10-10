@@ -49,7 +49,7 @@ import java.util.Collections;
 /**
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > ReferenceVolumeAssembler")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Reference Volume Assembly")
 public class ReferenceSectionDatasetAssembler implements Command {
 
     @Parameter
@@ -65,20 +65,12 @@ public class ReferenceSectionDatasetAssembler implements Command {
     private UIService ui;
 
 
-//    @Parameter(style = FileWidget.DIRECTORY_STYLE, label = "Input directory")
-    private File inputDir;
-
-
-    //    @Parameter(style = FileWidget.DIRECTORY_STYLE, label = "Output directory")
-
-//    private File outputDir;
-
     @Override
     public void run() {
         AllenCache cache = new AllenCache();
 
         SectionDatasetSelector dialog = SectionDatasetSelector.createAndShow();
-        inputDir = dialog.getSelection();
+        File inputDir = dialog.getSelection();
 
 
         String dataset_id = inputDir.getName();
@@ -128,7 +120,6 @@ public class ReferenceSectionDatasetAssembler implements Command {
         String greenChannelName = datasetMetadata.getValue("green-channel");
         String blueChannelName = datasetMetadata.getValue("blue-channel");
         double resolutionAxial = Double.parseDouble(datasetMetadata.getValue("section-thickness"));
-
 
 
         log.info("\tretrieve section image metadata");
@@ -215,8 +206,7 @@ public class ReferenceSectionDatasetAssembler implements Command {
 
         }
 
-
-
+        
         log.info("\talign section images");
         long xMax = Collections.max(xDims);
         long yMax = Collections.max(yDims);
@@ -237,16 +227,16 @@ public class ReferenceSectionDatasetAssembler implements Command {
 
         for (int f = 0; f < files.length; f++) {
             File file = files[f];
-            log.info("\tregister " + file.getName());
 
             // sub-volume
             int sliceNum = zNums.get(f) - 1;
             RandomAccessibleInterval<UnsignedByteType> slice = Views.hyperSlice(vol, 2, sliceNum);
 
+            log.info("\tregister " + file.getName() + " -> slice number " + sliceNum);
 
             double scale = scales.get(f);
             AffineTransform2D scaleUp = new AffineTransform2D();
-            scaleUp.scale(1/ scale);
+            scaleUp.scale(1 / scale);
             AffineTransform2D scaleDown = new AffineTransform2D();
             scaleDown.scale(scale);
 
@@ -295,7 +285,6 @@ public class ReferenceSectionDatasetAssembler implements Command {
 //            if (f > 3) {
 //                break;
 //            }
-
         }
 
         // TODO: The 3D alignment (affine) does not work as expected
