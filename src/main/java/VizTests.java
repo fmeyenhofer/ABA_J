@@ -5,14 +5,13 @@ import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
 import net.imglib2.Cursor;
-import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.type.numeric.real.DoubleType;
-import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang.ArrayUtils;
+
 
 import javax.swing.*;
 import java.io.IOException;
@@ -32,7 +31,6 @@ public class VizTests {
 
 
     public void show(ImgPlus<DoubleType> imgPlus) {
-
 //        imgPlus = ( ImgPlus< T > ) datasetView.getData().getImgPlus();
         frame = new JFrame( "ClearVolume Tutorial 1" );
         frame.setBounds( 50, 50, 1024, 768 );
@@ -95,9 +93,9 @@ public class VizTests {
             }
         }
 
-        long[] dim4d = ArrayUtils.addAll(dim3d, 2);
+        long[] dim4d = ArrayUtils.addAll(dim3d, new long[]{2});
 //        long[] dim2d = ArrayUtils.subarray(dim3d, 0, 1);
-        long[] dim2dc = ArrayUtils.addAll(dim2d, 2);
+        long[] dim2dc = ArrayUtils.addAll(dim2d, new long[]{2});
 //        long[] ub2d = ArrayUtils.subarray(ub3d, 0, 2);
         
         // Create a new image for the 2D section overlay
@@ -146,9 +144,9 @@ public class VizTests {
 
         // access bounds
         long[] lb4d1 = new long[]{0, 0, 0, 0};
-        long[] ub4d1 = ArrayUtils.addAll(ub3d, 0);
+        long[] ub4d1 = ArrayUtils.addAll(ub3d, new long[]{0});
         long[] lb4d2 = new long[]{0, 0, 0, 1};
-        long[] ub4d2 = ArrayUtils.addAll(ub3d, 1);
+        long[] ub4d2 = ArrayUtils.addAll(ub3d, new long[]{1});
 
 
         // copy the reference volume pixels
@@ -179,6 +177,4 @@ public class VizTests {
 //        ImgPlus imgp = dataset.getImgPlus();
 //        brainViewer.show((ImgPlus<RealType>)imgp);
     }
-
-
 }
