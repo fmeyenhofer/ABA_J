@@ -18,8 +18,11 @@ import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.view.Views;
+import org.apache.commons.lang.ArrayUtils;
+import org.scijava.plugin.Parameter;
 
 import java.io.IOException;
+import java.util.Collections;
 
 
 /**
@@ -29,9 +32,29 @@ import java.io.IOException;
  */
 public class ImageSectionTools {
 
+    @Parameter
+    OpService ops;
+
 
     public static <T extends NativeType<T>> Img<BitType> createMask(RandomAccessibleInterval<T> rai, OpService ops) {
         double sigma = 13.0;
+
+        long[] dims = new long[rai.numDimensions()];
+        rai.dimensions(dims);
+
+        long max = 0;
+        for (long dim : dims) {
+            if (dim > max) {
+                max = dim;
+            }
+        }
+
+        double simga = ((double) max) / 50;
+
+        return createMask(rai, sigma, ops);
+    }
+
+    public static <T extends NativeType<T>> Img<BitType> createMask(RandomAccessibleInterval<T> rai, double sigma, OpService ops) {
 
         Img fil = ops.copy().img((Img<T>) rai);
         ops.filter().gauss(fil, sigma);
