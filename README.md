@@ -18,7 +18,8 @@ the ImageJ documentation [how to install 3rd party plugins][inst] on
 the official wiki.
 
 ## Plugin compilation from source 
-To compile the source code and package it into a jar, that can be imported in ImageJ you need to have [Git][git] and [Maven][mvn] installed on your computer. Then the following two commands should do:
+To compile the source code and package it into a jar, that can be imported in ImageJ,
+ you need to have [Git][git] and [Maven][mvn] installed on your computer. Then the following two commands should do:
 
 ```
 git clone https://github.com/Meyenhofer/AllenJ
@@ -30,7 +31,25 @@ After compilation the plugin (jar-file) can be dragged and dropped from the targ
 After restarting, the plugin is available through the menu: Plugins > AllenJ
 
 # Usage
-TODO
+Once installed in [Fiji][fiji], you can access a collection of functions through _Main Menu > Plugins > Allen Brain Atlas_
+
+## Section to Volume Registration
+
+## Annotation Importer
+
+## Miscellaneous
+
+### Section Auto-Crop
+
+### Volume Slicer
+
+### Reference Dataset Assembler 
+
+
+## Slice to volume registration 
+* the section should have approximately the same size as the reference volume (which one? automatic?)
+* the SIFT feature extraction, more specifically the DOG filtering for the feature scaling, 
+is very sensitive to image contrast. (add contrast adjustment to configuration dialog?)
 
 
 [aba]: http://www.brain-map.org/
