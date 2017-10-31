@@ -50,7 +50,7 @@ import javax.xml.transform.TransformerException;
  *
  * @author Felix Meyenhofer
  */
-public class AllenCache {
+class AllenCache {
 
     /** Root directory of the cache */
     private File root;
@@ -59,7 +59,7 @@ public class AllenCache {
      * Organization of the different data types encountered with the
      * {@link AllenAPI}
      */
-    public enum DataType {
+    enum DataType {
         img("images", AllenAPI.Download.Image.FILE_EXTENSION),
         svg("annotations", AllenAPI.Download.SVG.FILE_EXTENSION),
         xml("metadata", AllenAPI.RMA.FILE_EXTENSION),
@@ -87,7 +87,7 @@ public class AllenCache {
     /**
      * Constructor
      */
-    public AllenCache() {
+    AllenCache() {
         //TODO put this in the fiji user settings. Use a setting dialog if not defined
         this.root = getDirectory(new File(System.getProperty("user.home"), "allen-cache"));
     }
@@ -99,7 +99,7 @@ public class AllenCache {
      * @param type data type (each data type has its own sub-directory)
      * @return subdirectory for a given data type
      */
-    public File getDirectory(DataType type) {
+    File getDirectory(DataType type) {
         return new File(this.root, type.getSubdirectory());
     }
 
@@ -148,7 +148,7 @@ public class AllenCache {
      * @param path_parts parts of the file path
      * @return {@link File}
      */
-    public File getPath(DataType type, String... path_parts) {
+    private File getPath(DataType type, String... path_parts) {
         int end = path_parts.length - 1;
         String filename = path_parts[end];
 
@@ -170,7 +170,7 @@ public class AllenCache {
      * @throws TransformerException
      * @throws URISyntaxException
      */
-    public AllenXml getResponseXml(URL url)
+    AllenXml getResponseXml(URL url)
             throws IOException, TransformerException, URISyntaxException {
 
         url = AllenAPI.RMA.adjustResponseSize(url);
@@ -193,7 +193,7 @@ public class AllenCache {
      * @throws IOException
      * @throws URISyntaxException
      */
-    public AllenXml getMetadataXml(String... path_parts)
+    AllenXml getMetadataXml(String... path_parts)
             throws IOException, URISyntaxException, TransformerException {
         File file = getPath(DataType.xml, path_parts);
 
@@ -223,7 +223,7 @@ public class AllenCache {
      * @throws TransformerException
      * @throws IOException
      */
-    public AllenXml getMetadataXml(Element element, String... path_parts)
+    AllenXml getMetadataXml(Element element, String... path_parts)
             throws TransformerException, IOException, URISyntaxException {
         File path = getPath(DataType.xml, path_parts);
         if (path.exists()) {
@@ -244,7 +244,7 @@ public class AllenCache {
      * @throws TransformerException
      * @throws URISyntaxException
      */
-    public AllenImage getImage(String... path_parts)
+    AllenImage getImage(String... path_parts)
             throws IOException, TransformerException, URISyntaxException {
 
         return getImage(AllenAPI.Download.ARG_DOWNSAMPLE_DEFAULT, AllenAPI.Download.ARG_QUALITY_DEFAULT, path_parts);
@@ -262,7 +262,7 @@ public class AllenCache {
      * @throws URISyntaxException
      * @throws TransformerException
      */
-    public AllenImage getImage(int downsample, int quality, String... path_parts)
+    AllenImage getImage(int downsample, int quality, String... path_parts)
             throws IOException, URISyntaxException, TransformerException {
 
         int n = path_parts.length;
@@ -294,7 +294,7 @@ public class AllenCache {
      * @throws TransformerException
      * @throws URISyntaxException
      */
-    public AllenSvg getAnnotationSvg(String... path_parts)
+    AllenSvg getAnnotationSvg(String... path_parts)
             throws IOException, TransformerException, URISyntaxException {
         File file = getPath(DataType.svg, path_parts);
 
@@ -305,6 +305,22 @@ public class AllenCache {
             String section_id = path_parts[end].replace(AllenAPI.Download.SVG.FILE_EXTENSION, "");
             URL url = AllenAPI.Download.SVG.createSvgUrl(section_id);
             return new AllenSvg(url, file);
+        }
+    }
+
+    AllenImage getAnnotationGrid(String resolution) throws IOException, URISyntaxException, TransformerException {
+
+        AllenAPI.Download.RefVol.VoxelResolution voxelResolution = AllenAPI.Download.RefVol.VoxelResolution.get(resolution);
+        AllenAPI.Download.RefVol.DataType type = AllenAPI.Download.RefVol.DataType.annotation;
+
+        String fileName = AllenAPI.Download.RefVol.createFileName(type, voxelResolution);
+        File path = getPath(DataType.vol, fileName);
+
+        if (path.exists()) {
+            return new AllenImage(path);
+        } else {
+            URL query = AllenAPI.Download.RefVol.createUrl(type, voxelResolution);
+            return new AllenImage(query, path);
         }
     }
 
@@ -319,7 +335,7 @@ public class AllenCache {
      * @throws URISyntaxException
      * @throws TransformerException
      */
-    public AllenImage getExpressionGrid(String... grid_id)
+    AllenImage getExpressionGrid(String... grid_id)
             throws IOException, URISyntaxException, TransformerException {
         File file = getPath(DataType.grd, grid_id);
 
@@ -334,20 +350,6 @@ public class AllenCache {
     }
 
     /**
-     * Get the absolute path to a reference volume.
-     * For convenience this allows to define the parameter as Strings
-     * in contrast to {@link AllenCache#getReferenceVolume(AllenAPI.Download.RefVol.DataType, AllenAPI.Download.RefVol.VoxelResolution)}
-     *
-     * @param modality of the data (see {@link AllenAPI.Download.RefVol.DataType})
-     * @param resolution voxel resolution in micron of the image (see {@link AllenAPI.Download.RefVol.VoxelResolution}
-     * @return {@link File} of the reference volume image file
-     */
-    public File getReferenceVolume(String modality, String resolution) {
-        String filename = AllenAPI.Download.RefVol.getFileName(modality, resolution);
-        return getPath(DataType.vol, filename);
-    }
-
-    /**
      * Get the reference volume data set
      *
      * @param type data type of the volume (see{@link AllenAPI.Download.RefVol.DataType})
@@ -357,8 +359,8 @@ public class AllenCache {
      * @throws URISyntaxException
      * @throws TransformerException
      */
-    public AllenImage getReferenceVolume(AllenAPI.Download.RefVol.DataType type,
-                                         AllenAPI.Download.RefVol.VoxelResolution resolution)
+    AllenImage getReferenceVolume(AllenAPI.Download.RefVol.DataType type,
+                                  AllenAPI.Download.RefVol.VoxelResolution resolution)
             throws IOException, URISyntaxException, TransformerException {
         String filename = AllenAPI.Download.RefVol.createFileName(type, resolution);
         File path = getPath(DataType.vol, filename);

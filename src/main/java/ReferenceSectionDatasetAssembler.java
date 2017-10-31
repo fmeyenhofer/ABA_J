@@ -12,15 +12,10 @@ import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
-import net.imagej.axis.CalibratedAxis;
 import net.imagej.ops.OpService;
 import net.imglib2.*;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
-import net.imglib2.img.ImgFactory;
-import net.imglib2.img.ImgView;
-import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -34,8 +29,7 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
-import org.scijava.widget.FileWidget;
-import rest.AllenCache;
+import rest.AllenClient;
 import rest.AllenXml;
 
 import javax.xml.transform.TransformerException;
@@ -67,7 +61,7 @@ public class ReferenceSectionDatasetAssembler implements Command {
 
     @Override
     public void run() {
-        AllenCache cache = new AllenCache();
+        AllenClient client = AllenClient.getInstance();
 
         SectionDatasetSelector dialog = SectionDatasetSelector.createAndShow();
         File inputDir = dialog.getSelection();
@@ -101,7 +95,7 @@ public class ReferenceSectionDatasetAssembler implements Command {
         log.info("\tretrieve dataset 3D transformation");
         AllenXml datasetMetadata;
         try {
-            datasetMetadata = cache.getMetadataXml(product_name, dataset_id);
+            datasetMetadata = client.getDatasetMetadata(product_name, dataset_id);
         } catch (IOException e) {
             e.printStackTrace();
             return;
@@ -170,7 +164,7 @@ public class ReferenceSectionDatasetAssembler implements Command {
 
             // get section metadata
             try {
-                AllenXml sectionMetadata = cache.getMetadataXml(product_name, dataset_id, image_id);
+                AllenXml sectionMetadata = client.getSectionImageMetadata(product_name, dataset_id, image_id);
 
                 zNums.add(Integer.parseInt(sectionMetadata.getValue("section-number")));
                 width = Integer.parseInt(sectionMetadata.getValue("width"));

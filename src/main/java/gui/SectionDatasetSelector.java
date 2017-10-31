@@ -1,6 +1,6 @@
 package gui;
 
-import rest.AllenCache;
+import rest.AllenClient;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -12,7 +12,7 @@ import java.io.FileFilter;
 
 
 /**
- * Dialog to select a SectionDataset from the {@link AllenCache}.
+ * Dialog to select a SectionDataset from the {@link AllenClient}.
  *
  * @author Felix Meyenhofer
  */
@@ -40,8 +40,8 @@ public class SectionDatasetSelector extends JPanel implements ActionListener {
     private SectionDatasetSelector() {
         super();
 
-        AllenCache cache = new AllenCache();
-        File root = cache.getDirectory(AllenCache.DataType.img);
+        AllenClient client = AllenClient.getInstance();
+        File root = client.getSectionImageDirectory();
         products = getSubdirectories(root);
         String[] productChoices = new String[products.length + 1];
         int i = 0;
