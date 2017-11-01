@@ -252,12 +252,15 @@ public class AllenXml extends AllenFile {
      * @return list of elements/nodes
      */
     public List<Element> getElements() {
-        Element root = dom.getRootElement();
-        Element only_child = (Element) root.getChildren().get(0);
-
         List<Element> elements = new ArrayList<>();
-        for (Object obj : only_child.getChildren()) {
-            elements.add((Element) obj);
+
+        if (Integer.parseInt((String) this.getResponseSize()) > 0) {
+            Element root = dom.getRootElement();
+            Element only_child = (Element) root.getChildren().get(0);
+
+            for (Object obj : only_child.getChildren()) {
+                elements.add((Element) obj);
+            }
         }
 
         return elements;
