@@ -7,7 +7,7 @@ package rest;
  * @author Felix Meyenhofer
  */
 enum AllenAtlas {
-
+    MOUSE3D         ("Adult Mouse, 3D Coronal"                 ,602630314, "28"),
     MOUSEP56C       ("Mouse, P56, Coronal"                     ,1        , "28,159226751"),
     MOUSEP56S       ("Mouse, P56, Sagital"                     ,2        , "28,159226751"),
     DEVMOUSEP56     ("Developing Mouse, P56"                   ,181276165, "32,167675952"),
