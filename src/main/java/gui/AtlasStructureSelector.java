@@ -67,6 +67,7 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
     /** Store the input hierarchy graph */
     private HashMap<Integer, AtlasStructure> graph;
 
+    /** Register of the selection listeners */
     private List<AtlasStructureSelectionListener> listeners = new ArrayList<>();
 
 
@@ -323,19 +324,7 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
         JTree newTree = new JTree(model);
         newTree.setRootVisible(false);
         newTree.expandRow(0);
-        newTree.addTreeSelectionListener(new TreeSelectionListener() {
-            @Override
-            public void valueChanged(TreeSelectionEvent e) {
-                boolean hasChanged = updateSelectedNodes(tree.getModel().getRoot());
-                updateStatus();
-
-                if (hasChanged) {
-                    for (AtlasStructureSelectionListener listener : listeners) {
-                        listener.valueChanged(getSelectedStructures());
-                    }
-                }
-            }
-        });
+        newTree.addTreeSelectionListener(new AtlasStructureTreeSelectionListener());
 
         return newTree;
     }
@@ -568,6 +557,24 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
             return "id = " + structure.getId();
         } else {
             return null;
+        }
+    }
+
+
+    /**
+     * Tree selection listener
+     */
+    private class AtlasStructureTreeSelectionListener implements TreeSelectionListener {
+        @Override
+        public void valueChanged(TreeSelectionEvent e) {
+            boolean hasChanged = updateSelectedNodes(tree.getModel().getRoot());
+            updateStatus();
+
+            if (hasChanged) {
+                for (AtlasStructureSelectionListener listener : listeners) {
+                    listener.valueChanged(getSelectedStructures());
+                }
+            }
         }
     }
 

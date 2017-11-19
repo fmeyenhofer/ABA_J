@@ -5,8 +5,9 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 /**
- * @author Adrian Walker (adrian.walker@bcs.org)
+ * TODO: customize icons
  *
+ * @author Adrian Walker (adrian.walker@bcs.org)
  * modified by Feilx Meyenhofer
  */
 public final class FilteredTreeModel implements TreeModel {
