@@ -150,6 +150,12 @@ class AllenAPI {
                     "[well_known_file_type_id$eq" + Download.WellKnownFileType.TYPE_ID__RESTAMPLED_IMAGES_TO_25UM_ARA + "]");
         }
 
+        static URL createAtlasStructuresQuery(String product_id) throws MalformedURLException {
+            return new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
+            ARG_MODEL + "Structure" +
+            ARG_CRITERIA + "ontology(products[id$eq" + product_id + "])");
+        }
+
         static URL adjustResponseSize(URL url) throws IOException, TransformerException, URISyntaxException {
             String[] parts = url.toString().split(ARG_INCLUDE);
             URL query = new URL(parts[0] + ARG_OPTIONS + "[only$eq" + URLEncoder.encode("'id'", "UTF-8") + "]");
@@ -530,7 +536,21 @@ class AllenAPI {
 
 
         /**
-         * Quick functionality test
+         * Query for annotation structure graphs.
+         */
+        public static class StructureGraph {
+
+            /** sub-URL for the structure graphs */
+            private static final String SUB_URL = "api/v2/structure_graph_download/";
+
+            static URL createStructureGraphUrl(String structure_graph_id) throws MalformedURLException {
+                return new URL(BASE_URL + SUB_URL + structure_graph_id + RMA.FILE_EXTENSION);
+            }
+        }
+
+
+        /**
+         * Quick functionality test.
          *
          * @param args something
          */

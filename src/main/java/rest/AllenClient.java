@@ -14,7 +14,6 @@ import javax.xml.transform.TransformerException;
 
 import java.io.*;
 import java.net.URISyntaxException;
-import java.net.URL;
 
 
 /**
@@ -78,12 +77,17 @@ public class AllenClient {
 
     public AllenXml getDatasetMetadata(String product_name, String dataset_id)
             throws TransformerException, IOException, URISyntaxException {
-        return cache.getMetadataXml(product_name, dataset_id);
+        return cache.getImageMetadataXml(product_name, dataset_id);
     }
 
     public AllenXml getSectionImageMetadata(String product_name, String dataset_id, String section_id)
             throws TransformerException, IOException, URISyntaxException {
-        return cache.getMetadataXml(product_name, dataset_id, section_id);
+        return cache.getImageMetadataXml(product_name, dataset_id, section_id);
+    }
+
+    public AllenXml getAtlasAnnotationMetadata(String product_id)
+            throws IOException, TransformerException, URISyntaxException {
+        return cache.getResponseXml(AllenAPI.RMA.createAtlasStructuresQuery(product_id));
     }
 
     /**
@@ -118,7 +122,7 @@ public class AllenClient {
         for (Element dataset_element : datasets.getElements()) {
             String dataset_id = dataset_element.getChild("id").getValue();
             String product_name = dataset_element.getChild("products").getChild("product").getChild("abbreviation").getValue();
-            cache.getMetadataXml(dataset_element, product_name, dataset_id);
+            cache.getImageMetadataXml(dataset_element, product_name, dataset_id);
 
             tell("\t" + dataset_id);
             AllenXml sub_images = cache.getResponseXml(AllenAPI.RMA.createSectionImagesQuery(dataset_id));
@@ -128,7 +132,7 @@ public class AllenClient {
                 System.out.print(".");
                 String image_id = image_element.getChild("id").getValue();
 
-                cache.getMetadataXml(dataset_element, product_name, dataset_id, image_id);
+                cache.getImageMetadataXml(dataset_element, product_name, dataset_id, image_id);
                 cache.getImage(downsample, quality, product_name, dataset_id, image_id);
 //                cache.getAnnotationSvg(product_name, dataset_id, image_id);
 

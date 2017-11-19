@@ -14,6 +14,9 @@
 	</parent>
 
 	<packaging>jar</packaging>
+	<groupId>ch.imagej</groupId>
+	<artifactId>imagej_allen-brain-atlas</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
 		<package-name>ch.imagej.aba</package-name>
@@ -32,11 +35,7 @@
 
 		<enforcer.skip>true</enforcer.skip>
 	</properties>
-
-	<groupId>ch.imagej</groupId>
-    <artifactId>imagej_allen-brain-atlas</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-
+	
 	<name>ABA-J 2D</name>
     <description>
 		Toolkit to register histological brain sections to the Allen Brain Atlas.
@@ -157,8 +156,7 @@
 			<artifactId>deeplearning4j-modelimport</artifactId>
 			<version>${dl4j.version}</version>
 		</dependency>
-
-
+		
 		<!--<dependency>-->
 			<!--<groupId>ch.ethz.csb</groupId>-->
 			<!--<artifactId>polco</artifactId>-->
@@ -288,7 +286,6 @@
 			<scope>runtime</scope>
 		</dependency>
 		
-
 		<!--SVG format library-->
 		<dependency>
 			<groupId>org.apache.xmlgraphics</groupId>
@@ -358,8 +355,7 @@
 			<!--<artifactId>jersey-json</artifactId>-->
 			<!--<version>1.9</version>-->
 		<!--</dependency>-->
-
-
+		
 		<!--File formats-->
 		<dependency>
 			<groupId>sc.fiji</groupId>
@@ -399,5 +395,20 @@
 			</exclusions>
 		</dependency>
 	</dependencies>
+
+	<!--<build>-->
+		<!--<plugins>-->
+			<!--<plugin>-->
+				<!--<groupId>org.apache.maven.plugins</groupId>-->
+				<!--<artifactId>maven-compiler-plugin</artifactId>-->
+				<!--<version>2.0.2</version>-->
+				<!--<configuration>-->
+					<!--<excludes>-->
+						<!--<exclude>/src/main/java/sandbox/</exclude>-->
+					<!--</excludes>-->
+				<!--</configuration>-->
+			<!--</plugin>-->
+		<!--</plugins>-->
+	<!--</build>-->
 	
 </project>

@@ -3,6 +3,7 @@ package rest;
 import org.jdom.Element;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -172,10 +173,25 @@ class AllenCache {
      */
     AllenXml getResponseXml(URL url)
             throws IOException, TransformerException, URISyntaxException {
-
-        url = AllenAPI.RMA.adjustResponseSize(url);
+        // Try to find the response file in the cache
         String filename = AllenAPI.RMA.url2filename(url);
+        final String pattern = filename.replaceAll(AllenAPI.RMA.FILE_EXTENSION, "");
         File path = getPath(DataType.rma, filename);
+        File[] responses = path.getParentFile().listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.contains(pattern);
+            }
+        });
+
+        // In case there is no unique match, create the query and download the xml
+        if ((responses != null) && (responses.length == 1)) {
+            path = responses[0];
+        } else {
+            url = AllenAPI.RMA.adjustResponseSize(url);
+            filename = AllenAPI.RMA.url2filename(url);
+            path = getPath(DataType.rma, filename);
+        }
 
         if (path.exists()) {
             return new AllenXml(path);
@@ -193,7 +209,7 @@ class AllenCache {
      * @throws IOException
      * @throws URISyntaxException
      */
-    AllenXml getMetadataXml(String... path_parts)
+    AllenXml getImageMetadataXml(String... path_parts)
             throws IOException, URISyntaxException, TransformerException {
         File file = getPath(DataType.xml, path_parts);
 
@@ -223,7 +239,7 @@ class AllenCache {
      * @throws TransformerException
      * @throws IOException
      */
-    AllenXml getMetadataXml(Element element, String... path_parts)
+    AllenXml getImageMetadataXml(Element element, String... path_parts)
             throws TransformerException, IOException, URISyntaxException {
         File path = getPath(DataType.xml, path_parts);
         if (path.exists()) {
@@ -308,6 +324,7 @@ class AllenCache {
         }
     }
 
+    
     AllenImage getAnnotationGrid(String resolution) throws IOException, URISyntaxException, TransformerException {
 
         AllenAPI.Download.RefVol.VoxelResolution voxelResolution = AllenAPI.Download.RefVol.VoxelResolution.get(resolution);
