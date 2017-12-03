@@ -1,49 +1,93 @@
 package rest;
 
 import org.jdom.Element;
+
+import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Class to hold the metadata attributes for the atlas annotation structures
- * Per convention, a structure without a parent, has a parent-ID of -1
+ * Conventions:
+ *      - a structure without a parent, has a parent-ID of -1
+ *      - a graph path includes all the nodes from the root node, including the node itself -> len(path) >= 1
  *
  * @author Felix Meyenhofer
  */
 public class AtlasStructure {
 
-    private int id;
+    private Integer id;
     private Integer depth;
     private String acronym;
     private String name;
-    private ArrayList<Integer> structurePath;
-    private String color;
+    private ArrayList<Integer> graphPath;
+    private Color color;
+    private String svgPath;
+    private Boolean active;
+    private Boolean hasActiveChildren;
+    private List<float[]> contourCoordinates;
+
+    private static String[] attributeNames = new String[]{"id", "depth", "acronym", "name",
+            "structure-id-path", "color-hex-triplet"};
+
 
     /**
      * Constructor
      *
-     * @param id of the structure
-     * @param depth in the hierarchy (or hierarchy level)
+     * @param id      of the structure
+     * @param depth   in the hierarchy (or hierarchy level)
      * @param acronym aka abbreviation
-     * @param name explicit name or description of the structure
-     * @param path path through the tree -> list of ID's of the parent structures
-     * @param color color (from ABA)
+     * @param name    explicit name or description of the structure
+     * @param path    path through the tree -> list of ID's of the parent structures
+     * @param color   colorHexTriple (from ABA)
      */
-    public AtlasStructure(String id, String depth, String acronym, String name, String path, String color) {
+    public AtlasStructure(String id, String depth, String acronym, String name, String path, String color, boolean active) {
         setId(id);
         setDepth(depth);
         setAcronym(acronym);
         setName(name);
-        setStructurePath(parseStructurePath(path));
+        setGraphPath(path);
         setColor(color);
+        setActivated(active);
     }
 
+    /**
+     * Construct a AtlasStructure object from a xml element, containing a ABA Structure
+     *
+     * @param element xml ABA structure element
+     */
     public AtlasStructure(Element element) {
-        this(element.getChild("id").getValue(),
-                element.getChild("depth").getValue(),
-                element.getChild("acronym").getValue(),
-                element.getChild("safe-name").getValue(),
-                element.getChild("structure-id-path").getValue(),
-                element.getChild("color-hex-triplet").getValue());
+        for (String attributeName : attributeNames) {
+            Element child = element.getChild(attributeName);
+            if (child != null) {
+                String value = child.getValue().replace("\"", "");
+
+                switch (attributeName) {
+                    case "id":
+                        setId(value);
+                        break;
+                    case "depth":
+                        setDepth(value);
+                        break;
+                    case "acronym":
+                        setAcronym(value);
+                        break;
+                    case "name":
+                        setName(value);
+                        break;
+                    case "structure-id-path":
+                        setGraphPath(value);
+                        break;
+                    case "color-hex-triplet":
+                        setColor(value);
+                        break;
+                }
+            }
+        }
+
+        this.setActivated(false);
+        this.setHasActiveChildren(false);
     }
 
     /**
@@ -68,15 +112,12 @@ public class AtlasStructure {
      *
      * @return parent structure ID or -1 if it has no parent (or itself as parent)
      */
-    public int getParentId() {
-        int parent = -1;
-        ArrayList<Integer> path = getStructurePath();
+    public Integer getParentId() {
+        Integer parent = -1;
+        ArrayList<Integer> path = getGraphPath();
 
         if (path.size() == 1) {
-            parent = path.get(0);
-            if (parent == getId()) {
-                parent = -1;
-            }
+            parent = -1;
         } else if (path.size() > 1) {
             int index = path.size() - 2;
             parent = path.get(index);
@@ -85,7 +126,52 @@ public class AtlasStructure {
         return parent;
     }
 
-    public int getId() {
+    public List<Integer> getParentIds() {
+        List<Integer> ids = new ArrayList<>();
+        ArrayList<Integer> path = getGraphPath();
+        if (path.size() > 1) {
+            ids = path.subList(0, path.size() - 1);
+        }
+        return ids;
+    }
+
+    public Boolean hasActiveChildren() {
+        return hasActiveChildren;
+    }
+
+    public void setHasActiveChildren(Boolean hasActiveChildren) {
+        this.hasActiveChildren = hasActiveChildren;
+    }
+
+    public List<float[]> getContourCoordinates() {
+        return contourCoordinates;
+    }
+
+    public void setContourCoordinates(List<float[]> coordinates) {
+        this.contourCoordinates = coordinates;
+    }
+
+    public void addContouCoordinate(float[] coordinate) {
+        this.contourCoordinates.add(coordinate);
+    }
+
+    public void setActivated(boolean flag) {
+        this.active = flag;
+    }
+
+    public boolean isActivated() {
+        return this.active;
+    }
+
+    public void setSvgPath(String svgPath) {
+        this.svgPath = svgPath;
+    }
+
+    public String getSvgPath() {
+        return this.svgPath;
+    }
+
+    public Integer getId() {
         return id;
     }
 
@@ -117,24 +203,30 @@ public class AtlasStructure {
         this.name = name;
     }
 
-    public ArrayList<Integer> getStructurePath() {
-        return structurePath;
+    public ArrayList<Integer> getGraphPath() {
+        return graphPath;
     }
 
-    private void setStructurePath(ArrayList<Integer> structurePath) {
-        this.structurePath = structurePath;
+    void setGraphPath(String graphPath) {
+        this.graphPath = parseStructurePath(graphPath);
     }
 
-    public String getColor() {
-        return color;
+    public Color getColor() {
+        return this.color;
     }
 
-    private void setColor(String color) {
-        this.color = color;
+    private void setColor(String colorHexTripple) {
+        this.color = Color.decode("#" + colorHexTripple);
     }
 
     @Override
     public String toString() {
-        return this.getAcronym() + " (" + this.getName() + ")";
+        String out = this.getAcronym();
+
+        if (!this.getName().isEmpty()) {
+            out += " (" + this.getName() + ")";
+        }
+
+        return out;
     }
 }

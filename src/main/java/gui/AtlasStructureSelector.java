@@ -17,7 +17,6 @@ import javax.xml.transform.TransformerException;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -40,6 +39,9 @@ import java.util.List;
  * the {@link AtlasStructureSelector} keeps its own record of selected nodes with the
  * {@link AtlasStructureSelector#selection} hashmap. So {@link AtlasStructureSelector#filterAndUpdateTree()}
  * reapplies the selection once the filtering is done.
+ *
+ * TODO: add a checkbox to filter only "active" nodes (nodes that were found in the current section)
+ * TODO: add a button to import the selected annotations
  *
  * @author Felix Meyenhofer
  *
@@ -229,7 +231,7 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
      *
      * @return selected structures
      */
-    public HashMap<Integer, AtlasStructure> getSelectedStructures() {
+    private HashMap<Integer, AtlasStructure> getSelectedStructures() {
         HashMap<Integer, AtlasStructure> structures = new HashMap<>();
         for (Integer id : this.selection.keySet()) {
             if (this.selection.get(id)) {
@@ -247,10 +249,6 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
      */
     public void addStructureSelectionListener(AtlasStructureSelectionListener listener) {
         this.listeners.add(listener);
-    }
-
-    public void removeStructureSelectionListener(AtlasStructureSelectionListener listener) {
-        this.listeners.remove(listener);
     }
 
     /**
@@ -294,8 +292,6 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
 
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("brain");
         nodes.put(-1, root);
-        DefaultMutableTreeNode detached = new DefaultMutableTreeNode("detached");
-        nodes.put(-2, detached);
 
         // Add all nodes and leaves
         for (AtlasStructure structure : structures.values()) {
@@ -303,9 +299,8 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
             nodes.put(structure.getId(), node);
         }
 
-        // Connect the nodes
-        for (Integer id : nodes.keySet()) {
-            DefaultMutableTreeNode node = nodes.get(id);
+        // Connect the nodes                              
+        for (DefaultMutableTreeNode node : nodes.values()) {
             Object obj = node.getUserObject();
             if (obj instanceof AtlasStructure) {
                 AtlasStructure structure = (AtlasStructure) obj;
@@ -314,17 +309,26 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
             }
         }
 
-        // Add the collector for remaining orphan nodes (if there are any left)
-        if (detached.getChildCount() > 0) {
-            root.add(detached);
-        }
-
         // Create the new tree
         FilteredTreeModel model = new FilteredTreeModel(new DefaultTreeModel(root));
         JTree newTree = new JTree(model);
         newTree.setRootVisible(false);
-        newTree.expandRow(0);
         newTree.addTreeSelectionListener(new AtlasStructureTreeSelectionListener());
+        newTree.setCellRenderer(new AtlasStructureTreeCellRenderer());
+
+        // Register the node tooltips of the custom cell renderer
+        ToolTipManager.sharedInstance().registerComponent(newTree);
+
+        // Expand the children of the root (first set of nodes, since root is not visible)
+        int nChildren = model.getChildCount(root);
+        for (int c = 0; c < nChildren; c++) {
+            Object child = model.getChild(root, c);
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) child;
+            if (node != null) {
+                TreePath path = new TreePath(node.getPath());
+                newTree.expandPath(path);
+            }
+        }
 
         return newTree;
     }
@@ -341,10 +345,6 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
             pattern = ".*" + input + ".*";
         }
 
-        // Set the filter
-        FilteredTreeModel filteredModel = (FilteredTreeModel) this.tree.getModel();
-        filteredModel.setFilter(pattern);
-
         // Remove the selection listener before the reload() to avoid that valueChanged(TreeSelectionEvent e)
         // is called when the reload just wiped the selection.
         TreeSelectionListener[] listeners = this.tree.getTreeSelectionListeners();
@@ -352,7 +352,9 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
             this.tree.removeTreeSelectionListener(listener);
         }
 
-        // Rebuild the tree
+        // Set the filter and rebuild the tree
+        FilteredTreeModel filteredModel = (FilteredTreeModel) this.tree.getModel();
+        filteredModel.setFilter(pattern);
         DefaultTreeModel treeModel = (DefaultTreeModel) filteredModel.getTreeModel();
         treeModel.reload();
 
@@ -464,10 +466,10 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
 
     /**
      * Update the selection register
+     *
      * @param obj root node
      * @return flag to indicate if something was changed
      */
-
     private boolean updateSelectedNodes(Object obj) {
         TreeModel model = this.tree.getModel();
         int childCount = model.getChildCount(obj);
@@ -544,19 +546,38 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {}
 
-    /** {@inheritDoc} */
-    @Override
-    public String getToolTipText(MouseEvent evt) {
 
-        if (this.tree.getRowForLocation(evt.getX(), evt.getY()) == -1)
-            return null;
-        TreePath curPath = this.tree.getPathForLocation(evt.getX(), evt.getY());
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode)curPath.getLastPathComponent();
-        if (node != null) {
-            AtlasStructure structure = (AtlasStructure) node.getUserObject();
-            return "id = " + structure.getId();
-        } else {
-            return null;
+    /**
+     * Custom cell renderer allowing for tooltips, icons and different font color depending
+     * on the underlying atlas structure.
+     */
+    public class AtlasStructureTreeCellRenderer extends DefaultTreeCellRenderer {
+
+        @Override
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel,
+                                                      boolean expanded, boolean leaf, int row, boolean hasFocus) {
+            DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer)
+                    super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+
+            if (node.getUserObject() instanceof AtlasStructure) {
+                AtlasStructure structure = (AtlasStructure) node.getUserObject();
+
+                renderer.setToolTipText("id = " + structure.getId().toString());
+
+                Icon icon = new MonoChromaticIcon(structure.getColor());
+                renderer.setIcon(icon);
+
+                if (structure.isActivated()) {
+                    renderer.setForeground(new Color(0, 0, 0));
+                } else if (structure.hasActiveChildren()) {
+                    renderer.setForeground(new Color(90, 90, 90));
+                } else {
+                    renderer.setForeground(new Color(200, 200, 200));
+                }
+            }
+
+            return renderer;
         }
     }
 
@@ -609,9 +630,9 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
      * Quick functionality testing
      *
      * @param args inputs
-     * @throws TransformerException
-     * @throws IOException
-     * @throws URISyntaxException
+     * @throws TransformerException cannot load xml
+     * @throws IOException file problems
+     * @throws URISyntaxException problem with the Allen API (server)
      */
     public static void main(String[] args) throws TransformerException, IOException, URISyntaxException {
         AllenClient client = AllenClient.getInstance();

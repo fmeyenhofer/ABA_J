@@ -201,6 +201,28 @@ class AllenCache {
     }
 
     /**
+     * Get a structure graph
+     * path example: StructureGraph/[structure graph id]
+     *
+     * @param path_parts subdirectories in the cache
+     * @return {@link AllenXml} containing the structure graph
+     * @throws IOException
+     * @throws URISyntaxException
+     * @throws TransformerException
+     */
+    AllenXml getStructureGraphXml(String... path_parts)
+            throws IOException, URISyntaxException, TransformerException {
+        File file = getPath(DataType.xml, path_parts);
+
+        if (file.exists()) {
+            return new AllenXml(file);
+        } else {
+            URL query = AllenAPI.Download.StructureGraph.createStructureGraphUrl(path_parts[1]);
+            return new AllenXml(query, file);
+        }
+    }
+
+    /**
      * Get the meta data for a given image file.
      * The parts usually go something like [product abbreviation]/[dataset id]/[image id].
      *

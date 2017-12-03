@@ -14,6 +14,7 @@ import javax.xml.transform.TransformerException;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 
 
 /**
@@ -90,10 +91,37 @@ public class AllenClient {
         return cache.getResponseXml(AllenAPI.RMA.createAtlasStructuresQuery(product_id));
     }
 
+    public HashMap<Integer, AtlasStructure> getAnnotationStructureGraph(AllenAtlas atlas)
+            throws IOException, TransformerException, URISyntaxException {
+        String graph_id = atlas.getStructureGraphId().toString();
+        AllenXml xml = cache.getStructureGraphXml("StructureGraph", graph_id);
+
+        HashMap<Integer, AtlasStructure> graph = new HashMap<>();
+        Element root = xml.getDom().getRootElement().getChild("structure");
+        parseStructureXmlElements(graph, root, "/");
+
+        return graph;
+    }
+
+    private void parseStructureXmlElements(HashMap<Integer, AtlasStructure> collector, Element element, String path) {
+        AtlasStructure structure = new AtlasStructure(element);
+        path += structure.getId() + "/";
+        structure.setGraphPath(path);
+        collector.put(structure.getId(), structure);
+
+        Element children = element.getChild("children");
+        if (children != null) {
+            for (Object obj : children.getChildren()) {
+                Element child = (Element) obj;
+                parseStructureXmlElements(collector, child, path);
+            }
+        }
+    }
+
     /**
      * Text output, gated to the stdout or the ImageJ logger
      *
-     * @param message
+     * @param message to output
      */
     private void tell(String message) {
         if (log == null) {
@@ -103,6 +131,14 @@ public class AllenClient {
         }
     }
 
+    /**
+     * Download a reference volume (average template) image
+     *
+     * @param resolution pixel resolution in um
+     * @throws IOException
+     * @throws URISyntaxException
+     * @throws TransformerException
+     */
     private void downloadMouseRefVol(AllenAPI.Download.RefVol.VoxelResolution resolution)
             throws IOException, URISyntaxException, TransformerException {
         AllenAPI.Download.RefVol.DataType[] types = {
@@ -116,6 +152,16 @@ public class AllenClient {
         }
     }
 
+    /**
+     * Download all the section images of a section dataset
+     *
+     * @param datasets id of the dataset
+     * @param downsample downs ampling of the images
+     * @param quality jpg quality
+     * @throws IOException
+     * @throws TransformerException
+     * @throws URISyntaxException
+     */
     private void downloadSectionDataSet(AllenXml datasets, int downsample, int quality)
             throws IOException, TransformerException, URISyntaxException {
         

@@ -6,7 +6,7 @@ package rest;
  *
  * @author Felix Meyenhofer
  */
-enum AllenAtlas {
+public enum AllenAtlas {
     MOUSE3D         ("Adult Mouse, 3D Coronal"                 ,602630314, 1,  "28"),
     MOUSEP56C       ("Mouse, P56, Coronal"                     ,1        , 1,  "28,159226751"),
     MOUSEP56S       ("Mouse, P56, Sagital"                     ,2        , 1,  "28,159226751"),
@@ -25,8 +25,8 @@ enum AllenAtlas {
     HUMANBRAINAG    ("Human Brain Atlas Guide "                ,265297125, 16, "265297119,266932194,266932196,266932197");
 
     private String name;
-    private int id;
-    private int structure_graph_id;
+    private Integer id;
+    private Integer structure_graph_id;
     private String groupId;
 
     AllenAtlas(String name, int id, int graph_id, String group) {
@@ -36,33 +36,33 @@ enum AllenAtlas {
         this.groupId = group;
     }
 
-    String getName() {
+    public String getName() {
         return this.name;
     }
 
-    int getId() {
+    public Integer getId() {
         return this.id;
     }
 
-    int getStructureGraphId() {
+    public Integer getStructureGraphId() {
         return this.structure_graph_id;
     }
 
-    String getGroupId() {
+    public String getGroupId() {
         return this.groupId;
     }
 
-    String getDonor() {
+    public String getDonor() {
         String[] parts = name.split(", ");
         return parts[0];
     }
 
-    String getAge() {
+    public String getAge() {
         String[] parts = name.split(", ");
         return parts[1];
     }
 
-    String getPerspective() {
+    public String getPerspective() {
         String[] parts = name.split(", ");
         return parts[2];
     }
@@ -76,8 +76,7 @@ enum AllenAtlas {
         return null;
     }
 
-    static String[] getNames() {
-
+    public static String[] getNames() {
         String[] names = new String[AllenAtlas.values().length];
         int i = 0;
         for (AllenAtlas atlas : AllenAtlas.values()) {

@@ -112,7 +112,7 @@ public class AllenXml extends AllenFile {
         outputter.output(dom, new FileWriter(this.getFile().getAbsoluteFile()));
     }
 
-    private Document getDom() {
+    Document getDom() {
         return dom;
     }
 
