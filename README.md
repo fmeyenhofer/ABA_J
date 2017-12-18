@@ -6,6 +6,7 @@ Once the section images are registered to the reference atlas,
 the plugin allows to retrieve annotations and use them as 
 regions of interest (ROI's). 
 
+
 # Installation
 To use the plugin you need to download and install ImageJ first. We 
 recommend the [Fiji][fiji] distribution, shipping with a collection of plugins
@@ -30,8 +31,21 @@ mvn package
 After compilation the plugin (jar-file) can be dragged and dropped from the target folder on the imageJ main UI. 
 After restarting, the plugin is available through the menu: Plugins > AllenJ
 
+## Optional Steps
+This plugin uses [Deeplearning4J][dl4j] (DL4J) to do the computations with the deep convolutional neural networks (CNN). DL4J has also 
+GPU capabilities. 
+
+
 # Usage
 Once installed in [Fiji][fiji], you can access a collection of functions through _Main Menu > Plugins > Allen Brain Atlas_
+
+Note: This neuroinformatics plugin performs computationally intense operations and deals with a considerable amount of data
+(input and web resources). Therefore the users are advised to run the software on a adequate machine with a configuration
+that fulfills the following requirements:
+* fast internet connection (LAN)
+* a good CPU
+* enough memory (at least 16 GB)
+* CUDA capable GPU (optional, but recommended) 
 
 ## Section to Volume Registration
 
@@ -44,7 +58,6 @@ Once installed in [Fiji][fiji], you can access a collection of functions through
 ### Volume Slicer
 
 ### Reference Dataset Assembler 
-
 
 ## Slice to volume registration 
 * the section should have approximately the same size as the reference volume (which one? automatic?)
@@ -59,3 +72,4 @@ is very sensitive to image contrast. (add contrast adjustment to configuration d
 [inst]: http://imagej.net/Installing_3rd_party_plugins
 [fiji]: http://imagej.net/Fiji/Downloads
 [bin]:  https://github.com/Meyenhofer/ABA_J/release 
+[dl4j]: https://deeplearning4j.org/
