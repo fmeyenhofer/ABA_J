@@ -8,7 +8,7 @@ import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
-import util.ij2.ImageSectionTools;
+import img.ij2.SectionImageTool;
 
 /**
  * @author Felix Meyenhofer
@@ -37,9 +37,9 @@ public class SectionMask implements Command{
         RandomAccessibleInterval<BitType> msk;
 
         if (sigma.equals(-1.)) {
-            msk = ImageSectionTools.createMask(rai, ops);
+            msk = SectionImageTool.createMask(rai, ops);
         } else {
-            msk = ImageSectionTools.createMask(rai, sigma, ops);
+            msk = SectionImageTool.createMask(rai, sigma, ops);
         }
 
         ui.show("mask", msk);

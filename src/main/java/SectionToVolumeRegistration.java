@@ -16,7 +16,7 @@ import net.imagej.ops.OpService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.logic.BitType;
-import util.ij1.ImageComparison;
+import img.ij1.ImageComparison;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
 import org.scijava.io.IOService;
@@ -24,8 +24,8 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
-import util.ij1.ImageProcessingTools;
-import util.ij2.ImageSectionTools;
+import img.ij1.ImageProcessingTools;
+import img.ij2.SectionImageTool;
 
 import java.awt.*;
 import java.io.IOException;
@@ -153,8 +153,8 @@ public class SectionToVolumeRegistration implements Command {
 
         // Threshold the section and get the surface area
         log.info(" create mask of target section");
-        RandomAccessibleInterval<BitType> sliMsk = ImageSectionTools.createMask(sliRai, op);
-        int sliArea = ImageSectionTools.getMaskArea(sliMsk);
+        RandomAccessibleInterval<BitType> sliMsk = SectionImageTool.createMask(sliRai, op);
+        int sliArea = SectionImageTool.getMaskArea(sliMsk);
         double sliLength = Math.sqrt(sliArea);
         ui.show( "target section mask (area=" + sliArea + ")", sliMsk);
 
@@ -172,8 +172,8 @@ public class SectionToVolumeRegistration implements Command {
             ImagePlus refSliImp = new ImagePlus();
             refSliImp.setProcessor(refPro);
 
-            RandomAccessibleInterval refMsk = ImageSectionTools.createMask((RandomAccessibleInterval)ImageJFunctions.wrap(refSliImp), op);
-            int refArea = ImageSectionTools.getMaskArea(refMsk);
+            RandomAccessibleInterval refMsk = SectionImageTool.createMask((RandomAccessibleInterval)ImageJFunctions.wrap(refSliImp), op);
+            int refArea = SectionImageTool.getMaskArea(refMsk);
 //            int refArea = ImageProcessingTools.getMaskArea(refPro);
             double refLength = Math.sqrt((double) refArea);
 

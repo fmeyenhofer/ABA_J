@@ -31,7 +31,7 @@ import rest.AllenAtlas;
 import rest.AllenClient;
 import rest.AtlasStructure;
 import sc.fiji.io.Nrrd_Reader;
-import util.ij1.ImageProcessingTools;
+import img.ij1.ImageProcessingTools;
 
 import javax.xml.transform.TransformerException;
 import java.awt.*;

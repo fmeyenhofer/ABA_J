@@ -1,4 +1,4 @@
-package util.ij1;
+package img.ij1;
 
 import ij.ImagePlus;
 import ij.process.ImageProcessor;

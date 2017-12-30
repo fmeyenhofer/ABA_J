@@ -1,4 +1,4 @@
-package util.ij1;
+package img.ij1;
 
 import ij.process.ImageProcessor;
 import mpicbg.imagefeatures.FloatArray2D;
