@@ -18,7 +18,6 @@ import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.view.Views;
-import org.scijava.plugin.Parameter;
 
 import java.io.IOException;
 
@@ -29,10 +28,6 @@ import java.io.IOException;
  * @author Felix Meyenhofer
  */
 public class SectionImageTool {
-
-    @Parameter
-    OpService ops;
-
 
     public static <T extends NativeType<T>> Img<BitType> createMask(RandomAccessibleInterval<T> rai, OpService ops) {
         double sigma = 13.0;
