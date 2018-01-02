@@ -32,7 +32,7 @@ import java.util.List;
  *
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Section Auto-Crop")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Pre-Processing > Section Auto-Crop")
 public class SectionAutoCrop implements Command {
 
     // User dialog

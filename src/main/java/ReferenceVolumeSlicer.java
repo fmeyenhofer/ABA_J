@@ -17,7 +17,7 @@ import java.io.IOException;
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("WeakerAccess")
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Reference Volume Slicer")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Misc. > Reference Volume Slicer")
 public class ReferenceVolumeSlicer implements Command {
 
     @Parameter

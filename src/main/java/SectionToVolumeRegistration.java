@@ -39,7 +39,7 @@ import java.util.Vector;
  *
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Map Section to Volume")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Mapping > Automatic")
 public class SectionToVolumeRegistration implements Command {
 
     @Parameter

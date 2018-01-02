@@ -49,7 +49,7 @@ import java.util.List;
  *
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Map 2D Section")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Test")
 public class AllenBrainJ2D implements Command {
 
 //    /** ImageJ io service instance */

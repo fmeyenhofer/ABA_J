@@ -24,7 +24,7 @@ import java.io.IOException;
 /**
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Batch Processing > Sections Auto-Crop")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Pre-Processing > Batch Processing > Sections Auto-Crop")
 public class SectionsAutoCropBatch implements Command {
 
     @Parameter(label = "Input directory", style = FileWidget.DIRECTORY_STYLE)

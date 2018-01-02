@@ -47,22 +47,28 @@ that fulfills the following requirements:
 * enough memory (at least 16 GB)
 * CUDA capable GPU (optional, but recommended) 
 
-## Section to Volume Registration
+The workflow template is:
+pre-process sections (orient, crop, scale) -> section-template mapping -> analysis
+## Pre-Processing
+### Convert 
+### Orient
+### Crop
+### Scale
+### Volume Reconstruction
 
-## Annotation Importer
-
-## Miscellaneous
-
-### Section Auto-Crop
-
-### Volume Slicer
-
-### Reference Dataset Assembler 
-
-## Slice to volume registration 
+## Mapping 
 * the section should have approximately the same size as the reference volume (which one? automatic?)
 * the SIFT feature extraction, more specifically the DOG filtering for the feature scaling, 
 is very sensitive to image contrast. (add contrast adjustment to configuration dialog?)
+
+## Analysis
+### Annotation Importer
+### Web-Services
+
+## Miscellaneous
+### Section Auto-Crop
+### Volume Slicer
+### Reference Dataset Assembler 
 
 
 [aba]: http://www.brain-map.org/

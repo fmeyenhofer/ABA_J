@@ -13,7 +13,7 @@ import img.ij2.SectionImageTool;
 /**
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Section Mask")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Pre-Processing > Section Mask")
 public class SectionMask implements Command{
 
     @Parameter
