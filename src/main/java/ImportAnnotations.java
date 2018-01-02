@@ -1,5 +1,5 @@
-import gui.AtlasStructureSelectionListener;
-import gui.AtlasStructureSelector;
+import gui.tree.AtlasStructureSelectionListener;
+import gui.tree.AtlasStructureSelector;
 import ij.ImagePlus;
 import ij.gui.ImageRoi;
 import ij.gui.Overlay;

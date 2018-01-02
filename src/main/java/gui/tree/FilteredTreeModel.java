@@ -1,11 +1,16 @@
-package gui;
+package gui.tree;
 
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
+import javax.swing.JTree;
 
 /**
- * TODO: customize icons
+ * TreeModel, that allows interactive node filtering.
+ * The {@link FilteredTreeModel} is inserted between the {@link JTree}
+ * and the {@link TreeModel}.
+ * It dynamically returns only nodes that match the {@link FilteredTreeModel#filter}
+ * or nodes that have a child that matches it.
  *
  * @author Adrian Walker (adrian.walker@bcs.org)
  * modified by Feilx Meyenhofer
@@ -20,11 +25,23 @@ public final class FilteredTreeModel implements TreeModel {
         this.filter = "";
     }
 
+    /**
+     * Get the tree model.
+     * (This class is inserting itself between JTree and TreeModel)
+     *
+     * @return {@link TreeModel}
+     */
     public TreeModel getTreeModel() {
         return treeModel;
     }
 
-    public int getNodeCount(Object node) {
+    /**
+     * Get the count of the currently shown nodes (all nodes minus the filtered ones)
+     *
+     * @param node tree node
+     * @return count of currently shown nodes
+     */
+    int getNodeCount(Object node) {
         int count = 1;
 
         int childCount = getChildCount(node);
@@ -36,10 +53,23 @@ public final class FilteredTreeModel implements TreeModel {
         return count;
     }
 
+    /**
+     * Set the filter string
+     *
+     * @param filter string
+     */
     public void setFilter(final String filter) {
         this.filter = filter;
     }
 
+    /**
+     * Find the nodes whose name matches the filter string, or if
+     * the node contains a child matching the string.
+     *
+     * @param node tree node
+     * @param filter string
+     * @return true for a match and false for no match.
+     */
     private boolean recursiveMatch(final Object node, final String filter) {
 
         boolean matches = filter.isEmpty() || node.toString().toLowerCase().matches(filter);
@@ -53,11 +83,13 @@ public final class FilteredTreeModel implements TreeModel {
         return matches;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Object getRoot() {
         return treeModel.getRoot();
     }
 
+    /** {@inheritDoc} */
     @Override
     public Object getChild(final Object parent, final int index) {
         int count = 0;
@@ -74,6 +106,7 @@ public final class FilteredTreeModel implements TreeModel {
         return null;
     }
 
+    /** {@inheritDoc} */
     @Override
     public int getChildCount(final Object parent) {
         int count = 0;
@@ -87,16 +120,19 @@ public final class FilteredTreeModel implements TreeModel {
         return count;
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean isLeaf(final Object node) {
         return treeModel.isLeaf(node);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void valueForPathChanged(final TreePath path, final Object newValue) {
         treeModel.valueForPathChanged(path, newValue);
     }
 
+    /** {@inheritDoc} */
     @Override
     public int getIndexOfChild(final Object parent, final Object childToFind) {
         int childCount = treeModel.getChildCount(parent);
@@ -111,11 +147,13 @@ public final class FilteredTreeModel implements TreeModel {
         return -1;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void addTreeModelListener(final TreeModelListener l) {
         treeModel.addTreeModelListener(l);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void removeTreeModelListener(final TreeModelListener l) {
         treeModel.removeTreeModelListener(l);

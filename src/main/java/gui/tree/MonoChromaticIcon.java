@@ -1,4 +1,4 @@
-package gui;
+package gui.tree;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,13 +16,13 @@ public class MonoChromaticIcon implements Icon {
     private Color borderColor = new Color(140, 140, 140); // same as expansion triangles
     private int borderThickness;
 
-    public MonoChromaticIcon() {
+    private MonoChromaticIcon() {
         this.width = 16;
         this.height = 16;
         this.borderThickness = 1;
     }
 
-    public MonoChromaticIcon(Color color) {
+    MonoChromaticIcon(Color color) {
         this();
         this.fillColor = color;
     }

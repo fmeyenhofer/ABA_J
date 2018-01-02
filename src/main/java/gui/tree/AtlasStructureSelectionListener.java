@@ -1,4 +1,4 @@
-package gui;
+package gui.tree;
 
 import rest.AtlasStructure;
 
