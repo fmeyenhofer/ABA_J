@@ -1,16 +1,18 @@
 package img.ij2;
 
 import io.scif.img.IO;
+
 import net.imagej.ImageJ;
 import net.imglib2.Cursor;
-import net.imglib2.Dimensions;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.type.logic.BitType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
+
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.cpu.nativecpu.NDArray;
 import org.nd4j.linalg.dimensionalityreduction.PCA;
@@ -28,6 +30,8 @@ import java.util.*;
  *
  * Similar outlines can be matches by generating the correspondences with this class.
  *
+ * TODO: It might be worth looking into fitting a contour function to have sub-pixel accuracy (see {@link SectionImageOutlineCorrespondence#outlineTriangulation})
+ *
  * @author Felix Meyenhofer
  */
 public class SectionImageOutlineCorrespondence {
@@ -37,7 +41,7 @@ public class SectionImageOutlineCorrespondence {
     private final int rows;
     private final int cols = 2;
 
-    /** Centroid coordinates of the controur */
+    /** Centroid coordinates of the contour */
     private double cx;
     private double cy;
 
@@ -46,6 +50,9 @@ public class SectionImageOutlineCorrespondence {
 
     /** Tolerance on the polar coordinate angle of the outline candidate */
     private double phi_tol = 0.1;
+
+    /** Generated and ordered contour points */
+    private int[][] pts;
 
 
     /**
@@ -171,19 +178,19 @@ public class SectionImageOutlineCorrespondence {
         }
 //        printPoints("correspondences", correspondences);
 
-        int[][] P = new int[correspondences.size()][cols];
+        pts = new int[correspondences.size()][cols];
         int i = 0;
         for (OutlinePoint point : correspondences) {
-            P[i][0] = O.getRow(point.index).getInt(0);
-            P[i][1] = O.getRow(point.index).getInt(1);
+            pts[i][0] = O.getRow(point.index).getInt(0);
+            pts[i][1] = O.getRow(point.index).getInt(1);
             i++;
         }
 
-        return P;
+        return pts;
     }
 
     /**
-     * For debuggin.
+     * For debugging.
      *
      * @param prefix reference prefixed to all points
      * @param points collection of points
@@ -271,8 +278,17 @@ public class SectionImageOutlineCorrespondence {
         OutlinePoint res = null;
 
         for (OutlinePoint point : points) {
+            double dy = point.y - qy;
+            double dx = point.x - qx;
+
+            // q lies on the contour itself.
+            if ((Math.abs(dx) < 1) && (Math.abs(dy) < 1)) {
+                res = point;
+                break;
+            }
+
             // Check if the qo is perpendicular to the base of q (line p1-p2)
-            double mx = (point.y - qy) / (point.x - qx);
+            double mx =  dy / dx;
             double m = Math.abs(1 + mpp * mx);
             if (m < m_min) {
                 m_min = m;
@@ -283,34 +299,111 @@ public class SectionImageOutlineCorrespondence {
     }
 
     /**
-     * Visualisation of the outline/contour and the generated (correspondence) points.
+     * Visualize the outline coordinates, its centroid and the sampled points.
      *
-     * @param dims dimensions of the output image
-     * @param points ordered set of points
-     * @return binary image stack with the contour and the points each on a separate frame
+     * @return image stack (one slice for outline and centroid and the second for the sampled points)
      */
-    public Img<BitType> createPointsImage(Dimensions dims, int[][] points) {
-        ArrayImgFactory<BitType> factory = new ArrayImgFactory<>();
-        Img<BitType> img = factory.create(dims, new BitType());
+    public RandomAccessibleInterval<UnsignedByteType> visualise() {
+        INDArray min = O.min(0);
+        INDArray max = O.max(0);
 
-        RandomAccess randomAccess = img.randomAccess();
+        long[] dim = new long[]{min.getInt(0) + max.getInt(0), min.getInt(1) + max.getInt(1)};
+        List<RandomAccessibleInterval<UnsignedByteType>> stk = visualise(dim);
 
-        randomAccess.setPosition(new int[]{(int)cx, (int)cy});
-        HyperSphere<BitType> sphere = new HyperSphere<>(img, randomAccess, 3);
-        for (BitType pixel : sphere) {
-            pixel.set(true);
+        return Views.stack(stk);
+    }
+
+    /**
+     * Visualize the outline, centroid and sampled points on top of the input image.
+     *
+     * @param original image
+     * @return image stack
+     */
+    public RandomAccessibleInterval<UnsignedByteType> visualise(RandomAccessibleInterval<UnsignedByteType> original) {
+        long[] dim = new long[original.numDimensions()];
+        original.dimensions(dim);
+
+        List<RandomAccessibleInterval<UnsignedByteType>> stk = visualise(dim);
+        stk.add(original);
+
+        return Views.stack(stk);
+    }
+
+    /**
+     * Create the outline+centroid slice and another one for the sampled points.
+     *
+     * @param dims image dimensions
+     * @return list of images slices (0: contour, 1: sampled points)
+     */
+    private List<RandomAccessibleInterval<UnsignedByteType>> visualise(long[] dims) {
+        List<RandomAccessibleInterval<UnsignedByteType>> stack = new ArrayList<>();
+
+        // Draw the centroid and the contour
+        RandomAccessibleInterval<UnsignedByteType> contour = new ArrayImgFactory<UnsignedByteType>().create(dims, new UnsignedByteType());
+        RandomAccess<UnsignedByteType> cursor = contour.randomAccess();
+        cursor.setPosition(new int[]{(int)cx, (int)cy});
+        HyperSphere<UnsignedByteType> sphere = new HyperSphere<>(contour, cursor, 3);
+        for (UnsignedByteType pixel : sphere) {
+            pixel.set(255);
         }
 
-        for (int[] point : points) {
-            randomAccess.setPosition(point);
+        for (int r = 0; r < rows; r++) {
+            int x = O.getRow(r).getInt(0);
+            int y = O.getRow(r).getInt(1);
+            cursor.setPosition(new int[]{x, y});
+            cursor.get().set(255);
+        }
 
-            sphere = new HyperSphere<>(img, randomAccess, 3);
-            for (BitType pixel : sphere) {
-                pixel.set(true);
+        // Draw the sampled points (the first one a bit ticker)
+        RandomAccessibleInterval<UnsignedByteType> samples = new ArrayImgFactory<UnsignedByteType>().create(dims, new UnsignedByteType());
+        cursor = samples.randomAccess();
+        int radius = 3;
+        for (int[] point : pts) {
+            cursor.setPosition(point);
+            sphere = new HyperSphere<>(samples, cursor, radius);
+            for (UnsignedByteType pixel : sphere) {
+                pixel.set(255);
+            }
+
+            if (radius == 3) {
+                radius--;
             }
         }
 
-        return img;
+        stack.add(contour);
+        stack.add(samples);
+
+        return stack;
+    }
+
+    /**
+     * Get the tolerance on the upper and lower bounds of the radial
+     * coordinate for constraining the search space. (in radian)
+     *
+     * @return radial coordinate tolerance
+     */
+    public double getRadialCoordinateTolerance() {
+        return phi_tol;
+    }
+
+    /**
+     * Set the tolerance on the upper and lower bounds of the radial
+     * coordinate for constraining the search space
+     *
+     * @param phi_tol radial coordinate tolerance in radian
+     */
+    public void setRadialCoordinateTolerance(double phi_tol) {
+        this.phi_tol = phi_tol;
+    }
+
+    /**
+     * Get the generated correspondence points or null if {@link SectionImageOutlineCorrespondence#generatePoints(int)}
+     * was not yet called.
+     *
+     * @return correspondence points
+     */
+    public int[][] getCorrespondencePoints() {
+        return pts;
     }
 
 
@@ -337,26 +430,6 @@ public class SectionImageOutlineCorrespondence {
         }
     }
 
-    /**
-     * Get the tolerance on the upper and lower bounds of the radial
-     * coordinate for constraining the search space. (in radian)
-     *
-     * @return radial coordinate tolerance
-     */
-    public double getRadialCoordinateTolerance() {
-        return phi_tol;
-    }
-
-    /**
-     * Set the tolerance on the upper and lower bounds of the radial
-     * coordinate for constraining the search space
-     *
-     * @param phi_tol radial coordinate tolerance in radian
-     */
-    public void setRadialCoordinateTolerance(double phi_tol) {
-        this.phi_tol = phi_tol;
-    }
-
 
     /**
      * Functionality Testing
@@ -372,15 +445,14 @@ public class SectionImageOutlineCorrespondence {
 
         BitType type = new BitType();
         ArrayImgFactory<BitType> factory = new ArrayImgFactory<>();
-        RandomAccessibleInterval<BitType> out = IO.openImgs(path, factory, type).get(0);
+        Img<BitType> out = IO.openImgs(path, factory, type).get(0);
 
         SectionImageOutlineCorrespondence sampler = new SectionImageOutlineCorrespondence(out);
-        int[][] cor = sampler.generatePoints(4);
-        RandomAccessibleInterval<BitType> pts = sampler.createPointsImage(out, cor);
+        sampler.generatePoints(4);
+        RandomAccessibleInterval<UnsignedByteType> vis = sampler.visualise();
 
-        RandomAccessibleInterval<BitType> stack = Views.stack(out, pts);
-//        ImageJFunctions.show(stack);
-        ij.ui().show(stack);
+//        ImgPlus<UnsignedByteType> img = new ImgPlus<UnsignedByteType>(vis, "Contour sampling", new AxisType[]{Axes.X, Axes.Y, Axes.CHANNEL});
+        ij.ui().show(vis);
 
         System.out.println("Done");
     }
