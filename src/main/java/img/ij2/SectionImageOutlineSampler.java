@@ -5,6 +5,7 @@ import io.scif.img.IO;
 import net.imagej.ImageJ;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
 import net.imglib2.img.Img;
@@ -19,6 +20,8 @@ import org.nd4j.linalg.dimensionalityreduction.PCA;
 import org.nd4j.linalg.factory.Nd4j;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.*;
 
 /**
@@ -30,11 +33,11 @@ import java.util.*;
  *
  * Similar outlines can be matches by generating the correspondences with this class.
  *
- * TODO: It might be worth looking into fitting a contour function to have sub-pixel accuracy (see {@link SectionImageOutlineCorrespondence#outlineTriangulation})
+ * TODO: It might be worth looking into fitting a contour function to have sub-pixel accuracy (see {@link SectionImageOutlineSampler#outlineTriangulation})
  *
  * @author Felix Meyenhofer
  */
-public class SectionImageOutlineCorrespondence {
+public class SectionImageOutlineSampler {
 
     /** Contour coordinates */
     private final INDArray O;
@@ -51,8 +54,11 @@ public class SectionImageOutlineCorrespondence {
     /** Tolerance on the polar coordinate angle of the outline candidate */
     private double phi_tol = 0.1;
 
-    /** Generated and ordered contour points */
-    private int[][] pts;
+    /** Number of iteration levels to generate correspondence points. */
+    private int lvls;
+
+    /** Ordered samples along the contours */
+    private ArrayList<OutlinePoint> samples;
 
 
     /**
@@ -60,7 +66,18 @@ public class SectionImageOutlineCorrespondence {
      *
      * @param matrix contour/outline coordinates. N by 2 matrix
      */
-    public SectionImageOutlineCorrespondence(INDArray matrix) {
+    public SectionImageOutlineSampler(INDArray matrix) {
+        this(matrix, 4);
+    }
+
+    /**
+     * Constructor
+     *
+     * @param matrix contour coordinates
+     * @param levels number of triangulation iteration levels
+     */
+    public SectionImageOutlineSampler(INDArray matrix, int levels) {
+        lvls = levels;
         O = matrix;
         rows = matrix.shape()[0];
 
@@ -74,6 +91,8 @@ public class SectionImageOutlineCorrespondence {
         double n1x = factors.getDouble(0, 1);
 
         theta = -Math.atan(n1x / n1y);
+
+        generatePoints(levels);
     }
 
     /**
@@ -81,8 +100,18 @@ public class SectionImageOutlineCorrespondence {
      *
      * @param outline binary mask of the some object outline.
      */
-    public SectionImageOutlineCorrespondence(RandomAccessibleInterval<BitType> outline) {
+    public SectionImageOutlineSampler(RandomAccessibleInterval<BitType> outline) {
         this(getOutlineCoordinates(outline));
+    }
+
+    /**
+     * Constructor
+     *
+     * @param outline contour coordinates
+     * @param levels number of triangulation iteration levels
+     */
+    public SectionImageOutlineSampler(RandomAccessibleInterval<BitType> outline, int levels) {
+        this(getOutlineCoordinates(outline), levels);
     }
 
     /**
@@ -113,7 +142,7 @@ public class SectionImageOutlineCorrespondence {
      * @param levels number of sampling levels (1 -> 8 points, 2 -> 16 points etc.)
      * @return correspondence points coordinates. 4*2^levels by 2 matrix
      */
-    public int[][] generatePoints(int levels) {
+    public ArrayList<OutlinePoint> generatePoints(int levels) {
         TreeSet<OutlinePoint> outline = new TreeSet<>();
 
         // Transform coordinates and put them a tree-set ordered by the radial distribution around the center
@@ -178,15 +207,15 @@ public class SectionImageOutlineCorrespondence {
         }
 //        printPoints("correspondences", correspondences);
 
-        pts = new int[correspondences.size()][cols];
-        int i = 0;
+        samples = new ArrayList<>(correspondences.size());
+
+        // Get back the original coordinates
         for (OutlinePoint point : correspondences) {
-            pts[i][0] = O.getRow(point.index).getInt(0);
-            pts[i][1] = O.getRow(point.index).getInt(1);
-            i++;
+            INDArray row = O.getRow(point.index);
+            samples.add(new OutlinePoint(row.getDouble(0), row.getDouble(1), point.index));
         }
 
-        return pts;
+        return samples;
     }
 
     /**
@@ -299,6 +328,89 @@ public class SectionImageOutlineCorrespondence {
     }
 
     /**
+     * Try greedily to reduce the global distance between the point sets by
+     * moving them along the respective outline.
+     * the input is unchanged, the points of this instance are updated.
+     *
+     * TODO: consider using contour curvature as additional optimization criterion
+     *
+     * @param soc Outline samples to match
+     * @return updated outline samples of the this instance.
+     */
+    public void optimize(SectionImageOutlineSampler soc) {
+        // Center this outline and order them according the radial coordinate
+        TreeSet<OutlinePoint> out1 = new TreeSet<>();
+        for (int r = 0; r < rows; r++) {
+            OutlinePoint p = new OutlinePoint(O.getRow(r).getDouble(0), this.O.getRow(r).getDouble(1), r);
+            p.subtract(cx, cy);
+            out1.add(p);
+        }
+
+        ArrayList<OutlinePoint> pts1 = getCorrespondencePoints();
+        ArrayList<OutlinePoint> pts2 = soc.getCorrespondencePoints();
+
+        // Center the sampled outline points
+        ArrayList<OutlinePoint> cor1 = new ArrayList<>(pts1.size());
+        ArrayList<OutlinePoint> cor2 = new ArrayList<>(pts2.size());
+
+        double dPhi = 0;
+        double dR = 0;
+        for (int i = 0; i < pts1.size(); i++) {
+            OutlinePoint p1 = pts1.get(i).duplicate().subtract(cx, cy);
+            OutlinePoint p2 = pts2.get(i).duplicate().subtract(soc.cx, soc.cy);
+
+            dPhi += p1.deltaPhi(p2);
+            dR += p1.deltaR2(p2);
+
+            cor1.add(p1);
+            cor2.add(p2);
+        }
+
+        // Determine the search direction along the outline
+        boolean clockwise = dPhi > 1;
+
+        while (true) {
+            OutlinePoint p_;
+            double dR_ = 0;
+            ArrayList<OutlinePoint> cor1_ = new ArrayList<>(cor1.size());
+
+            for (int i = 0; i < cor1.size(); i++) {
+                OutlinePoint p = cor1.get(i);
+
+                if (clockwise) {
+                    p_ = out1.higher(p);
+                    if (p_ == null) {
+                        p_ = out1.first();
+                    }
+                } else {
+                    p_ = out1.lower(p);
+                    if (p_ == null) {
+                        p_ = out1.last();
+                    }
+                }
+
+                cor1_.add(p_);
+                dR_ += p_.deltaR2(cor2.get(i));
+            }
+
+            if (dR_ < dR) {
+                cor1 = cor1_;
+                dR = dR_;
+            } else {
+                break;
+            }
+        }
+
+        // Get back the original coordinates
+        samples = new ArrayList<>(cor1.size());
+
+        for (OutlinePoint point : cor1) {
+            INDArray row = O.getRow(point.index);
+            samples.add(new OutlinePoint(row.getDouble(0), row.getDouble(1), point.index));
+        }
+    }
+
+    /**
      * Visualize the outline coordinates, its centroid and the sampled points.
      *
      * @return image stack (one slice for outline and centroid and the second for the sampled points)
@@ -335,7 +447,7 @@ public class SectionImageOutlineCorrespondence {
      * @param dims image dimensions
      * @return list of images slices (0: contour, 1: sampled points)
      */
-    private List<RandomAccessibleInterval<UnsignedByteType>> visualise(long[] dims) {
+    public List<RandomAccessibleInterval<UnsignedByteType>> visualise(long[] dims) {
         List<RandomAccessibleInterval<UnsignedByteType>> stack = new ArrayList<>();
 
         // Draw the centroid and the contour
@@ -356,11 +468,12 @@ public class SectionImageOutlineCorrespondence {
 
         // Draw the sampled points (the first one a bit ticker)
         RandomAccessibleInterval<UnsignedByteType> samples = new ArrayImgFactory<UnsignedByteType>().create(dims, new UnsignedByteType());
-        cursor = samples.randomAccess();
+        RandomAccessible<UnsignedByteType> extended = Views.extendZero(samples);
+        cursor = extended.randomAccess();
         int radius = 3;
-        for (int[] point : pts) {
-            cursor.setPosition(point);
-            sphere = new HyperSphere<>(samples, cursor, radius);
+        for (OutlinePoint point : this.samples) {
+            cursor.setPosition(point.getIntCoordinates());
+            sphere = new HyperSphere<>(extended, cursor, radius);
             for (UnsignedByteType pixel : sphere) {
                 pixel.set(255);
             }
@@ -371,7 +484,7 @@ public class SectionImageOutlineCorrespondence {
         }
 
         stack.add(contour);
-        stack.add(samples);
+        stack.add(Views.interval(extended, samples));
 
         return stack;
     }
@@ -397,13 +510,32 @@ public class SectionImageOutlineCorrespondence {
     }
 
     /**
-     * Get the generated correspondence points or null if {@link SectionImageOutlineCorrespondence#generatePoints(int)}
+     * Get the generated correspondence points or null if {@link SectionImageOutlineSampler#generatePoints(int)}
      * was not yet called.
      *
      * @return correspondence points
      */
-    public int[][] getCorrespondencePoints() {
-        return pts;
+    public ArrayList<OutlinePoint> getCorrespondencePoints() {
+        return samples;
+    }
+
+    /**
+     * Get the number of iteration levels used during
+     * outline triangulation.
+     * 
+     * @return iteration levels
+     */
+    public int getNumberOfLevels() {
+        return lvls;
+    }
+
+    /**
+     * Get the outline centroid coordinates
+     *
+     * @return centroid coordinates
+     */
+    public double[] getCentroidCoordinates() {
+        return new double[]{cx, cy};
     }
 
 
@@ -411,22 +543,64 @@ public class SectionImageOutlineCorrespondence {
      * Helper class to organise coordinates, original index and
      * radial coordinate
      */
-    private class OutlinePoint implements Comparable<OutlinePoint>{
+    public class OutlinePoint implements Comparable<OutlinePoint>{
         double x;
         double y;
+        double r;
         Double phi;
         int index;
+
+        private NumberFormat twodec = new DecimalFormat("#0.00");
 
         OutlinePoint(double x, double y, int index) {
             this.x = x;
             this.y = y;
-            this.phi = Math.atan2(y, x);
             this.index = index;
+
+            update();
+        }
+
+        private void update() {
+            this.phi = Math.atan2(y, x);
+            this.r = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+        }
+
+        OutlinePoint duplicate() {
+            return new OutlinePoint(x, y, index);
+        }
+
+        OutlinePoint subtract(double x, double y) {
+            this.x -= x;
+            this.y -= y;
+            update();
+            return this;
+        }
+
+        double deltaPhi(OutlinePoint p) {
+            return phi - p.phi;
+        }
+
+        double deltaR2(OutlinePoint p) {
+            return Math.pow(p.x - x, 2) + Math.pow(p.y - y, 2);
+        }
+
+        public double[] getCoordinates() {
+            return new double[]{x, y};
+        }
+
+        int[] getIntCoordinates() {
+            return new int[]{(int) x, (int) y};
         }
 
         @Override
         public int compareTo(OutlinePoint o) {
             return phi.compareTo(o.phi);
+        }
+
+        @Override
+        public String toString() {
+            return "index: " + index +", x=" + twodec.format(x) + ", y=" + twodec.format(y) +
+                    ", phi=" + twodec.format(phi) + ", r=" + twodec.format(r);
         }
     }
 
@@ -447,7 +621,7 @@ public class SectionImageOutlineCorrespondence {
         ArrayImgFactory<BitType> factory = new ArrayImgFactory<>();
         Img<BitType> out = IO.openImgs(path, factory, type).get(0);
 
-        SectionImageOutlineCorrespondence sampler = new SectionImageOutlineCorrespondence(out);
+        SectionImageOutlineSampler sampler = new SectionImageOutlineSampler(out);
         sampler.generatePoints(4);
         RandomAccessibleInterval<UnsignedByteType> vis = sampler.visualise();
 
