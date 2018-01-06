@@ -21,7 +21,6 @@ import net.imglib2.view.Views;
 import org.scijava.ItemIO;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
-import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -58,9 +57,6 @@ public class ImportAnnotations implements Command, AtlasStructureSelectionListen
 
     @Parameter
     private LogService log;
-
-    @Parameter
-    private IOService io;
 
     @Parameter
     private UIService ui;
@@ -109,10 +105,13 @@ public class ImportAnnotations implements Command, AtlasStructureSelectionListen
             dialog.addStructureSelectionListener(this);
 
         } catch (TransformerException e) {
+            log.error("Annotation xml parsing trouble.");
             e.printStackTrace();
         } catch (IOException e) {
+            log.error("Could not read annotation xml");
             e.printStackTrace();
         } catch (URISyntaxException e) {
+            log.error("Unable to download annotation xml");
             e.printStackTrace();
         }
     }

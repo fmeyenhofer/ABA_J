@@ -37,12 +37,12 @@ import java.util.*;
  *
  * @author Felix Meyenhofer
  */
+@SuppressWarnings("WeakerAccess")
 public class SectionImageOutlineSampler {
 
     /** Contour coordinates */
     private final INDArray O;
     private final int rows;
-    private final int cols = 2;
 
     /** Centroid coordinates of the contour */
     private double cx;
@@ -86,7 +86,7 @@ public class SectionImageOutlineSampler {
         cy = centroid.getDouble(0, 1);
 
         INDArray A = O.dup();
-        INDArray factors = PCA.pca_factor(A, cols, true);
+        INDArray factors = PCA.pca_factor(A, 2, true);
         double n1y = factors.getDouble(0, 0);
         double n1x = factors.getDouble(0, 1);
 
@@ -112,6 +112,34 @@ public class SectionImageOutlineSampler {
      */
     public SectionImageOutlineSampler(RandomAccessibleInterval<BitType> outline, int levels) {
         this(getOutlineCoordinates(outline), levels);
+    }
+
+    /**
+     * Constructor for duplication
+     */
+    private SectionImageOutlineSampler(int levels,
+                                       INDArray o,
+                                       double cx,
+                                       double cy,
+                                       double theta,
+                                       int rows,
+                                       ArrayList<OutlinePoint> samples) {
+        this.lvls = levels;
+        this.O = o;
+        this.cx = cx;
+        this.cy = cy;
+        this.rows = rows;
+        this.theta = theta;
+        this.samples = samples;
+    }
+
+    /**
+     * Duplicate this
+     *
+     * @return identical copy of this instance
+     */
+    public SectionImageOutlineSampler duplicate() {
+        return new SectionImageOutlineSampler(this.lvls, this.O, this.cx, this.cy, this.theta, this.rows, this.samples);
     }
 
     /**
@@ -335,7 +363,6 @@ public class SectionImageOutlineSampler {
      * TODO: consider using contour curvature as additional optimization criterion
      *
      * @param soc Outline samples to match
-     * @return updated outline samples of the this instance.
      */
     public void optimize(SectionImageOutlineSampler soc) {
         // Center this outline and order them according the radial coordinate
@@ -431,7 +458,7 @@ public class SectionImageOutlineSampler {
      * @param original image
      * @return image stack
      */
-    public RandomAccessibleInterval<UnsignedByteType> visualise(RandomAccessibleInterval<UnsignedByteType> original) {
+    public RandomAccessibleInterval<UnsignedByteType> visualise(Img<UnsignedByteType> original) {
         long[] dim = new long[original.numDimensions()];
         original.dimensions(dim);
 
@@ -609,7 +636,7 @@ public class SectionImageOutlineSampler {
      * Functionality Testing
      *
      * @param args not used
-     * @throws IOException
+     * @throws IOException because
      */
     public static void main(String[] args) throws IOException {
         ImageJ ij = new ImageJ();

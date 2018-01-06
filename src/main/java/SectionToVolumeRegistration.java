@@ -14,6 +14,7 @@ import net.imagej.ImageJ;
 import net.imagej.Dataset;
 import net.imagej.ops.OpService;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.logic.BitType;
 import org.scijava.app.StatusService;
@@ -42,16 +43,10 @@ import java.util.Vector;
 public class SectionToVolumeRegistration implements Command {
 
     @Parameter
-    private StatusService status;
-
-    @Parameter
     private LogService log;
 
     @Parameter
     private OpService op;
-
-    @Parameter
-    private IOService io;
 
     @Parameter
     private UIService ui;
@@ -106,7 +101,7 @@ public class SectionToVolumeRegistration implements Command {
         // Get the input data
         final ImagePlus ref = ImageJFunctions.wrap((RandomAccessibleInterval) volume.getImgPlus().getImg(), "Volume");
 
-        final RandomAccessibleInterval sliRai = section.getImgPlus().getImg();
+        final Img sliRai = section.getImgPlus().getImg();
         final ImagePlus oriSec = ImageJFunctions.wrap(sliRai, "Section");
 
         // Adjust the contrast
@@ -171,7 +166,9 @@ public class SectionToVolumeRegistration implements Command {
             ImagePlus refSliImp = new ImagePlus();
             refSliImp.setProcessor(refPro);
 
-            RandomAccessibleInterval refMsk = SectionImageTool.createMask((RandomAccessibleInterval)ImageJFunctions.wrap(refSliImp), op);
+
+            Img img = ImageJFunctions.wrap(refSliImp);
+            RandomAccessibleInterval refMsk = SectionImageTool.createMask(img, op);
             int refArea = SectionImageTool.getMaskArea(refMsk);
 //            int refArea = ImageProcessingTools.getMaskArea(refPro);
             double refLength = Math.sqrt((double) refArea);

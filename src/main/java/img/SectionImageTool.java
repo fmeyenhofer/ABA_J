@@ -1,5 +1,6 @@
 package img;
 
+import io.scif.img.IO;
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
 
@@ -13,10 +14,10 @@ import net.imglib2.labeling.Labeling;
 
 import net.imglib2.labeling.LabelingType;
 import net.imglib2.labeling.NativeImgLabeling;
-import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
 
 import java.io.IOException;
@@ -27,11 +28,10 @@ import java.io.IOException;
  *
  * @author Felix Meyenhofer
  */
+@SuppressWarnings("WeakerAccess")
 public class SectionImageTool {
 
-    public static <T extends NativeType<T>> Img<BitType> createMask(RandomAccessibleInterval<T> rai, OpService ops) {
-        double sigma = 13.0;
-
+    public static <T extends RealType<T>> Img<BitType> createMask(Img<T> rai, OpService ops) {
         long[] dims = new long[rai.numDimensions()];
         rai.dimensions(dims);
 
@@ -42,14 +42,13 @@ public class SectionImageTool {
             }
         }
 
-        double simga = ((double) max) / 50;
+        double sigma = ((double) max) / 50;
 
         return createMask(rai, sigma, ops);
     }
 
-    public static <T extends NativeType<T>> Img<BitType> createMask(RandomAccessibleInterval<T> rai, double sigma, OpService ops) {
-
-        Img fil = ops.copy().img((Img<T>) rai);
+    public static <T extends RealType<T>> Img<BitType> createMask(Img<T> rai, double sigma, OpService ops) {
+        Img<T> fil = rai.copy();
         ops.filter().gauss(fil, sigma);
 
         Img<BitType> bw = ops.create().img(fil, new BitType());
@@ -58,15 +57,8 @@ public class SectionImageTool {
         Img<BitType> hol = ops.create().img(bw);
         ops.morphology().fillHoles(hol, bw);
 
-        Img<BitType> msk = extractCenterBlob(hol, ops);
-
-//        ImageJFunctions.show(bw, "thresholded");
-//        ImageJFunctions.show(hol, "filled");
-//        ImageJFunctions.show(msk, "mask");
-
-        return msk;
+        return extractCenterBlob(hol, ops);
     }
-
 
     public static <T extends RealType<T>> Img<BitType> extractCenterBlob(RandomAccessibleInterval<BitType> msk, OpService ops) {
         long[] dimensions = new long[msk.numDimensions()];
@@ -171,12 +163,18 @@ public class SectionImageTool {
 
 
     public static void main(String[] args) throws IOException {
+        String path = "/Users/turf/switchdrive/SJMCS/data/devel/section2volume/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif";
         ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        Object vol = ij.io().open("/Users/turf/switchdrive/SJMCS/data/devel/section2volume/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif");
+//        Object vol = ij.io().open(path);
 //        Object vol = ij.io().open("/Users/turf/switchdrive/SJMCS/data/devel/section2volume/average_template_50um_coronal-180.tif");
-        Img<BitType> msk = SectionImageTool.createMask((RandomAccessibleInterval) vol, ij.op());
+
+        UnsignedByteType type = new UnsignedByteType();
+        ArrayImgFactory<UnsignedByteType> factory = new ArrayImgFactory<>();
+        Img<UnsignedByteType> vol = IO.openImgs(path, factory, type).get(0);
+
+        Img<BitType> msk = SectionImageTool.createMask(vol, ij.op());
 
         ij.ui().show("input", vol);
         ij.ui().show("section mask", msk);
