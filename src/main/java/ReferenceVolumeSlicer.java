@@ -49,7 +49,8 @@ public class ReferenceVolumeSlicer implements Command {
 
     public static void main(final String... args) throws Exception {
         // Get the ImageJ instance
-        final ImageJ ij = net.imagej.Main.launch(args);
+        final ImageJ ij = new ImageJ();
+        ij.ui().showUI();
 
         // Open an image
 //        File file = new File ("/Users/turf/switchdrive/SJMCS_Thesis/data/aba/mouse-ccf-3/reference-volumes/average_template_50.nrrd");
