@@ -8,7 +8,7 @@ import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
-import img.ij2.SectionImageTool;
+import img.SectionImageTool;
 
 /**
  * @author Felix Meyenhofer

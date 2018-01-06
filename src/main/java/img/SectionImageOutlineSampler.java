@@ -1,4 +1,4 @@
-package img.ij2;
+package img;
 
 import io.scif.img.IO;
 

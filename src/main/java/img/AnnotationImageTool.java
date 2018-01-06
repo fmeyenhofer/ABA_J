@@ -1,4 +1,4 @@
-package img.ij2;
+package img;
 
 import net.imglib2.Cursor;
 import net.imglib2.Interval;

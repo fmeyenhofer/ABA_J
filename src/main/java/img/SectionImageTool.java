@@ -1,4 +1,4 @@
-package img.ij2;
+package img;
 
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;

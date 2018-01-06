@@ -31,7 +31,7 @@ import rest.AllenAtlas;
 import rest.AllenClient;
 import rest.AtlasStructure;
 import sc.fiji.io.Nrrd_Reader;
-import img.ij1.ImageProcessingTools;
+import img.ImagePlusUtils;
 
 import javax.xml.transform.TransformerException;
 import java.awt.*;
@@ -359,7 +359,7 @@ public class ImportAnnotations implements Command, AtlasStructureSelectionListen
         imp.setOverlay(overlay);
         if (imp.getWindow() == null) {
             imp.show();
-            ImageProcessingTools.adjustContrast(imp.getProcessor(), 0.99);
+            ImagePlusUtils.adjustContrast(imp.getProcessor(), 0.99);
             imp.updateAndDraw();
         } else {
             imp.updateAndDraw();

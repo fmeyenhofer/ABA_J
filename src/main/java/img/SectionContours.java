@@ -1,4 +1,4 @@
-package img.ij2;
+package img;
 
 import io.scif.img.IO;
 import mpicbg.models.Point;
@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
+ * TODO: fininsh it or delete the "brouillon"
+ *
  * @author Felix Meyenhofer
  */
 public class SectionContours {

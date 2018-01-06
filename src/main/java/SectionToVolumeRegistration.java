@@ -16,7 +16,6 @@ import net.imagej.ops.OpService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.logic.BitType;
-import img.ij1.ImageComparison;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
 import org.scijava.io.IOService;
@@ -24,8 +23,8 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
-import img.ij1.ImageProcessingTools;
-import img.ij2.SectionImageTool;
+import img.ImagePlusUtils;
+import img.SectionImageTool;
 
 import java.awt.*;
 import java.io.IOException;
@@ -112,8 +111,8 @@ public class SectionToVolumeRegistration implements Command {
 
         // Adjust the contrast
         log.info(" adjust contrast");
-        ImageProcessingTools.adjustContrast(ref.getProcessor(), saturationFraction);
-        ImageProcessingTools.adjustContrast(oriSec.getProcessor(), saturationFraction);
+        ImagePlusUtils.adjustContrast(ref.getProcessor(), saturationFraction);
+        ImagePlusUtils.adjustContrast(oriSec.getProcessor(), saturationFraction);
 
         // Get the reference volume
 //        File path = cache.getReferenceVolume(modality, resolution);
@@ -232,7 +231,7 @@ public class SectionToVolumeRegistration implements Command {
             final ImageProcessor alignedSlice = mapSection(secPro, model, w, h, p.interpolate);
 
             log.info("    compute difference between reference slice and aligned slice...");
-            float msd = ImageComparison.meanSquareDifference(alignedSlice, refPro);
+            float msd = ImagePlusUtils.meanSquareDifference(alignedSlice, refPro);
             log.info("    msd:     " + msd);
 
 
