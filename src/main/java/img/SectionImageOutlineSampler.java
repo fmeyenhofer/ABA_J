@@ -92,7 +92,7 @@ public class SectionImageOutlineSampler {
 
         theta = -Math.atan(n1x / n1y);
 
-        generatePoints(levels);
+//        generatePoints(levels);
     }
 
     /**
@@ -112,34 +112,6 @@ public class SectionImageOutlineSampler {
      */
     public SectionImageOutlineSampler(RandomAccessibleInterval<BitType> outline, int levels) {
         this(getOutlineCoordinates(outline), levels);
-    }
-
-    /**
-     * Constructor for duplication
-     */
-    private SectionImageOutlineSampler(int levels,
-                                       INDArray o,
-                                       double cx,
-                                       double cy,
-                                       double theta,
-                                       int rows,
-                                       ArrayList<OutlinePoint> samples) {
-        this.lvls = levels;
-        this.O = o;
-        this.cx = cx;
-        this.cy = cy;
-        this.rows = rows;
-        this.theta = theta;
-        this.samples = samples;
-    }
-
-    /**
-     * Duplicate this
-     *
-     * @return identical copy of this instance
-     */
-    public SectionImageOutlineSampler duplicate() {
-        return new SectionImageOutlineSampler(this.lvls, this.O, this.cx, this.cy, this.theta, this.rows, this.samples);
     }
 
     /**
@@ -167,10 +139,9 @@ public class SectionImageOutlineSampler {
     /**
      * Generate a set of ordered correspondence points.
      *
-     * @param levels number of sampling levels (1 -> 8 points, 2 -> 16 points etc.)
      * @return correspondence points coordinates. 4*2^levels by 2 matrix
      */
-    public ArrayList<OutlinePoint> generatePoints(int levels) {
+    public ArrayList<OutlinePoint> generatePoints() {
         TreeSet<OutlinePoint> outline = new TreeSet<>();
 
         // Transform coordinates and put them a tree-set ordered by the radial distribution around the center
@@ -209,7 +180,7 @@ public class SectionImageOutlineSampler {
 
         // Create correspondence points
         int l = 1;
-        while (l <= levels) {
+        while (l <= lvls) {
             List<OutlinePoint> collector = new ArrayList<>();
 
             // Triangulate over the existing points
@@ -537,7 +508,7 @@ public class SectionImageOutlineSampler {
     }
 
     /**
-     * Get the generated correspondence points or null if {@link SectionImageOutlineSampler#generatePoints(int)}
+     * Get the generated correspondence points or null if {@link SectionImageOutlineSampler#generatePoints()}
      * was not yet called.
      *
      * @return correspondence points
@@ -648,8 +619,8 @@ public class SectionImageOutlineSampler {
         ArrayImgFactory<BitType> factory = new ArrayImgFactory<>();
         Img<BitType> out = IO.openImgs(path, factory, type).get(0);
 
-        SectionImageOutlineSampler sampler = new SectionImageOutlineSampler(out);
-        sampler.generatePoints(4);
+        SectionImageOutlineSampler sampler = new SectionImageOutlineSampler(out, 4);
+        sampler.generatePoints();
         RandomAccessibleInterval<UnsignedByteType> vis = sampler.visualise();
 
 //        ImgPlus<UnsignedByteType> img = new ImgPlus<UnsignedByteType>(vis, "Contour sampling", new AxisType[]{Axes.X, Axes.Y, Axes.CHANNEL});
