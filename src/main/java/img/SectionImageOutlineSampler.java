@@ -49,7 +49,7 @@ public class SectionImageOutlineSampler {
     private double cy;
 
     /** Rotation angle of the first principal axis */
-    private double theta;
+    private Double theta;
 
     /** Tolerance on the polar coordinate angle of the outline candidate */
     private double phi_tol = 0.1;
@@ -60,15 +60,6 @@ public class SectionImageOutlineSampler {
     /** Ordered samples along the contours */
     private ArrayList<OutlinePoint> samples;
 
-
-    /**
-     * Constructor
-     *
-     * @param matrix contour/outline coordinates. N by 2 matrix
-     */
-    public SectionImageOutlineSampler(INDArray matrix) {
-        this(matrix, 4);
-    }
 
     /**
      * Constructor
@@ -84,24 +75,6 @@ public class SectionImageOutlineSampler {
         INDArray centroid = O.mean(0);
         cx = centroid.getDouble(0, 0);
         cy = centroid.getDouble(0, 1);
-
-        INDArray A = O.dup();
-        INDArray factors = PCA.pca_factor(A, 2, true);
-        double n1y = factors.getDouble(0, 0);
-        double n1x = factors.getDouble(0, 1);
-
-        theta = -Math.atan(n1x / n1y);
-
-//        generatePoints(levels);
-    }
-
-    /**
-     * Constructor
-     *
-     * @param outline binary mask of the some object outline.
-     */
-    public SectionImageOutlineSampler(RandomAccessibleInterval<BitType> outline) {
-        this(getOutlineCoordinates(outline));
     }
 
     /**
@@ -112,6 +85,19 @@ public class SectionImageOutlineSampler {
      */
     public SectionImageOutlineSampler(RandomAccessibleInterval<BitType> outline, int levels) {
         this(getOutlineCoordinates(outline), levels);
+    }
+
+    /**
+     * Do PCA on the outline coordinate values and use
+     * the component to compute the rotation angle if the section.
+     */
+    private void doPca() {
+        INDArray A = O.dup();
+        INDArray factors = PCA.pca_factor(A, 2, true);
+        double n1y = factors.getDouble(0, 0);
+        double n1x = factors.getDouble(0, 1);
+
+        theta = -Math.atan(n1x / n1y);
     }
 
     /**
@@ -142,6 +128,10 @@ public class SectionImageOutlineSampler {
      * @return correspondence points coordinates. 4*2^levels by 2 matrix
      */
     public ArrayList<OutlinePoint> generatePoints() {
+        if (this.theta == null) {
+            doPca();
+        }
+
         TreeSet<OutlinePoint> outline = new TreeSet<>();
 
         // Transform coordinates and put them a tree-set ordered by the radial distribution around the center
@@ -217,17 +207,17 @@ public class SectionImageOutlineSampler {
         return samples;
     }
 
-    /**
-     * For debugging.
-     *
-     * @param prefix reference prefixed to all points
-     * @param points collection of points
-     */
-    private void printPoints(String prefix,  Collection<OutlinePoint> points) {
-        for (OutlinePoint point : points) {
-            System.out.println(prefix + ": i=" + point.index + ", phi=" + point.phi + ", x=" + point.x + ", y=" + point.y);
-        }
-    }
+//    /**
+//     * For debugging.
+//     *
+//     * @param prefix reference prefixed to all points
+//     * @param points collection of points
+//     */
+//    private void printPoints(String prefix,  Collection<OutlinePoint> points) {
+//        for (OutlinePoint point : points) {
+//            System.out.println(prefix + ": i=" + point.index + ", phi=" + point.phi + ", x=" + point.x + ", y=" + point.y);
+//        }
+//    }
 
     /**
      * Get a subset of outline coordinates filtering them by their radial polar coordinate
@@ -514,17 +504,10 @@ public class SectionImageOutlineSampler {
      * @return correspondence points
      */
     public ArrayList<OutlinePoint> getCorrespondencePoints() {
+        if (samples == null) {
+            generatePoints();
+        }
         return samples;
-    }
-
-    /**
-     * Get the number of iteration levels used during
-     * outline triangulation.
-     * 
-     * @return iteration levels
-     */
-    public int getNumberOfLevels() {
-        return lvls;
     }
 
     /**
