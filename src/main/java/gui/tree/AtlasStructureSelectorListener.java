@@ -7,8 +7,10 @@ import java.util.HashMap;
 /**
  * @author Felix Meyenhofer
  */
-public interface AtlasStructureSelectionListener {
+public interface AtlasStructureSelectorListener {
 
     void valueChanged(HashMap<Integer, AtlasStructure> structures);
+
+    void importAction(HashMap<Integer, AtlasStructure> structures, String type);
 
 }

@@ -91,7 +91,7 @@ public class AllenClient {
         return cache.getResponseXml(AllenAPI.RMA.createAtlasStructuresQuery(product_id));
     }
 
-    public HashMap<Integer, AtlasStructure> getAnnotationStructureGraph(AllenAtlas atlas)
+    public AtlasStructureGraph getAnnotationStructureGraph(AllenAtlas atlas)
             throws IOException, TransformerException, URISyntaxException {
         String graph_id = atlas.getStructureGraphId().toString();
         AllenXml xml = cache.getStructureGraphXml("StructureGraph", graph_id);
@@ -100,7 +100,7 @@ public class AllenClient {
         Element root = xml.getDom().getRootElement().getChild("structure");
         parseStructureXmlElements(graph, root, "/");
 
-        return graph;
+        return new AtlasStructureGraph(graph);
     }
 
     private void parseStructureXmlElements(HashMap<Integer, AtlasStructure> collector, Element element, String path) {

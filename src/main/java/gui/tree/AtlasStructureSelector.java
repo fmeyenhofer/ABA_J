@@ -42,6 +42,7 @@ import java.util.List;
  *
  * TODO: add a checkbox to filter only "active" nodes (nodes that were found in the current section)
  * TODO: add a button to import the selected annotations
+ * TODO: when expanding all nodes, expand only those with active children
  *
  * @author Felix Meyenhofer
  *
@@ -70,12 +71,12 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
     private HashMap<Integer, AtlasStructure> graph;
 
     /** Register of the selection listeners */
-    private List<AtlasStructureSelectionListener> listeners = new ArrayList<>();
+    private List<AtlasStructureSelectorListener> listeners = new ArrayList<>();
 
 
     /**
      * Constructor
-     * <p>
+     * 
      * Initializes the UI.
      *
      * @param hierarchy to create the tree selector for
@@ -174,10 +175,51 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
         this.updateStatus();
         JPanel statusPanel = new JPanel(new GridBagLayout());
         statusPanel.setBorder(new EmptyBorder(5, 0,0,0));
-        statusPanel.add(this.status, new GridBagConstraints(0,0,1,1,
+        statusPanel.add(new JPanel(), new GridBagConstraints(0,0,
+                1,1,
                 1,0,
                 GridBagConstraints.WEST,
+                GridBagConstraints.NONE,
+                new Insets(0,0,0, 0),
+                0, 0));
+        statusPanel.add(this.status, new GridBagConstraints(1,0,
+                1,1,
+                1,0,
+                GridBagConstraints.EAST,
+                GridBagConstraints.NONE,
+                new Insets(0,0,0, 0),
+                0, 0));
+
+        // Import Button
+        JComboBox<String> importType = new JComboBox<>(new String[]{"ROI", "Mask"});
+        JButton importButton = new JButton("import");
+        importButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                notifyImportListeners((String) importType.getSelectedItem());
+            }
+        });
+        JPanel importPanel = new JPanel(new GridBagLayout());
+        importPanel.setBorder(new EmptyBorder(5, 0,0,0));
+        importPanel.add(new JPanel(), new GridBagConstraints(0,0,
+                2,1,
+                1,1,
+                GridBagConstraints.WEST,
+                GridBagConstraints.NONE,
+                new Insets(0,0,0, 0),
+                0, 0));
+        importPanel.add(importType, new GridBagConstraints(3,0,
+                1,1,
+                0,0,
+                GridBagConstraints.EAST,
                 GridBagConstraints.HORIZONTAL,
+                new Insets(0,0,0, 0),
+                0, 0));
+        importPanel.add(importButton, new GridBagConstraints(4,0,
+                1,1,
+                0,0,
+                GridBagConstraints.EAST,
+                GridBagConstraints.NONE,
                 new Insets(0,0,0, 0),
                 0, 0));
 
@@ -198,6 +240,12 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
                 0, 0));
         this.add(statusPanel, new GridBagConstraints(0,2,1,1,
                 1,0,
+                GridBagConstraints.CENTER,
+                GridBagConstraints.HORIZONTAL,
+                new Insets(0,0,0, 0),
+                0, 0));
+        this.add(importPanel, new GridBagConstraints(0,3,1,1,
+                0,0,
                 GridBagConstraints.CENTER,
                 GridBagConstraints.HORIZONTAL,
                 new Insets(0,0,0, 0),
@@ -247,7 +295,7 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
      *
      * @param listener selection change listener
      */
-    public void addStructureSelectionListener(AtlasStructureSelectionListener listener) {
+    public void addStructureSelectionListener(AtlasStructureSelectorListener listener) {
         this.listeners.add(listener);
     }
 
@@ -423,6 +471,7 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
 
     /**
      * Check if a node contains a selected child node
+     * 
      * @param tree current tree
      * @param node node to check for selected child nodes
      * @return binary answer
@@ -542,6 +591,12 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
         return count;
     }
 
+    private void notifyImportListeners(String type) {
+        for (AtlasStructureSelectorListener listener : listeners) {
+            listener.importAction(getSelectedStructures(), type);
+        }
+    }
+
     /** {@inheritDoc} */
     @Override
     public void actionPerformed(ActionEvent e) {}
@@ -592,7 +647,7 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
             updateStatus();
 
             if (hasChanged) {
-                for (AtlasStructureSelectionListener listener : listeners) {
+                for (AtlasStructureSelectorListener listener : listeners) {
                     listener.valueChanged(getSelectedStructures());
                 }
             }

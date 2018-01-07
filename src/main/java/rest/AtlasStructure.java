@@ -4,7 +4,6 @@ import org.jdom.Element;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -15,6 +14,7 @@ import java.util.List;
  *
  * @author Felix Meyenhofer
  */
+@SuppressWarnings("WeakerAccess")
 public class AtlasStructure {
 
     private Integer id;
@@ -217,6 +217,10 @@ public class AtlasStructure {
 
     private void setColor(String colorHexTripple) {
         this.color = Color.decode("#" + colorHexTripple);
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
     }
 
     @Override
