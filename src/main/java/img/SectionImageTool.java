@@ -8,6 +8,9 @@ import net.imglib2.*;
 import net.imglib2.Cursor;
 import net.imglib2.algorithm.labeling.AllConnectedComponents;
 import net.imglib2.algorithm.labeling.Watershed;
+import net.imglib2.algorithm.morphology.Opening;
+import net.imglib2.algorithm.morphology.StructuringElements;
+import net.imglib2.algorithm.neighborhood.Shape;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.labeling.Labeling;
@@ -17,10 +20,11 @@ import net.imglib2.labeling.NativeImgLabeling;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.Views;
 
 import java.io.IOException;
+import java.util.List;
 
 
 /**
@@ -54,6 +58,11 @@ public class SectionImageTool {
         Img<BitType> bw = ops.create().img(fil, new BitType());
         ops.threshold().huang(bw, fil);
 
+        Img<BitType> ope = ops.create().img(bw);
+        List<Shape> strel = StructuringElements.diamond(3, 1);
+//        ops.morphology().open(ope, bw, strel);
+        Opening.open(Views.extendZero(bw), ope, strel, 4);
+
         Img<BitType> hol = ops.create().img(bw);
         ops.morphology().fillHoles(hol, bw);
 
@@ -61,8 +70,8 @@ public class SectionImageTool {
     }
 
     public static <T extends RealType<T>> Img<BitType> extractCenterBlob(RandomAccessibleInterval<BitType> msk, OpService ops) {
-        long[] dimensions = new long[msk.numDimensions()];
-        msk.max(dimensions);
+        long[] upperBounds = new long[msk.numDimensions()];
+        msk.max(upperBounds);
 
         // get the border
         Img<BitType> out = ops.create().img(msk);
@@ -76,36 +85,49 @@ public class SectionImageTool {
 
         // distance transform
         RandomAccessibleInterval<T> dst = ops.image().distancetransform(out);
-        IterableInterval<T> interval = Views.interval(dst, dst);
+        IterableInterval<T> dsti = Views.interval(dst, dst);
+//        ImageJFunctions.show(dst, "dist. transform");
 
         // get the intensity boundaries
-        T min = interval.firstElement().createVariable();
+        T min = dsti.firstElement().createVariable();
         min.setReal(0.0);
-        T max = interval.firstElement().createVariable();
-        ops.stats().max(max, interval);
+        T absMax = dsti.firstElement().createVariable();
+        ops.stats().max(absMax, dsti);
 
-        // create the seeds for the watershed (the minimum is one and the border another)
+        // Variable to store the maximum within the mask
+        T currentMax = dsti.firstElement().createVariable();
+        currentMax.set(min);
+
+        // create the seeds for the watershed: the minimum inside the mask and the border another
         // also invert the distance transform
         final NativeImgLabeling<Integer, IntType> sds =
                 new NativeImgLabeling<>(new ArrayImgFactory<IntType>().create(msk, new IntType()));
 
         RandomAccess<LabelingType<Integer>> sdsCursor = sds.randomAccess();
-        Cursor<T> dstCursor = interval.cursor();
+        Cursor<T> dstCursor = dsti.cursor();
+        RandomAccess<BitType> mskCursor = msk.randomAccess();
 
         long[] position = new long[msk.numDimensions()];
+        long[] maxPosision = new long[msk.numDimensions()];
         while (dstCursor.hasNext()) {
             dstCursor.fwd();
             dstCursor.localize(position);
             T dstValue = dstCursor.get();
 
-            if (dstValue.equals(max)) {
-                dstValue.set(min);
-                sdsCursor.setPosition(position);
-                sdsCursor.get().setLabel(1);
+            mskCursor.setPosition(position);
+
+            if (mskCursor.get().get()) {
+                if (dstValue.compareTo(currentMax) > 0) {
+                    currentMax.set(dstValue);
+                    dstCursor.localize(maxPosision);
+                }
+                dstValue.mul(-1.0);
+                dstValue.add(absMax);
+
             } else {
                 boolean isBorder = false;
                 for (int p = 0; p < position.length; p++) {
-                    if (0 == position[p] || position[p] == dimensions[p]) {
+                    if (0 == position[p] || position[p] == upperBounds[p]) {
                         isBorder = true;
                         break;
                     }
@@ -117,10 +139,16 @@ public class SectionImageTool {
                     sdsCursor.get().setLabel(2);
                 } else {
                     dstValue.mul(-1.0);
-                    dstValue.add(max);
+                    dstValue.add(absMax);
                 }
             }
         }
+
+        RandomAccess<T> ra = dst.randomAccess();
+        ra.setPosition(maxPosision);
+        ra.get().set(currentMax);
+        sdsCursor.setPosition(maxPosision);
+        sdsCursor.get().setLabel(1);
 
         // watershed
         final NativeImgLabeling<Integer, IntType> blb =
@@ -141,9 +169,9 @@ public class SectionImageTool {
             bwCur.next().set(lblCur.next().getInteger() == 2);
         }
 
+//        ImageJFunctions.show(msk, "mask");
 //        ImageJFunctions.show(out, "outline");
 //        ImageJFunctions.show(sds.getStorageImg(), "seeds");
-//        ImageJFunctions.show(dst, "dist. transform");
 //        ImageJFunctions.show(dst, "modified inv. dist. transform");
 
         return obj;
@@ -163,16 +191,22 @@ public class SectionImageTool {
 
 
     public static void main(String[] args) throws IOException {
-        String path = "/Users/turf/switchdrive/SJMCS/data/devel/section2volume/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif";
+//        String path = "/Users/turf/switchdrive/SJMCS/data/devel/section2volume/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif";
+//        String path = "/Users/turf/Desktop/new section.tif";
+        String path = "/Users/turf/Desktop/reference section.tif";
         ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
 //        Object vol = ij.io().open(path);
 //        Object vol = ij.io().open("/Users/turf/switchdrive/SJMCS/data/devel/section2volume/average_template_50um_coronal-180.tif");
 
-        UnsignedByteType type = new UnsignedByteType();
-        ArrayImgFactory<UnsignedByteType> factory = new ArrayImgFactory<>();
-        Img<UnsignedByteType> vol = IO.openImgs(path, factory, type).get(0);
+//        UnsignedByteType type = new UnsignedByteType();
+//        ArrayImgFactory<UnsignedByteType> factory = new ArrayImgFactory<>();
+//        Img<UnsignedByteType> vol = IO.openImgs(path, factory, type).get(0);
+
+        UnsignedShortType type = new UnsignedShortType();
+        ArrayImgFactory<UnsignedShortType> factory = new ArrayImgFactory<>();
+        Img<UnsignedShortType> vol = IO.openImgs(path, factory, type).get(0);
 
         Img<BitType> msk = SectionImageTool.createMask(vol, ij.op());
 
