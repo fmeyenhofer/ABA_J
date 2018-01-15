@@ -18,6 +18,7 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.Views;
 
 import java.awt.*;
@@ -123,13 +124,25 @@ public class SectionImageAlignment <T extends RealType<T> & NativeType<T>>  {
 //        ImageJFunctions.show(Views.stack(outlines), "outlines");
 
         // Overlay of contours and sections
-        ImageJFunctions.show(
-                Views.stack(secCon.visualise(ops.convert().uint8(source)),
-                            refCon.visualise(ops.convert().uint8(target))), "outlines");
+        T miSrc = source.firstElement().createVariable();
+        miSrc.setReal(0.0);
+        T maSrc = ops.stats().max(source);
+        T maSrcT = source.firstElement().createVariable();
+        maSrcT.setReal(255.0);
+        Img<UnsignedByteType> nSrc = ops.convert().uint8(ops.image().normalize(source, miSrc, maSrc, miSrc, maSrcT));
+
+        T miTar = target.firstElement().createVariable();
+        miTar.setReal(0.0);
+        T maTar = ops.stats().max(target);
+        T maTarT = target.firstElement().createVariable();
+        maTarT.setReal(255.0);
+        Img<UnsignedByteType> nTar = ops.convert().uint8(ops.image().normalize(target, miTar, maTar, miTar, maTarT));
+
+        ImageJFunctions.show(Views.stack(secCon.visualise(nSrc), refCon.visualise(nTar)), "outlines");
 
         // Overlay of source target and warp
-        final ImagePlus secImp = ImageJFunctions.wrap(source, "source");
-        final ImagePlus refImp = ImageJFunctions.wrap(target, "target");
+        final ImagePlus secImp = ImageJFunctions.wrap(nSrc, "source");
+        final ImagePlus refImp = ImageJFunctions.wrap(nTar, "target");
         final Shape shape = mltMesh.illustrateMesh();
 
         ImageStack stk = new ImageStack(secImp.getWidth(), secImp.getHeight(), 3);
@@ -148,8 +161,10 @@ public class SectionImageAlignment <T extends RealType<T> & NativeType<T>>  {
 
     public static void main(String[] args) throws Exception {
         //        String secPath = "/Users/turf/switchdrive/SJMCS/data/devel/small-deformations/26836491_25um_red_300_tps1.tif";
-        String secPath = "/Users/turf/switchdrive/SJMCS/data/devel/small-deformations/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif";
-        String refPath = "/Users/turf/switchdrive/SJMCS/data/devel/small-deformations/average_template_25um_coronal-300.tif";
+//        String secPath = "/Users/turf/switchdrive/SJMCS/data/devel/small-deformations/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif";
+        String secPath = "/Users/turf/Desktop/new section.tif";
+//        String refPath = "/Users/turf/switchdrive/SJMCS/data/devel/small-deformations/average_template_25um_coronal-300.tif";
+        String refPath = "/Users/turf/Desktop/reference section.tif";
         int levels = 5;
 
         ImageJ ij = new ImageJ();
@@ -158,7 +173,10 @@ public class SectionImageAlignment <T extends RealType<T> & NativeType<T>>  {
         UnsignedByteType type = new UnsignedByteType();
         ArrayImgFactory<UnsignedByteType> factory = new ArrayImgFactory<>();
         Img<UnsignedByteType> sec = IO.openImgs(secPath, factory, type).get(0);
-        Img<UnsignedByteType> ref = IO.openImgs(refPath, factory, type).get(0);
+
+        UnsignedShortType type2 = new UnsignedShortType();
+        ArrayImgFactory<UnsignedShortType> factory2 = new ArrayImgFactory<>();
+        Img<UnsignedShortType> ref = IO.openImgs(refPath, factory2, type2).get(0);
 
         SectionImageAlignment alignment = new SectionImageAlignment(sec, ref,
                 64, true, levels,  ij.op());
