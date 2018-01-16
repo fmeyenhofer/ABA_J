@@ -4,7 +4,9 @@ import io.scif.img.IO;
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
 
-import net.imglib2.*;
+import net.imglib2.IterableInterval;
+import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.Cursor;
 import net.imglib2.algorithm.labeling.AllConnectedComponents;
 import net.imglib2.algorithm.labeling.Watershed;
@@ -14,7 +16,6 @@ import net.imglib2.algorithm.neighborhood.Shape;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.labeling.Labeling;
-
 import net.imglib2.labeling.LabelingType;
 import net.imglib2.labeling.NativeImgLabeling;
 import net.imglib2.type.logic.BitType;
@@ -54,6 +55,7 @@ public class SectionImageTool {
     public static <T extends RealType<T>> Img<BitType> createMask(Img<T> rai, double sigma, OpService ops) {
         Img<T> fil = rai.copy();
         ops.filter().gauss(fil, sigma);
+//        Gauss3.gauss(new double[]{sigma,0}, rai, fil, 1);
 
         Img<BitType> bw = ops.create().img(fil, new BitType());
         ops.threshold().huang(bw, fil);
@@ -61,7 +63,7 @@ public class SectionImageTool {
         Img<BitType> ope = ops.create().img(bw);
         List<Shape> strel = StructuringElements.diamond(3, 1);
 //        ops.morphology().open(ope, bw, strel);
-        Opening.open(Views.extendZero(bw), ope, strel, 4);
+        Opening.open(Views.extendZero(bw), ope, strel, 1);
 
         Img<BitType> hol = ops.create().img(bw);
         ops.morphology().fillHoles(hol, bw);
