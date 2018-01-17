@@ -69,6 +69,9 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
 
     private OpService ops;
 
+    private static int DISPLAY_WIDTH = 652;
+    private static int DISPLAY_HEIGHT = 512;
+
 
 //    private boolean interpolate = true;
 //    private int resolutionOutput = 64;
@@ -76,7 +79,6 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
 
 
     private BdvHandlePanel bdvHandle;
-    private HelpDialog helpDialog;
     private BdvSource sectionSource;
 
     private final Img<V> secImg;
@@ -97,13 +99,10 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         this.dims = refVol.getHdf5().getSequenceDescription().getViewSetups().get(0).getSize();
         this.initialTransform = refVol.getHdf5().getViewRegistrations().getViewRegistration(new ViewId(0, 0)).getModel().copy();
 
-//        ImageJFunctions.show(secImg);
-
         // TODO: depends on the input section (xy, yz, zx)
         RandomAccessibleInterval secVol = Views.addDimension(secImg, 0, dims.dimension(0) - 1);
         secVolPer = Views.permute(secVol, 0, 2);
 
-        // TODO: given the smoothness of the templates, consider a simpler and faster mask creation
         RandomAccessibleInterval<BitType> secMsk = SectionImageTool.createMask(secImg, ops);
         RandomAccessibleInterval<BitType> secOut = ops.morphology().outline(secMsk, false);
         SectionImageOutlineSampler secCon = new SectionImageOutlineSampler(secOut, triangulationLevels);
@@ -115,9 +114,6 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
     private void createAndShow() throws SpimDataException {
         JFrame window = new JFrame("Interactive Section Alignment");
 
-        helpDialog = new HelpDialog(window, InteractiveAlignmentUi.class.getResource("/bdv/InteractiveAlignmentHelp.html"));
-//        helpDialog.setVisible(true);
-
         // General options
         BdvOptions options = Bdv.options();
         options.axisOrder(AxisOrder.XYZ);
@@ -126,11 +122,14 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         // Add key binding
         InputTriggerConfig triggerConfig = BigDataViewer.getInputTriggerConfig(ViewerOptions.options());
         bdvHandle.getKeybindings().addInputMap("bdv ia", createInputMap(triggerConfig));
-        bdvHandle.getKeybindings().addActionMap("bdv ia", createActionMap(this));
+        HelpDialog dialog = new HelpDialog(window,
+                InteractiveAlignmentUi.class.getResource("/bdv/InteractiveAlignmentHelp.html"));
+        bdvHandle.getKeybindings().addActionMap("bdv ia", createActionMap(dialog));
 
         // Configure the UI window
         window.add(bdvHandle.getViewerPanel(), BorderLayout.CENTER);
-        window.setBounds(50, 50, 612, 512);
+
+        window.setBounds(50, 50, DISPLAY_WIDTH, DISPLAY_HEIGHT);
         window.setVisible(true);
 
         // Add the reference volume
@@ -146,6 +145,26 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
                 Bdv.options().addTo(bdvHandle).sourceTransform(initialTransform));
         sectionSource.setColor(new ARGBType(0x0000FF));
         sectionSource.setActive(true);
+
+        // Get the current view transform and rotate it to the yz-plane
+        AffineTransform3D tvw = new AffineTransform3D();
+        bdvHandle.getViewerPanel().getState().getViewerTransform(tvw);
+        tvw.rotate(1, Math.PI/2);   // TODO: depends on the input section (xy, yz, zx)
+
+        // Assemble the entire transform from source to display
+        InvertibleRealTransformSequence tlv = new InvertibleRealTransformSequence();
+        tlv.add(initialTransform);
+        tlv.add(tvw);
+
+        // Check where the center is and put it in the middle of the display
+        double[] cen = new double[]{(double) (dims.dimension(0) / 2),
+                                    (double) (dims.dimension(1) / 2),
+                                    (double) (dims.dimension(2) / 2)};
+        double[] cen_t = new double[3];
+        tlv.apply(cen, cen_t);
+        double[] dcen = new double[]{DISPLAY_WIDTH/2 - cen_t[0], DISPLAY_HEIGHT/2 - cen_t[1], -cen_t[2]};
+        tvw.translate(dcen);
+        bdvHandle.getViewerPanel().setCurrentViewerTransform(tvw);
     }
 
     private InputMap createInputMap(final KeyStrokeAdder.Factory keyProperties) {
@@ -159,37 +178,31 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         return inputMap;
     }
 
-    private ActionMap createActionMap(InteractiveAlignmentUi ui) {
+    private ActionMap createActionMap(HelpDialog dialog) {
         final ActionMap actionMap = new ActionMap();
 
-        new WarpAction("warp section", ui).put(actionMap);
-        new ToggleDialogAction("help", helpDialog).put(actionMap);
-        new ToggleWarpAction("toggle warp", ui).put(actionMap);
+        new WarpAction("warp section", this).put(actionMap);
+        new ToggleDialogAction("help", dialog).put(actionMap);
+        new ToggleWarpAction("toggle warp", this).put(actionMap);
 
         return actionMap;
     }
 
     private void toggleWarp() {
-        if (secVolWrapped != null & !wrapped) {
+        RandomAccessibleInterval rai = (wrapped) ? secVolPer : secVolWrapped;
+
+        if (rai == null) {
+            bdvHandle.getViewerPanel().showMessage("Register with <W>, before toggling.");
+        } else {
             sectionSource.removeFromBdv();
-            sectionSource = BdvFunctions.show(secVolWrapped,
-                    "New Section",
-                    Bdv.options().addTo(bdvHandle).sourceTransform(initialTransform));
-            sectionSource.setColor(new ARGBType(0x0000FF));
-            bdvHandle.getViewerPanel().requestRepaint();
-            wrapped = true;
-        } else if (wrapped) {
-            sectionSource.removeFromBdv();
-            sectionSource = BdvFunctions.show(secVolPer,
+            sectionSource = BdvFunctions.show(rai,
                     "New Section",
                     Bdv.options().addTo(bdvHandle).sourceTransform(initialTransform));
             sectionSource.setColor(new ARGBType(0x0000FF));
             sectionSource.setActive(true);
-            bdvHandle.getViewerPanel().requestRepaint();
-            wrapped = false;
-        } else {
-            bdvHandle.getViewerPanel().showMessage("Register with <W>, before toggling.");
+            wrapped = !wrapped;
         }
+        bdvHandle.getViewerPanel().requestRepaint();
     }
 
     public class ToggleWarpAction extends AbstractNamedAction {
@@ -333,6 +346,7 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
 
         Img<UnsignedShortType> refImg = getCurrentlyVisibleSection(0, bdvHandle);
 
+        // TODO: given the smoothness of the templates, consider a simpler and faster mask creation
         RandomAccessibleInterval<BitType> refMsk = SectionImageTool.createMask(refImg, ops);
         RandomAccessibleInterval<BitType> refOut = ops.morphology().outline(refMsk, false);
 //        ImageJFunctions.show(refOut, "ref. outline");
@@ -354,8 +368,6 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         T.add(T_vw);
 
         InvertibleRealTransform T_lv = T.inverse();
-
-
 
 //        int yMax = bdvHandle.getViewerPanel().getDisplay().getHeight();
 //        int xMax = bdvHandle.getViewerPanel().getDisplay().getWidth();
