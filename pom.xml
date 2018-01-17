@@ -201,6 +201,10 @@
 			<groupId>sc.fiji</groupId>
 			<artifactId>bigdataviewer_fiji</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigwarp_fiji</artifactId>
+		</dependency>
 		<!--<dependency>-->
 			<!--<groupId>net.imagej</groupId>-->
 			<!--<artifactId>ij</artifactId>-->

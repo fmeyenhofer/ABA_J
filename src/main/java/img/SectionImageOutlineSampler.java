@@ -319,13 +319,13 @@ public class SectionImageOutlineSampler {
     /**
      * Try greedily to reduce the global distance between the point sets by
      * moving them along the respective outline.
-     * the input is unchanged, the points of this instance are updated.
      *
      * TODO: consider using contour curvature as additional optimization criterion
      *
      * @param soc Outline samples to match
+     * @return optimized set of points
      */
-    public void optimize(SectionImageOutlineSampler soc) {
+    public ArrayList<OutlinePoint> getOptimizedCorrespondencePoints(SectionImageOutlineSampler soc) {
         // Center this outline and order them according the radial coordinate
         TreeSet<OutlinePoint> out1 = new TreeSet<>();
         for (int r = 0; r < rows; r++) {
@@ -390,12 +390,23 @@ public class SectionImageOutlineSampler {
         }
 
         // Get back the original coordinates
-        samples = new ArrayList<>(cor1.size());
+        ArrayList<OutlinePoint> optimizedSamples = new ArrayList<>(cor1.size());
 
         for (OutlinePoint point : cor1) {
             INDArray row = O.getRow(point.index);
-            samples.add(new OutlinePoint(row.getDouble(0), row.getDouble(1), point.index));
+            optimizedSamples.add(new OutlinePoint(row.getDouble(0), row.getDouble(1), point.index));
         }
+
+        return optimizedSamples;
+    }
+
+    /**
+     * In place optimization of this contour against a second
+     *
+     * @param outlineSampler outline to optimize for
+     */
+    public void optimize(SectionImageOutlineSampler outlineSampler) {
+        this.samples = getOptimizedCorrespondencePoints(outlineSampler);
     }
 
     /**
