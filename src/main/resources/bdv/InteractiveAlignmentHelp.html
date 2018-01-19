@@ -6,6 +6,12 @@ h2
 {
   margin-bottom: 0px;
 }
+h3 {
+  margin-bottom: 0px;
+}
+p {
+  margin-bottom: 5px;
+}
 table, tr, td
 {
   border-spacing: 0px;
@@ -38,11 +44,22 @@ body
 <body>
 
 <h2>Instructions for interactive section alignment</h2>
-<p>Align the section to the reference template using the controls described bellow.
-  With <b>T</b> the section can be transformed independently. Once the sections are approximately aligned,
-  use the <b>W</b> key to map the section on the template.</p>
+<p>To align the section to the reference template proceed as follows:</p>
+<ol>
+  <li>scroll to move along the z-axis to find the corresponding template section.</li>
+  <li>with <b>T</b> the template can be transformed independently. Use the <a href="#navigation">navigation</a> controls
+  to transform the template and hit <b>T</b> again to apply the transformation or <b>ESC</b> to abort.</li>
+  <li>once the section and template are approximately aligned use <b>W</b> to warp the section to the template.</li>
+  <li>repeat the previous points until you get a satisfactory match.</li>
+</ol>
+<p>
+  With <b>Shift&nbsp;W</b> you can toggle between the section display between original and warped. Additionally you can
+toggle the visibility the outline points of the section and the template (which are used to compute the mapping) with
+<b>Shift&nbsp;P</b> (see <a href="#miscellaneous">miscellaneous</a>)
+</p>
 
-<h2>Sources and display modes</h2>
+<h2>Big Data Viewer controls</h2>
+<h3>Sources and display modes</h3>
 <p>
 The viewer has two display modes, <i>single-source</i> and <i>fused</i>.
 In <i>single-source</i> mode, only the <i>current</i> source is shown
@@ -76,7 +93,7 @@ In <i>fused</i> mode, all <i>active</i> sources are shown overlaid.
 </table>
 <br/>
 
-<h2>Navigation</h2>
+<h3><a name="navigation"></a>Navigation</h3>
 <p>
 Using the mouse:
 </p>
@@ -133,7 +150,7 @@ Hold <b>Shift</b> to rotate and browse 10x faster.<br/>
 Hold <b>Ctrl</b> to rotate and browse 10x slower.
 </p>
 
-<h2>Bookmarks</h2>
+<h3>Bookmarks</h3>
 <br/>
 <table border="1">
 <tr>
@@ -149,7 +166,7 @@ Hold <b>Ctrl</b> to rotate and browse 10x slower.
 </table>
 <br/>
 
-<h2>Miscellaneous</h2>
+<h3><a name="miscellaneous"></a>Miscellaneous</h3>
 <br/>
 <table border="1">
 <tr>
@@ -163,6 +180,9 @@ Hold <b>Ctrl</b> to rotate and browse 10x slower.
 </tr><tr>
   <td class="a"><b>Shift&nbsp;W&nbsp;</b></td>
   <td>Toggle original/mapped</td>
+</tr><tr>
+  <td class="a"><b>Shift&nbsp;P&nbsp;</b></td>
+  <td>Toggle outline points visibility</td>
 </tr><tr>
   <td class="a"><b>F10</b></td>
   <td>Show Record Movie dialog.</td>

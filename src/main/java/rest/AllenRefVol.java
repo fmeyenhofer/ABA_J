@@ -74,7 +74,7 @@ public class AllenRefVol {
         return reader.load(nrrdFile.getParent(), nrrdFile.getName());
     }
 
-    private RandomAccessibleInterval<UnsignedShortType> loadHdf5() throws SpimDataException {
+    public RandomAccessibleInterval<UnsignedShortType> getRai() throws SpimDataException {
         SpimDataMinimal spimData = new XmlIoSpimDataMinimal().load(this.xmlFile.getAbsolutePath());
         final AbstractSequenceDescription< ?, ?, ? > seq = spimData.getSequenceDescription();
         Hdf5ImageLoader loader = new Hdf5ImageLoader(hdf5File, null, seq, true);
@@ -219,7 +219,6 @@ public class AllenRefVol {
                     }
                 }
             }
-
         };
 
         WriteSequenceToHdf5.writeHdf5File(seq, perSetupExportMipmapInfo, deflate,
@@ -247,6 +246,13 @@ public class AllenRefVol {
             throw new RuntimeException(e);
         }
         progressWriter.out().println( "done" );
+    }
+
+
+    public enum Plane {
+        XY,
+        YZ,
+        ZX
     }
 
 

@@ -1,5 +1,7 @@
 package gui;
 
+
+import gui.bdv.SectionImageOutlinePoints;
 import img.SectionImageOutlineSampler;
 import img.SectionImageTool;
 import rest.AllenRefVol;
@@ -18,6 +20,7 @@ import bdv.tools.ToggleDialogAction;
 import bdv.viewer.ViewerOptions;
 import bdv.viewer.state.SourceState;
 import bdv.viewer.state.ViewerState;
+import bdv.viewer.VisibilityAndGrouping;
 
 import mpicbg.spim.data.SpimDataException;
 import mpicbg.spim.data.sequence.ViewId;
@@ -58,10 +61,10 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
+
 /**
- * TODO: Add outline points as overlays
  * TODO: Add possibility to work with different perspectives: coronal works, sagital and horizontal need to be added
- * TODO: Set initial perspective
  *
  * @author Felix Meyenhofer
  */
@@ -69,9 +72,14 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
 
     private OpService ops;
 
+
     private static int DISPLAY_WIDTH = 652;
     private static int DISPLAY_HEIGHT = 512;
-
+    private static int SECTION_INDEX = 0;
+    private static int[] SECTION_OUTLIINE_INDICES = new int[]{1, 2};
+    private static int SECTION_WARP_INDEX = 6;
+    private static int TEMPLATE_INDEX = 3;
+    private static int[] TEMPLATE_OUTLINE_INDICES = new int[]{4, 5};
 
 //    private boolean interpolate = true;
 //    private int resolutionOutput = 64;
@@ -79,17 +87,22 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
 
 
     private BdvHandlePanel bdvHandle;
-    private BdvSource sectionSource;
+    private static BdvSource sectionSource = null;
+    private static BdvSource warpedSectionSource = null;
+    private static BdvSource sectionOutlineSrc1 = null;
+    private static BdvSource sectionOutlineSrc2 = null;
+    private static BdvSource templateOutlineSrc1 = null;
+    private static BdvSource templateOutlineSrc2 = null;
 
     private final Img<V> secImg;
-    private RandomAccessibleInterval secVolWrapped;
     private RandomAccessibleInterval secVolPer;
     private final ArrayList<SectionImageOutlineSampler.OutlinePoint> secPts;
     private final AllenRefVol refVol;
     private final Dimensions dims;
 
     private final AffineTransform3D initialTransform;
-    private boolean wrapped = false;
+    private final SectionImageOutlineSampler secCon;
+    private boolean debug = false;
 
 
     private InteractiveAlignmentUi(Img<V> secImg, AllenRefVol refVolFile, OpService opService) throws SpimDataException {
@@ -97,7 +110,9 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         this.secImg = secImg;
         this.refVol = refVolFile;
         this.dims = refVol.getHdf5().getSequenceDescription().getViewSetups().get(0).getSize();
-        this.initialTransform = refVol.getHdf5().getViewRegistrations().getViewRegistration(new ViewId(0, 0)).getModel().copy();
+        this.initialTransform = refVol.getHdf5()
+                .getViewRegistrations()
+                .getViewRegistration(new ViewId(0, 0)).getModel().copy();
 
         // TODO: depends on the input section (xy, yz, zx)
         RandomAccessibleInterval secVol = Views.addDimension(secImg, 0, dims.dimension(0) - 1);
@@ -105,10 +120,9 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
 
         RandomAccessibleInterval<BitType> secMsk = SectionImageTool.createMask(secImg, ops);
         RandomAccessibleInterval<BitType> secOut = ops.morphology().outline(secMsk, false);
-        SectionImageOutlineSampler secCon = new SectionImageOutlineSampler(secOut, triangulationLevels);
+        secCon = new SectionImageOutlineSampler(secOut, triangulationLevels);
         secCon.generatePoints();
         secPts = secCon.getCorrespondencePoints();
-//        srcPts = getGlobalCoordinates(secPts, initialTransform);
     }
 
     private void createAndShow() throws SpimDataException {
@@ -119,6 +133,11 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         options.axisOrder(AxisOrder.XYZ);
         bdvHandle = new BdvHandlePanel(window, options);
 
+        // Configure the UI window
+        window.add(bdvHandle.getViewerPanel(), BorderLayout.CENTER);
+        window.setBounds(50, 50, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+        window.setVisible(true);
+
         // Add key binding
         InputTriggerConfig triggerConfig = BigDataViewer.getInputTriggerConfig(ViewerOptions.options());
         bdvHandle.getKeybindings().addInputMap("bdv ia", createInputMap(triggerConfig));
@@ -126,25 +145,38 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
                 InteractiveAlignmentUi.class.getResource("/bdv/InteractiveAlignmentHelp.html"));
         bdvHandle.getKeybindings().addActionMap("bdv ia", createActionMap(dialog));
 
-        // Configure the UI window
-        window.add(bdvHandle.getViewerPanel(), BorderLayout.CENTER);
-
-        window.setBounds(50, 50, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-        window.setVisible(true);
-
-        // Add the reference volume
-        List<BdvStackSource<?>> ref = BdvFunctions.show(refVol.getHdf5(),
-                Bdv.options().addTo(bdvHandle));
-        ref.get(0).setColor(new ARGBType(0x00FF00));
-        ref.get(0).setActive(true);
-//        ref.get(0).setDisplayRange(0, 400);
-
         // Add the section volume
         sectionSource = BdvFunctions.show(secVolPer,
-                "New Section",
+                "input section",
                 Bdv.options().addTo(bdvHandle).sourceTransform(initialTransform));
         sectionSource.setColor(new ARGBType(0x0000FF));
         sectionSource.setActive(true);
+
+        // Add section contour points
+        double x = dims.dimension(0)/2;
+
+        sectionOutlineSrc1 = BdvFunctions.showOverlay(
+                new SectionImageOutlinePoints(secPts, x, AllenRefVol.Plane.YZ),
+                "section outline points",
+                Bdv.options().addTo(bdvHandle).sourceTransform(initialTransform));
+        sectionOutlineSrc1.setColor(new ARGBType(0x0000FF));
+        sectionOutlineSrc1.setDisplayRangeBounds(0, 1);
+        sectionOutlineSrc1.setActive(false);
+
+        sectionOutlineSrc2 = BdvFunctions.showOverlay(
+                new SectionImageOutlinePoints(secCon.getCentroidCoordinates(), secPts.get(0).getCoordinates(), x, AllenRefVol.Plane.YZ),
+                "section centroid and 1st",
+                Bdv.options().addTo(bdvHandle).sourceTransform(initialTransform));
+        sectionOutlineSrc2.setColor(new ARGBType(0x00FFFF));
+        sectionOutlineSrc2.setDisplayRangeBounds(1, 1);
+        sectionOutlineSrc2.setActive(false);
+
+        // Add the reference volume
+        List<BdvStackSource<?>> stkSources = BdvFunctions.show(refVol.getHdf5(),
+                Bdv.options().addTo(bdvHandle));
+        stkSources.get(0).setColor(new ARGBType(0x00FF00));
+        stkSources.get(0).setActive(true);
+        stkSources.get(0).setCurrent();
 
         // Get the current view transform and rotate it to the yz-plane
         AffineTransform3D tvw = new AffineTransform3D();
@@ -173,6 +205,7 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
 
         map.put("warp section", "W");
         map.put("toggle warp", "shift W");
+        map.put("toggle points", "shift P");
         map.put("help", "F1", "H");
 
         return inputMap;
@@ -181,44 +214,45 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
     private ActionMap createActionMap(HelpDialog dialog) {
         final ActionMap actionMap = new ActionMap();
 
+        int[] sections = new int[]{SECTION_INDEX, SECTION_WARP_INDEX};
+        int[] outlines = ArrayUtils.addAll(SECTION_OUTLIINE_INDICES, TEMPLATE_OUTLINE_INDICES);
+
         new WarpAction("warp section", this).put(actionMap);
         new ToggleDialogAction("help", dialog).put(actionMap);
-        new ToggleWarpAction("toggle warp", this).put(actionMap);
+        new ToggleVisibilityAction("toggle warp", this, sections).put(actionMap);
+        new ToggleVisibilityAction("toggle points", this, outlines).put(actionMap);
 
         return actionMap;
     }
 
-    private void toggleWarp() {
-        RandomAccessibleInterval rai = (wrapped) ? secVolPer : secVolWrapped;
 
-        if (rai == null) {
-            bdvHandle.getViewerPanel().showMessage("Register with <W>, before toggling.");
-        } else {
-            sectionSource.removeFromBdv();
-            sectionSource = BdvFunctions.show(rai,
-                    "New Section",
-                    Bdv.options().addTo(bdvHandle).sourceTransform(initialTransform));
-            sectionSource.setColor(new ARGBType(0x0000FF));
-            sectionSource.setActive(true);
-            wrapped = !wrapped;
-        }
-        bdvHandle.getViewerPanel().requestRepaint();
-    }
+    public class ToggleVisibilityAction extends AbstractNamedAction {
 
-    public class ToggleWarpAction extends AbstractNamedAction {
-
+        private final int[] indices;
         private final InteractiveAlignmentUi ui;
 
-        ToggleWarpAction(String name, InteractiveAlignmentUi ui) {
+        ToggleVisibilityAction(String name, InteractiveAlignmentUi ui, int[] sourceIndices) {
             super(name);
             this.ui = ui;
+            this.indices = sourceIndices;
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            this.ui.toggleWarp();
+            ViewerState viewerState = this.ui.bdvHandle.getViewerPanel().getState();
+            VisibilityAndGrouping visibility = this.ui.bdvHandle.getViewerPanel().getVisibilityAndGrouping();
+            int nSources = viewerState.getSources().size();
+            for (int index : indices) {
+                if (index < nSources) {
+                    boolean active = viewerState.getSources().get(index).isActive();
+                    visibility.setSourceActive(index, !active);
+                }
+            }
+
+            bdvHandle.getViewerPanel().requestRepaint();
         }
     }
+
 
     public class WarpAction extends AbstractNamedAction {
 
@@ -231,129 +265,26 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-//            this.ui.register();
-            this.ui.snapOutline();
+            this.ui.warpSectionImage();
         }
     }
 
 
-//    private <U extends RealType<U> & NativeType<U>> ImagePlus warp(Img<U> source, Img<U> target) throws Exception {
-//        long[] dim = new long[source.numDimensions()];
-//        source.dimensions(dim);
-//        int width = (int) dim[0];
-//        int height = (int) dim[1];
-//
-//        RandomAccessibleInterval<BitType> secMsk = SectionImageTool.createMask(source, ops);
-//        RandomAccessibleInterval<BitType> refMsk = SectionImageTool.createMask(target, ops);
-//
-//        RandomAccessibleInterval<BitType> secOut = ops.morphology().outline(secMsk, false);
-//        RandomAccessibleInterval<BitType> refOut = ops.morphology().outline(refMsk, false);
-//
-//        SectionImageOutlineSampler secCon = new SectionImageOutlineSampler(secOut, triangulationLevels);
-//        secCon.generatePoints();
-//        SectionImageOutlineSampler refCon = new SectionImageOutlineSampler(refOut, triangulationLevels);
-//        refCon.generatePoints();
-//
-//        // Alignment
-//        secCon.optimize(refCon);
-//        ArrayList<SectionImageOutlineSampler.OutlinePoint> secPts = secCon.getCorrespondencePoints();
-//        ArrayList<SectionImageOutlineSampler.OutlinePoint> refPts = refCon.getCorrespondencePoints();
-//
-//        int nMatches = refPts.size() + 1;
-//        ArrayList<PointMatch> matches = new ArrayList<>(nMatches);
-//        for (int i = 0; i < refPts.size(); i++) {
-//            Point p1 = new Point(secPts.get(i).getCoordinates());
-//            Point p2 = new Point(refPts.get(i).getCoordinates());
-//            matches.add(new PointMatch(p1, p2));
-//        }
-//
-//        matches.add(new PointMatch(new Point(secCon.getCentroidCoordinates()),
-//                new Point(refCon.getCentroidCoordinates()), 3));
-//
-//        final MovingLeastSquaresTransform mlt = new MovingLeastSquaresTransform();
-//        mlt.setModel(AffineModel2D.class);
-//        mlt.setAlpha(2.0f);
-//        mlt.setMatches(matches);
-//
-//        CoordinateTransformMesh mltMesh = new CoordinateTransformMesh(mlt, resolutionOutput, width, height);
-//        final TransformMeshMapping<CoordinateTransformMesh> mltMapping = new TransformMeshMapping<>(mltMesh);
-//
-//        final ImagePlus secImp = ImageJFunctions.wrap(source, "section");
-//        final ImageProcessor srcIp, trgIp;
-//        srcIp = secImp.getProcessor();
-//        trgIp = srcIp.createProcessor(width, height);
-//
-//        if (interpolate) {
-//            mltMapping.mapInterpolated(srcIp, trgIp);
-//        } else {
-//            mltMapping.map(srcIp, trgIp);
-//        }
-//
-//        ImagePlus warp = new ImagePlus("mapped section", trgIp);
-//
-//        return warp;
-//    }
-
-//    private <M extends RealType<M> & NativeType<M>> void visualiseWarp(Img<M> source, ImagePlus warp, Img<M> target) {
-//        long[] dim = new long[source.numDimensions()];
-//        source.dimensions(dim);
-//
-//        M miSrc = source.firstElement().createVariable();
-//        miSrc.setReal(0.0);
-//        M maSrc = ops.stats().max(source);
-//        M maSrcT = source.firstElement().createVariable();
-//        maSrcT.setReal(255.0);
-//        Img<UnsignedByteType> nSrc = ops.convert().uint8(ops.image().normalize(source, miSrc, maSrc, miSrc, maSrcT));
-//
-//        M miTar = target.firstElement().createVariable();
-//        miTar.setReal(0.0);
-//        M maTar = ops.stats().max(target);
-//        M maTarT = target.firstElement().createVariable();
-//        maTarT.setReal(255.0);
-//        Img<UnsignedByteType> nTar = ops.convert().uint8(ops.image().normalize(target, miTar, maTar, miTar, maTarT));
-//
-//        final ImagePlus secImp = ImageJFunctions.wrap(nSrc, "source");
-//        final ImagePlus refImp = ImageJFunctions.wrap(nTar, "target");
-//
-//
-//        ImageStack stk = new ImageStack(secImp.getWidth(), secImp.getHeight(), 3);
-//        stk.setProcessor(secImp.getProcessor(), 1);
-//        stk.setProcessor(warp.getProcessor(), 2);
-//        stk.setProcessor(refImp.getProcessor(), 3);
-//
-//        CompositeImage res = new CompositeImage(new ImagePlus("warp", stk), CompositeImage.COMPOSITE);
-//        res.show();
-//    }
-
-//    private void register() {
-//        Img<UnsignedShortType> refImg = getCurrentlyVisibleSection(0, bdvHandle);//ImgView.wrap(refSec, new ArrayImgFactory<>());
-//        Img<UnsignedShortType> secImg = getCurrentlyVisibleSection(1, bdvHandle);//ImgView.wrap(newSec, new ArrayImgFactory<>());
-////        ImageJFunctions.show(refImg);
-////            SectionImageAlignment<UnsignedShortType> alignment = new SectionImageAlignment<>(secImg.copy(), refImg.copy(), 64, true, 5, ops);
-//        try {
-//            ImagePlus mapped = warp(secImg, refImg);
-//            visualiseWarp(secImg, mapped, refImg);
-//        } catch (Exception e1) {
-//            e1.printStackTrace();
-//        }
-//
-//        System.out.println("was here");
-//    }
-
-    private void snapOutline() {
+    private void warpSectionImage() {
         bdvHandle.getViewerPanel().showMessage("mapping sections...");
         bdvHandle.getViewerPanel().requestRepaint();
 
-        Img<UnsignedShortType> refImg = getCurrentlyVisibleSection(0, bdvHandle);
+        Img<UnsignedShortType> refImg = getCurrentlyVisibleTemplateSection();
 
         // TODO: given the smoothness of the templates, consider a simpler and faster mask creation
         RandomAccessibleInterval<BitType> refMsk = SectionImageTool.createMask(refImg, ops);
         RandomAccessibleInterval<BitType> refOut = ops.morphology().outline(refMsk, false);
-//        ImageJFunctions.show(refOut, "ref. outline");
 
         SectionImageOutlineSampler refCon = new SectionImageOutlineSampler(refOut, triangulationLevels);
         refCon.generatePoints();
         ArrayList<SectionImageOutlineSampler.OutlinePoint> refPts = refCon.getCorrespondencePoints();
+
+        // TODO optimize correspondences
 
         ViewerState viewerState = bdvHandle.getViewerPanel().getState();
         AffineTransform3D T_vw = new AffineTransform3D();
@@ -369,23 +300,17 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
 
         InvertibleRealTransform T_lv = T.inverse();
 
-//        int yMax = bdvHandle.getViewerPanel().getDisplay().getHeight();
-//        int xMax = bdvHandle.getViewerPanel().getDisplay().getWidth();
-//        double[] zsample = new double[3];
-//        T_lv.apply(new double[]{xMax / 2, yMax / 2, 0}, zsample);
-////        double z = zsample[2];
-//
-////        System.out.println(T);
+        // Put the points in data-structure for the TPS solver and map section outline points and reference points
+        // into the same space (local)
         int N = secPts.size();
-
-
         double[][] secVects = new double[2][N];
         double[][] refVects = new double[2][N];
-        NumberFormat twodec = new DecimalFormat("#0.0");
+        StringBuilder str = null;
 
         for (int i = 0; i < N; i++) {
-            StringBuffer str1 = new StringBuffer().append(i).append(":");
-            StringBuilder str2 = new StringBuilder();
+            if (debug) {
+                str = new StringBuilder().append(i).append(":");
+            }
 
             double[] srcVect = new double[]{refPts.get(i).getCoordinates()[0], refPts.get(i).getCoordinates()[1], 0};
             double[] dstVect = new double[3];
@@ -395,73 +320,71 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
 
             for (int d = 0; d < 2; d++) {
                 refVects[d][i] = dstVect[2-d]; // TODO: depends on the input section (xy, yz, zx)
-                str2.append(" ").append(twodec.format(dstVect[2-d]));
-
                 secVects[d][i] = secVect[d];
-                str1.append(" ").append(twodec.format(secVect[d]));
             }
-            str1.append(" <-> ").append(str2).append(" - ");
-            System.out.print(str1);
 
-            System.out.println(array2str(dstVect));
+            if (debug && (str != null)) {
+                str.append(array2str(srcVect))
+                        .append( " <-> ")
+                        .append(array2str(new double[]{ refVects[i][0], refVects[i][1]}))
+                        .append(" - ")
+                        .append(array2str(dstVect));
+                System.out.println(str);
+            }
         }
-
-//        if (secCon == null) {
-//
-//            RealRandomAccessible<V> rai = Views.interpolate(Views.extendZero(secImg), new NLinearInterpolatorFactory<>());
-//            RealRandomAccessible<V> mapped = RealViews.transform(rai, initialTransform);
-//            secImgGlob = Views.raster(mapped);
-//
-//            RandomAccessibleInterval<BitType> secMsk = SectionImageTool.createMask(secImg, ops);
-//            RandomAccessibleInterval<BitType> secOut = ops.morphology().outline(secMsk, false);
-//            secCon = new SectionImageOutlineSampler(secOut, triangulationLevels);
-//            secCon.generatePoints();
-////        IntType secArea = ops.stats().sum(secImg);
-//            ImageJFunctions.show(secOut);
-//        }
-
-//        ArrayList<SectionImageOutlineSampler.OutlinePoint> secPts = secCon.getOptimizedCorrespondencePoints(refCon);
-
-
-//        int N = refPts.size();
-//        double[][] srcPts = new double[2][N];
-//        double[][] dstPts = new double[2][N];
-//        for (int i = 0; i < refPts.size(); i++) {
-//            for (int d = 0; d < 2; d++) {
-//                srcPts[d][i] = secPts.get(i).getCoordinates()[d];
-//                dstPts[d][i] = refPts.get(i).getCoordinates()[d];
-//            }
-//        }
 
         ThinPlateR2LogRSplineKernelTransform tps = new ThinPlateR2LogRSplineKernelTransform(2, refVects, secVects);
         TpsTransformWrapper tpsw = new TpsTransformWrapper(2, tps);
 
 //        Affine3DHelpers.extractScale()
 
-//        InvertibleRealTransformSequence T_wl = new InvertibleRealTransformSequence();
-//        T_wl.add(tpsw);
-//        T_wl.add(this.initialTransform);
-
-
         RandomAccessibleInterval<V> rai = secImg.copy();
         RealRandomAccessible<V> interp = Views.interpolate(Views.extendZero(rai), new NLinearInterpolatorFactory<>());
         RealRandomAccessible<V> mapped = RealViews.transform(interp, tpsw);
         RandomAccessibleInterval<V> warp = Views.interval(Views.raster(mapped), secImg);
-//        ImageJFunctions.show(warp, "wrapped section");
 
         RandomAccessibleInterval secVol = Views.addDimension(warp, 0, dims.dimension(0) - 1);
-        secVolWrapped = Views.permute(secVol, 0, 2);
+        RandomAccessibleInterval secVolWrapped = Views.permute(secVol, 0, 2);
 
-        wrapped = false;
-        toggleWarp();
-//        sectionSource.removeFromBdv();
-//        sectionSource = BdvFunctions.show(secVolWrapped,
-//                "New Section",
-//                Bdv.options().addTo(bdvHandle).sourceTransform(initialTransform));
-//        sectionSource.setColor(new ARGBType(0x0000FF));
-//
-//        bdvHandle.getViewerPanel().requestRepaint();
-        System.out.println("mapped sections.");
+        // Remove and re-add the outline points of the template and the warped section image
+        if (warpedSectionSource != null) {
+            warpedSectionSource.removeFromBdv();
+        }
+        if (templateOutlineSrc2 != null) {
+            templateOutlineSrc2.removeFromBdv();
+        }
+        if (templateOutlineSrc1 != null) {
+            templateOutlineSrc1.removeFromBdv();
+        }
+
+        boolean showPoints = bdvHandle.getViewerPanel().getState().getSources().get(SECTION_OUTLIINE_INDICES[0]).isActive();
+
+        templateOutlineSrc1 = BdvFunctions.showOverlay(
+                new SectionImageOutlinePoints(refPts, T_lv),
+                "template outline points",
+                Bdv.options().addTo(bdvHandle).sourceTransform(initialTransform));
+        templateOutlineSrc1.setColor(new ARGBType(0xFF0000));
+        templateOutlineSrc1.setDisplayRangeBounds(0, 1);
+        templateOutlineSrc1.setActive(showPoints);
+
+        templateOutlineSrc2 = BdvFunctions.showOverlay(
+                new SectionImageOutlinePoints(refCon.getCentroidCoordinates(), refPts.get(0).getCoordinates(), T_lv),
+                "template centroid and 1st",
+                Bdv.options().addTo(bdvHandle).sourceTransform(initialTransform));
+        templateOutlineSrc2.setColor(new ARGBType(0xFFFF00));
+        templateOutlineSrc2.setDisplayRangeBounds(1, 1);
+        templateOutlineSrc2.setActive(showPoints);
+
+        // Add the warped section
+        sectionSource.setActive(false);
+
+        warpedSectionSource = BdvFunctions.show(secVolWrapped,
+                "warped section",
+                Bdv.options().addTo(bdvHandle).sourceTransform(initialTransform));
+        warpedSectionSource.setColor(new ARGBType(0x0000FF));
+        warpedSectionSource.setActive(true);
+
+        bdvHandle.getViewerPanel().requestRepaint();
     }
 
     private static String array2str(double[] a) {
@@ -474,7 +397,7 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         return str.toString();
     }
 
-    private static Img<UnsignedShortType> getCurrentlyVisibleSection(int sourceNumber, BdvHandlePanel bdvHandle) {
+    private Img<UnsignedShortType> getCurrentlyVisibleTemplateSection() {
         ViewerState viewerState = bdvHandle.getViewerPanel().getState();
 
         int yMax = bdvHandle.getViewerPanel().getDisplay().getHeight();
@@ -485,20 +408,17 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         final AffineTransform3D T_vw = new AffineTransform3D();
         bdvHandle.getViewerPanel().getState().getViewerTransform(T_vw);
 
-        SourceState srcState = viewerState.getSources().get(sourceNumber);
+        SourceState srcState = viewerState.getSources().get(TEMPLATE_INDEX);
         final AffineTransform3D T_wl = new AffineTransform3D();
         srcState.getSpimSource().getSourceTransform(0, 0, T_wl);
 
         final InvertibleRealTransformSequence T_vl = new InvertibleRealTransformSequence();
         T_vl.add(T_wl);
         T_vl.add(T_vw);
-        
-        RandomAccessibleInterval<UnsignedShortType> rai = srcState.getSpimSource().getSource(0, 0);
-//        ImageJFunctions.show(rai);
 
+        RandomAccessibleInterval<UnsignedShortType> rai = srcState.getSpimSource().getSource(0, 0);
         RealRandomAccessible<UnsignedShortType> interpolated = Views.interpolate(Views.extendZero(rai), new NLinearInterpolatorFactory<>());
         RealRandomAccessible<UnsignedShortType> transformed = RealViews.transform(interpolated, T_vl);
-//        ImageJFunctions.show(Views.interval(Views.raster(transformed), rai));
         RandomAccessibleInterval<UnsignedShortType> section = Views.interval(Views.raster(transformed), lb, ub);
 
         return ImgView.wrap(Views.hyperSlice(section, 2, 0), new ArrayImgFactory<>());
