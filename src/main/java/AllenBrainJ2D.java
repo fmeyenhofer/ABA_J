@@ -44,13 +44,13 @@ import java.util.List;
 
 
 /**
- *
+ * TODO: delete
  * http://www.alleninstitute.org/legal/terms-use/
  *
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Test")
-public class AllenBrainJ2D implements Command {
+//@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Test")
+public class AllenBrainJ2D {
 
 //    /** ImageJ io service instance */
 //    @Parameter
@@ -115,7 +115,7 @@ public class AllenBrainJ2D implements Command {
     /**
      * Method to do all the work.
      */
-    @Override
+//    @Override
     public void run() {
 //        ImgOpener opener = new ImgOpener();
 
