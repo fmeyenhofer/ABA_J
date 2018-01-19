@@ -561,7 +561,7 @@ class AllenAPI {
                 TransformerException,
                 URISyntaxException {
 
-            URL query = AllenAPI.RMA.createProductQueryUrl(Atlas.Species.Mouse);
+            URL query = AllenAPI.RMA.createProductQueryUrl(Atlas.Species.MOUSE);
             URL adjusted = AllenAPI.RMA.adjustResponseSize(query);
             AllenXml xml = new AllenXml(adjusted);
 

@@ -12,13 +12,13 @@ class Atlas {
     static final int DEFAULT_PRODUCT_ID = 12;
 
     enum Species {
-        Human,
-        Mouse
+        HUMAN,
+        MOUSE
     }
 
     enum PlaneOfSection {
-        coronal,
-        sagital
+        CORONAL,
+        SAGITAL,
+        HORIZONTAL
     }
-
 }

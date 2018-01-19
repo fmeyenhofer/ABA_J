@@ -219,7 +219,7 @@ public class AllenClient {
 
 
         // List all the products for mouse and the associated datasets
-        AllenXml mouse_products = client.cache.getResponseXml(AllenAPI.RMA.createProductQueryUrl(Atlas.Species.Mouse));
+        AllenXml mouse_products = client.cache.getResponseXml(AllenAPI.RMA.createProductQueryUrl(Atlas.Species.MOUSE));
         client.tell("Mouse products: ");
         for (Element product : mouse_products.getElements()) {
             String product_name = product.getChild("name").getValue();
@@ -228,7 +228,7 @@ public class AllenClient {
 
             if (product_name.contains("Reference")) {
                 AllenXml datasets = client.cache.getResponseXml(
-                        AllenAPI.RMA.createSectionDataSetsQuery(Integer.parseInt(product_id), Atlas.PlaneOfSection.coronal));
+                        AllenAPI.RMA.createSectionDataSetsQuery(Integer.parseInt(product_id), Atlas.PlaneOfSection.CORONAL));
                 for (Element dataset : datasets.getElements()) {
                     String dataset_id = dataset.getChild("id").getValue();
                     client.tell("\t\t" + dataset_id);
