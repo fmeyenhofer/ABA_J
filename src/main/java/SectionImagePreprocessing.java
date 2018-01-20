@@ -1,9 +1,14 @@
 import img.SectionImageOutlineSampler;
 import img.SectionImageTool;
+
 import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.ops.OpService;
-import net.imglib2.*;
+
+import net.imglib2.Interval;
+import net.imglib2.FinalInterval;
+import net.imglib2.RealRandomAccessible;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgView;
 import net.imglib2.img.array.ArrayImgFactory;
@@ -15,8 +20,11 @@ import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.view.Views;
+
 import org.apache.commons.lang.ArrayUtils;
+
 import org.nd4j.linalg.api.ndarray.INDArray;
+
 import org.scijava.ItemIO;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
@@ -30,7 +38,7 @@ import java.io.IOException;
  * @author Felix Meyenhofer
  */
 @Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Pre-Processing > Orient + Auto-Crop")
-public class SectionimagePreprocessing <T extends RealType<T> & NativeType<T>> implements Command {
+public class SectionImagePreprocessing<T extends RealType<T> & NativeType<T>> implements Command {
 
     @Parameter
     private OpService ops;
@@ -51,6 +59,7 @@ public class SectionimagePreprocessing <T extends RealType<T> & NativeType<T>> i
     @Parameter(label = "Show mask")
     private boolean showMask = false;
 
+    @SuppressWarnings("unused")
     @Parameter(type = ItemIO.OUTPUT)
     private ImgPlus outputSection;
 
@@ -134,7 +143,7 @@ public class SectionimagePreprocessing <T extends RealType<T> & NativeType<T>> i
         Object img = ij.io().open("/Users/turf/switchdrive/SJMCS/data/lamy-lab/floating/160128_crym_gng2/ome/series-3/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-09.ome.tif");
         ij.ui().show(img);
 
-        ij.command().run(SectionimagePreprocessing.class, true);
+        ij.command().run(SectionImagePreprocessing.class, true);
     }
 }
 
