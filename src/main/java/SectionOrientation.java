@@ -44,6 +44,7 @@ public class SectionOrientation <T extends RealType<T> & NativeType<T>> implemen
     @Parameter(label = "Input Section")
     private ImgPlus<T> inputSection;
 
+    @SuppressWarnings("unused")
     @Parameter(type = ItemIO.OUTPUT)
     private ImgPlus outputSection;
 
@@ -76,6 +77,7 @@ public class SectionOrientation <T extends RealType<T> & NativeType<T>> implemen
 
         AffineTransform2D t = new AffineTransform2D();
         t.rotate(sampler.getRotation());
+        System.out.println(sampler.getRotation());
 
         status.showStatus(50,100, "rotate");
         RealRandomAccessible<DoubleType> interp = Views.interpolate(Views.extendZero(imgSrc), new NLinearInterpolatorFactory());

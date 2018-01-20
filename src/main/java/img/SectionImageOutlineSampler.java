@@ -14,10 +14,11 @@ import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
 
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.cpu.nativecpu.NDArray;
-import org.nd4j.linalg.dimensionalityreduction.PCA;
-import org.nd4j.linalg.factory.Nd4j;
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.math3.linear.EigenDecomposition;
+import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.stat.correlation.Covariance;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -41,8 +42,9 @@ import java.util.*;
 public class SectionImageOutlineSampler {
 
     /** Contour coordinates */
-    private final INDArray O;
+    private final RealMatrix O;
     private final int rows;
+    private final int cols;
 
     /** Centroid coordinates of the contour */
     private double cx;
@@ -64,17 +66,28 @@ public class SectionImageOutlineSampler {
     /**
      * Constructor
      *
-     * @param matrix contour coordinates
+     * @param coords contour coordinates
      * @param levels number of triangulation iteration levels
      */
-    public SectionImageOutlineSampler(INDArray matrix, int levels) {
+    public SectionImageOutlineSampler(List<double[]> coords, int levels) {
         lvls = levels;
-        O = matrix;
-        rows = matrix.shape()[0];
 
-        INDArray centroid = O.mean(0);
-        cx = centroid.getDouble(0, 0);
-        cy = centroid.getDouble(0, 1);
+        rows = coords.size();
+        cols = coords.get(0).length;
+
+        O = MatrixUtils.createRealMatrix(rows, cols);
+        double sumX = 0;
+        double sumY = 0;
+        int i = 0;
+        for (double[] coordinate : coords) {
+            sumX += coordinate[0];
+            sumY += coordinate[1];
+
+            O.setRow(i++, coordinate);
+        }
+
+        cx = sumX / rows;
+        cy = sumY / rows;
     }
 
     /**
@@ -92,31 +105,70 @@ public class SectionImageOutlineSampler {
      * the component to compute the rotation angle if the section.
      */
     public void doPca() {
-        INDArray A = O.dup();
-        INDArray factors = PCA.pca_factor(A, 2, true);
-        double n1y = factors.getDouble(0, 0);
-        double n1x = factors.getDouble(0, 1);
+        Covariance covariance = new Covariance(O.copy());
+        RealMatrix covarianceMatrix = covariance.getCovarianceMatrix();
+        EigenDecomposition ed = new EigenDecomposition(covarianceMatrix);
 
+        double n1x = ed.getV().getEntry(0, 1);
+        double n1y = ed.getV().getEntry(0, 0);
         theta = -Math.atan(n1x / n1y);
     }
 
-    public INDArray getRotatedCoordinates() {
+    /**
+     * Bounding box of the input coordinates
+     *
+     * @param mat input coordinates
+     * @return bounding box [x_min y_min x_max y_max]
+     */
+    public double[] getBoundingBox(RealMatrix mat) {
+        double minX = Double.MAX_VALUE;
+        double minY = Double.MAX_VALUE;
+        double maxX = Double.MIN_VALUE;
+        double maxY = Double.MIN_VALUE;
+        for (int i = 0; i < mat.getRowDimension(); i++) {
+            double x = mat.getEntry(i, 0);
+            double y = mat.getEntry(i, 1);
+            if (x < minX) {
+                minX = x;
+            }
+            if (x > maxX) {
+                maxX = x;
+            }
+            if (y < minY) {
+                minY = y;
+            }
+            if (y > maxY) {
+                maxY = y;
+            }
+        }
+
+        return new double[]{minX, minY, maxX, maxY};
+    }
+
+    /**
+     * Get the bounding box of the {@link SectionImageOutlineSampler#theta}- rotated
+     * coordinates.
+     *
+     * @return bounding box [x_min y_min x_max y_max]
+     */
+    public double[] getRotatedBoundingBox() {
         if (theta == null) {
             doPca();
         }
 
-        List<INDArray> coords = new ArrayList<>(rows);
+        RealMatrix O_ = MatrixUtils.createRealMatrix(rows, cols);
+
         for (int r = 0; r < rows; r++) {
-            double x = O.getRow(r).getDouble(0);
-            double y = O.getRow(r).getDouble(1);
+            double x = O.getEntry(r, 0);
+            double y = O.getEntry(r, 1);
 
             double u = x * Math.cos(theta) - y * Math.sin(theta);
             double v = x * Math.sin(theta) + y * Math.cos(theta);
 
-            coords.add(Nd4j.create(new double[]{u, v}));
+            O_.setRow(r, new double[]{u, v});
         }
 
-        return new NDArray(coords, new int[]{rows, 2});
+        return getBoundingBox(O_);
     }
 
     /**
@@ -125,20 +177,20 @@ public class SectionImageOutlineSampler {
      * @param outline binary object mask
      * @return outline coordinates
      */
-    private static INDArray extractOutlineCoordinates(RandomAccessibleInterval<BitType> outline) {
-        float[] position = new float[outline.numDimensions()];
-        List<INDArray> coordinates = new ArrayList<>();
-
+    private static List<double[]> extractOutlineCoordinates(RandomAccessibleInterval<BitType> outline) {
+        int d = outline.numDimensions();
+        List<double[]> coordinates = new ArrayList<>();
         Cursor<BitType> cursor = Views.flatIterable(outline).cursor();
         while (cursor.hasNext()) {
             BitType value = cursor.next();
             if (value.get()) {
+                double[] position = new double[d];
                 cursor.localize(position);
-                coordinates.add(Nd4j.create(position));
+                coordinates.add(position);
             }
         }
 
-        return new NDArray(coordinates, new int[]{coordinates.size(), position.length});
+        return coordinates;
     }
 
     /**
@@ -155,8 +207,8 @@ public class SectionImageOutlineSampler {
 
         // Transform coordinates and put them a tree-set ordered by the radial distribution around the center
         for (int r = 0; r < rows; r++) {
-            double x = O.getRow(r).getDouble(0);
-            double y = O.getRow(r).getDouble(1);
+            double x = O.getEntry(r, 0);
+            double y = O.getEntry(r, 1);
 
             double xc = x - cx;
             double yc = y - cy;
@@ -219,8 +271,9 @@ public class SectionImageOutlineSampler {
 
         // Get back the original coordinates
         for (OutlinePoint point : correspondences) {
-            INDArray row = O.getRow(point.index);
-            samples.add(new OutlinePoint(row.getDouble(0), row.getDouble(1), point.index));
+//            INDArray row = O.getRow(point.index);
+            double[] coord = O.getRow(point.index);
+            samples.add(new OutlinePoint(coord, point.index));
         }
 
         return samples;
@@ -348,7 +401,7 @@ public class SectionImageOutlineSampler {
         // Center this outline and order them according the radial coordinate
         TreeSet<OutlinePoint> out1 = new TreeSet<>();
         for (int r = 0; r < rows; r++) {
-            OutlinePoint p = new OutlinePoint(O.getRow(r).getDouble(0), this.O.getRow(r).getDouble(1), r);
+            OutlinePoint p = new OutlinePoint(O.getRow(r), r);
             p.subtract(cx, cy);
             out1.add(p);
         }
@@ -412,8 +465,7 @@ public class SectionImageOutlineSampler {
         ArrayList<OutlinePoint> optimizedSamples = new ArrayList<>(cor1.size());
 
         for (OutlinePoint point : cor1) {
-            INDArray row = O.getRow(point.index);
-            optimizedSamples.add(new OutlinePoint(row.getDouble(0), row.getDouble(1), point.index));
+            optimizedSamples.add(new OutlinePoint(O.getRow(point.index), point.index));
         }
 
         return optimizedSamples;
@@ -434,10 +486,8 @@ public class SectionImageOutlineSampler {
      * @return image stack (one slice for outline and centroid and the second for the sampled points)
      */
     public RandomAccessibleInterval<UnsignedByteType> visualise() {
-        INDArray min = O.min(0);
-        INDArray max = O.max(0);
-
-        long[] dim = new long[]{min.getInt(0) + max.getInt(0), min.getInt(1) + max.getInt(1)};
+        double[] bb = getBoundingBox(O);
+        long[] dim = new long[]{(long) (bb[0] +bb[2]), (long) (bb[1] + bb[3])};
         List<RandomAccessibleInterval<UnsignedByteType>> stk = visualise(dim);
 
         return Views.stack(stk);
@@ -478,8 +528,8 @@ public class SectionImageOutlineSampler {
         }
 
         for (int r = 0; r < rows; r++) {
-            int x = O.getRow(r).getInt(0);
-            int y = O.getRow(r).getInt(1);
+            int x = (int) O.getEntry(r, 0);
+            int y = (int) O.getEntry(r, 1);
             cursor.setPosition(new int[]{x, y});
             cursor.get().set(255);
         }
@@ -564,7 +614,7 @@ public class SectionImageOutlineSampler {
      *
      * @return array of outline coordinates
      */
-    public INDArray getOutlineCoordinates() {
+    public RealMatrix getOutlineCoordinates() {
         return O;
     }
 
@@ -581,6 +631,10 @@ public class SectionImageOutlineSampler {
         int index;
 
         private NumberFormat twodec = new DecimalFormat("#0.00");
+
+        OutlinePoint(double[] pt, int index) {
+            this(pt[0], pt[1], index);
+        }
 
         OutlinePoint(double x, double y, int index) {
             this.x = x;
@@ -658,6 +712,9 @@ public class SectionImageOutlineSampler {
 //        ImgPlus<UnsignedByteType> img = new ImgPlus<UnsignedByteType>(vis, "Contour sampling", new AxisType[]{Axes.X, Axes.Y, Axes.CHANNEL});
         ij.ui().show(vis);
 
+        System.out.println(sampler.getRotation());
         System.out.println("Done");
+
+        System.out.println(ArrayUtils.toString(sampler.getBoundingBox(sampler.getOutlineCoordinates())));
     }
 }

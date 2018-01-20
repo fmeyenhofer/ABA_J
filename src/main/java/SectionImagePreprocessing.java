@@ -14,6 +14,7 @@ import net.imglib2.img.ImgView;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.realtransform.AffineTransform2D;
+import net.imglib2.realtransform.InvertibleRealTransformSequence;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
@@ -22,8 +23,6 @@ import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.view.Views;
 
 import org.apache.commons.lang.ArrayUtils;
-
-import org.nd4j.linalg.api.ndarray.INDArray;
 
 import org.scijava.ItemIO;
 import org.scijava.app.StatusService;
@@ -92,23 +91,26 @@ public class SectionImagePreprocessing<T extends RealType<T> & NativeType<T>> im
         status.showStatus(40, 100, "contour analysis");
         SectionImageOutlineSampler sampler = new SectionImageOutlineSampler(out, 4);
         sampler.doPca();
-        INDArray outlineCoordinates = sampler.getRotatedCoordinates();
-        INDArray minima = outlineCoordinates.min(0);
-        INDArray maxima = outlineCoordinates.max(0);
-        INDArray minimat = minima.mul(1 / factor);
-        INDArray maximat = maxima.mul(1 / factor);
+        double theta = sampler.getRotation();
+        double[] bb = sampler.getRotatedBoundingBox();
 
-        long[] ulct = new long[]{minimat.getInt(0) - margin, minimat.getInt(1) - margin};
-        long[] lrct = new long[]{maximat.getInt(0) + margin, maximat.getInt(1) + margin};
+        // scale up
+        long[] bbt = new long[4];
+        for (int i = 0; i < 4; i++) {
+            bbt[i] = (long) (bb[i] / factor);
+        }
 
-        System.out.println("ulc and lrc transformed");
-        System.out.println(ArrayUtils.toString(ulct));
-        System.out.println(ArrayUtils.toString(lrct));
+        long[] ulct = new long[]{bbt[0] - margin, bbt[1] - margin};
+        long[] lrct = new long[]{bbt[2] + margin, bbt[3] + margin};
+
+//        System.out.println("ulc and lrc transformed");
+//        System.out.println(ArrayUtils.toString(ulct));
+//        System.out.println(ArrayUtils.toString(lrct));
         Interval boundingBox = new FinalInterval(ulct, lrct);
 
         status.showStatus(50,100, "rotate");
         AffineTransform2D t = new AffineTransform2D();
-        t.rotate(sampler.getRotation());
+        t.rotate(theta);
 
         double[] mint = new double[2];
         double[] maxt = new double[2];
