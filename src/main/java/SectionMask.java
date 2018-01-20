@@ -1,5 +1,6 @@
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
+import net.imagej.ImgPlus;
 import net.imagej.ops.OpService;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
@@ -17,14 +18,11 @@ import java.io.IOException;
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("FieldCanBeLocal")
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Pre-Processing > Section Mask")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Pre-Processing > Create Mask")
 public class SectionMask implements Command{
 
     @Parameter
     private OpService ops;
-
-    @Parameter
-    private UIService ui;
                                                                                          
 
     @Parameter(type = ItemIO.INPUT)
@@ -32,6 +30,9 @@ public class SectionMask implements Command{
 
     @Parameter(label = "Gaussian smoothing (-1 -> auto estimate)")
     private Double sigma = -1.;
+
+    @Parameter(type = ItemIO.OUTPUT)
+    private ImgPlus<BitType> output;
 
 
     @Override
@@ -44,8 +45,8 @@ public class SectionMask implements Command{
         } else {
             msk = SectionImageTool.createMask(rai, sigma, ops);
         }
-
-        ui.show("mask", msk);
+        
+        output = new ImgPlus(msk);
     }
 
     

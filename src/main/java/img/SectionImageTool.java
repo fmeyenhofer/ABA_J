@@ -18,14 +18,18 @@ import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.labeling.Labeling;
 import net.imglib2.labeling.LabelingType;
 import net.imglib2.labeling.NativeImgLabeling;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.view.Views;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 
 
 /**
@@ -189,6 +193,26 @@ public class SectionImageTool {
         }
 
         return area;
+    }
+
+    public static <T extends NativeType<T> & RealType<T>> Img<T> double2Whatever(RandomAccessibleInterval<DoubleType> img, Img<T> ori, OpService ops) {
+        IterableInterval<DoubleType> imgIter = Views.iterable(img);
+        DoubleType miSrc = new DoubleType(ops.stats().min(imgIter).getRealFloat());
+        DoubleType maSrc = new DoubleType(ops.stats().max(imgIter).getRealFloat());
+        IterableInterval<T> oriIter = Views.iterable(ori);
+        DoubleType miTar = new DoubleType(ops.stats().min(oriIter).getRealFloat());
+        DoubleType maTar = new DoubleType(ops.stats().max(oriIter).getRealFloat());
+
+        Img con;
+        if (ori.firstElement() instanceof UnsignedByteType) {
+            con = ops.convert().uint8(ops.image().normalize(imgIter, miSrc, maSrc, miTar, maTar));
+        } else if (ori.firstElement() instanceof UnsignedShortType) {
+            con = ops.convert().uint16(ops.image().normalize(imgIter, miSrc, maSrc, miTar, maTar));
+        } else {
+            con = ops.create().img(ops.image().normalize(imgIter, miSrc, maSrc, miTar, maTar));
+        }
+
+        return con;
     }
 
 

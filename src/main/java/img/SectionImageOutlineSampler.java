@@ -84,14 +84,14 @@ public class SectionImageOutlineSampler {
      * @param levels number of triangulation iteration levels
      */
     public SectionImageOutlineSampler(RandomAccessibleInterval<BitType> outline, int levels) {
-        this(getOutlineCoordinates(outline), levels);
+        this(extractOutlineCoordinates(outline), levels);
     }
 
     /**
      * Do PCA on the outline coordinate values and use
      * the component to compute the rotation angle if the section.
      */
-    private void doPca() {
+    public void doPca() {
         INDArray A = O.dup();
         INDArray factors = PCA.pca_factor(A, 2, true);
         double n1y = factors.getDouble(0, 0);
@@ -100,13 +100,32 @@ public class SectionImageOutlineSampler {
         theta = -Math.atan(n1x / n1y);
     }
 
+    public INDArray getRotatedCoordinates() {
+        if (theta == null) {
+            doPca();
+        }
+
+        List<INDArray> coords = new ArrayList<>(rows);
+        for (int r = 0; r < rows; r++) {
+            double x = O.getRow(r).getDouble(0);
+            double y = O.getRow(r).getDouble(1);
+
+            double u = x * Math.cos(theta) - y * Math.sin(theta);
+            double v = x * Math.sin(theta) + y * Math.cos(theta);
+
+            coords.add(Nd4j.create(new double[]{u, v}));
+        }
+
+        return new NDArray(coords, new int[]{rows, 2});
+    }
+
     /**
      * Get all the (true) coordinates of a given binary mask
      *
      * @param outline binary object mask
      * @return outline coordinates
      */
-    private static INDArray getOutlineCoordinates(RandomAccessibleInterval<BitType> outline) {
+    private static INDArray extractOutlineCoordinates(RandomAccessibleInterval<BitType> outline) {
         float[] position = new float[outline.numDimensions()];
         List<INDArray> coordinates = new ArrayList<>();
 
@@ -528,6 +547,25 @@ public class SectionImageOutlineSampler {
      */
     public double[] getCentroidCoordinates() {
         return new double[]{cx, cy};
+    }
+
+    /**
+     * Get the rotation of principal component to the
+     * vertical axis.
+     *
+     * @return approximate section rotation
+     */
+    public double getRotation() {
+        return theta;
+    }
+
+    /**
+     * Get the outline x-y positions
+     *
+     * @return array of outline coordinates
+     */
+    public INDArray getOutlineCoordinates() {
+        return O;
     }
 
 
