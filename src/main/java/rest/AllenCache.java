@@ -349,8 +349,8 @@ class AllenCache {
     
     AllenImage getAnnotationGrid(String resolution) throws IOException, URISyntaxException, TransformerException {
 
-        AllenAPI.Download.RefVol.VoxelResolution voxelResolution = AllenAPI.Download.RefVol.VoxelResolution.get(resolution);
-        AllenAPI.Download.RefVol.DataType type = AllenAPI.Download.RefVol.DataType.annotation;
+        Atlas.VoxelResolution voxelResolution = Atlas.VoxelResolution.get(resolution);
+        Atlas.Modality type = Atlas.Modality.ANNOTATION;
 
         String fileName = AllenAPI.Download.RefVol.createFileName(type, voxelResolution);
         File path = getPath(DataType.vol, fileName);
@@ -391,23 +391,23 @@ class AllenCache {
     /**
      * Get the reference volume data set
      *
-     * @param type data type of the volume (see{@link AllenAPI.Download.RefVol.DataType})
-     * @param resolution voxel resolution (see {@link AllenAPI.Download.RefVol.VoxelResolution}
+     * @param modality data type of the volume (see{@link Atlas.Modality})
+     * @param resolution voxel resolution (see {@link Atlas.VoxelResolution}
      * @return {@link File} of the reference volume image file
      * @throws IOException
      * @throws URISyntaxException
      * @throws TransformerException
      */
-    AllenImage getReferenceVolume(AllenAPI.Download.RefVol.DataType type,
-                                  AllenAPI.Download.RefVol.VoxelResolution resolution)
+    AllenImage getReferenceVolume(Atlas.Modality modality,
+                                  Atlas.VoxelResolution resolution)
             throws IOException, URISyntaxException, TransformerException {
-        String filename = AllenAPI.Download.RefVol.createFileName(type, resolution);
+        String filename = AllenAPI.Download.RefVol.createFileName(modality, resolution);
         File path = getPath(DataType.vol, filename);
 
         if (path.exists()) {
             return new AllenImage(path);
         } else {
-            URL query = AllenAPI.Download.RefVol.createUrl(type, resolution);
+            URL query = AllenAPI.Download.RefVol.createUrl(modality, resolution);
             return new AllenImage(query, path);
         }
     }

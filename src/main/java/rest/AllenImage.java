@@ -10,6 +10,8 @@ import java.net.URLConnection;
 /**
  * Class to handle the image files from the Allen API
  *
+ * TODO: implement progress tracker and notifier interface
+ *
  * @author Felix Meyenhofer
  */
 class AllenImage extends AllenFile {
@@ -36,6 +38,9 @@ class AllenImage extends AllenFile {
         // TODO: There was the problem with the "java.net.UnknownHostException: iwarehouse". I added the proper connection object, but with the university networks the problem seemed to occur randomely. So far the research indicated that it might actually be de DN server the causes the problems.
         HttpURLConnection host = (HttpURLConnection) url.openConnection();
         host.connect();
+
+        System.out.println("content length: " + host.getContentLength());
+
         InputStream is = host.getInputStream();
 
         OutputStream os = new FileOutputStream(getFile());

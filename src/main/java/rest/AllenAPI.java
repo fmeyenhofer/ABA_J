@@ -308,89 +308,17 @@ class AllenAPI {
 
             static final String FILE_EXTENSION = ".nrrd";
 
-            enum VoxelResolution {
-                TEN(10),
-                TWENTYFIVE(25),
-                FIFTY(50),
-                HUNDRED(100);
-
-                private Integer resolution;
-
-                VoxelResolution(int res) {
-                    this.resolution = res;
-                }
-
-                String getString() {
-                    return this.resolution.toString();
-                }
-
-                static VoxelResolution get(String resolution) {
-                    resolution = resolution.replace("um", "");
-                    if (VoxelResolution.TEN.getString().equals(resolution)) {
-                        return VoxelResolution.TEN;
-                    } else if (VoxelResolution.TWENTYFIVE.getString().equals(resolution)) {
-                        return VoxelResolution.TWENTYFIVE;
-                    } else if (VoxelResolution.FIFTY.getString().equals(resolution)) {
-                        return VoxelResolution.FIFTY;
-                    } else if (VoxelResolution.HUNDRED.getString().equals(resolution)) {
-                        return VoxelResolution.HUNDRED;
-                    } else {
-                        throw new RuntimeException("The resolution " + resolution + " does not exist in VoxelResolution.");
-                    }
-                }
-            }
-
-            enum DataType {
-                template("average_template/", "average_template_", "auto-fluorescence"),
-                nissl("ara_nissl/", "ara_nissl_", "nissel"),
-                annotation("annotation/ccf_2016/", "annotation_", "annotation");
-
-                private String suburl;
-                private String filename;
-                private String modality;
-
-                DataType(String sub_url, String filename, String modality) {
-                    this.suburl = sub_url;
-                    this.filename = filename;
-                    this.modality = modality;
-                }
-
-                String getSubUrl() {
-                    return this.suburl;
-                }
-
-                String getFileTrunk() {
-                    return this.filename;
-                }
-
-                String getModality() {
-                    return this.modality;
-                }
-
-                static DataType get(String modality) {
-                    if (DataType.template.getModality().equals(modality)) {
-                        return DataType.template;
-                    } else if (DataType.annotation.getModality().equals(modality)) {
-                        return DataType.annotation;
-                    } else if (DataType.nissl.getModality().equals(modality)) {
-                        return DataType.nissl;
-                    } else {
-                        throw new RuntimeException("The modality " + modality + " does not exist in DataType");
-                    }
-                }
-            }
-
-            static URL createUrl(DataType type, VoxelResolution resolution) throws MalformedURLException {
+            static URL createUrl(Atlas.Modality type, Atlas.VoxelResolution resolution) throws MalformedURLException {
                 return new URL(BASE_URL + type.getSubUrl() + createFileName(type, resolution));
             }
 
-            static String createFileName(DataType type, VoxelResolution resolution) {
-                return type.getFileTrunk() + resolution.getString() + FILE_EXTENSION;
+            static String createFileName(Atlas.Modality type, Atlas.VoxelResolution resolution) {
+                return type.getFileTrunk() + resolution.getLabel().replace("um", "") + FILE_EXTENSION;
             }
 
             static String getFileName(String modality, String resolution) {
-                DataType type = DataType.get(modality);
-                VoxelResolution voxelResolution = VoxelResolution.get(resolution);
+                Atlas.Modality type = Atlas.Modality.get(modality);
+                Atlas.VoxelResolution voxelResolution = Atlas.VoxelResolution.get(resolution);
 
                 return createFileName(type, voxelResolution);
             }

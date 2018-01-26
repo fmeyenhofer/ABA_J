@@ -103,6 +103,16 @@ public class AllenClient {
         return new AtlasStructureGraph(graph);
     }
 
+    public AllenRefVol getReferenceVolume(String modality, String resolution)
+            throws TransformerException, IOException, URISyntaxException {
+
+        Atlas.Modality mod = Atlas.Modality.get(modality);
+        Atlas.VoxelResolution res = Atlas.VoxelResolution.get(resolution);
+        AllenImage img = cache.getReferenceVolume(mod, res);
+
+        return new AllenRefVol(img.getFile());
+    }
+
     private void parseStructureXmlElements(HashMap<Integer, AtlasStructure> collector, Element element, String path) {
         AtlasStructure structure = new AtlasStructure(element);
         path += structure.getId() + "/";
@@ -139,14 +149,14 @@ public class AllenClient {
      * @throws URISyntaxException
      * @throws TransformerException
      */
-    private void downloadMouseRefVol(AllenAPI.Download.RefVol.VoxelResolution resolution)
+    private void downloadMouseRefVol(Atlas.VoxelResolution resolution)
             throws IOException, URISyntaxException, TransformerException {
-        AllenAPI.Download.RefVol.DataType[] types = {
-                AllenAPI.Download.RefVol.DataType.template,
-                AllenAPI.Download.RefVol.DataType.nissl,
-                AllenAPI.Download.RefVol.DataType.annotation};
+        Atlas.Modality[] types = {
+                Atlas.Modality.AUTOFLUO,
+                Atlas.Modality.NISSEL,
+                Atlas.Modality.ANNOTATION};
 
-        for (AllenAPI.Download.RefVol.DataType type : types) {
+        for (Atlas.Modality type : types) {
             String msg = cache.getReferenceVolume(type, resolution).getStatusMessage();
             tell(msg);
         }

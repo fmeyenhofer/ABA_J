@@ -12,26 +12,30 @@ import bdv.spimdata.XmlIoSpimDataMinimal;
 import bdv.viewer.ViewerOptions;
 import ij.IJ;
 import ij.ImagePlus;
+import img.AnnotationImageTool;
 import mpicbg.spim.data.SpimDataException;
-import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.BasicViewSetup;
-import mpicbg.spim.data.generic.sequence.ImgLoaderHints;
 import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
-import mpicbg.spim.data.sequence.Channel;
-import mpicbg.spim.data.sequence.FinalVoxelDimensions;
-import mpicbg.spim.data.sequence.TimePoint;
-import mpicbg.spim.data.sequence.TimePoints;
+import mpicbg.spim.data.sequence.*;
+import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import net.imglib2.img.ImgView;
+import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.view.Views;
 import sc.fiji.io.Nrrd_Reader;
 
+import javax.xml.transform.TransformerException;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.*;
 
 /**
  * Class that takes care of loading reference volumes and
@@ -56,7 +60,7 @@ public class AllenRefVol {
         this.hdf5File = generatePath(xmlFile, ".h5");
 
         if (!xmlFile.exists()) {
-            ImagePlus imp = loadNrrd();
+            ImagePlus imp = loadNrrd(nrrdFile);
             convert2Hdf5(imp, this.xmlFile);
         }
     }
@@ -69,18 +73,18 @@ public class AllenRefVol {
         return new File(trunk + ext);
     }
 
-    private ImagePlus loadNrrd() {
+    private static ImagePlus loadNrrd(File file) {
         Nrrd_Reader reader = new Nrrd_Reader();
-        return reader.load(nrrdFile.getParent(), nrrdFile.getName());
+        return reader.load(file.getParent(), file.getName());
     }
 
-    public RandomAccessibleInterval<UnsignedShortType> getRai() throws SpimDataException {
-        SpimDataMinimal spimData = new XmlIoSpimDataMinimal().load(this.xmlFile.getAbsolutePath());
-        final AbstractSequenceDescription< ?, ?, ? > seq = spimData.getSequenceDescription();
-        Hdf5ImageLoader loader = new Hdf5ImageLoader(hdf5File, null, seq, true);
-
-        return loader.getSetupImgLoader(0).getImage(0, 0, ImgLoaderHints.LOAD_COMPLETELY);
-    }
+//    public RandomAccessibleInterval<UnsignedShortType> getRai() throws SpimDataException {
+//        SpimDataMinimal spimData = new XmlIoSpimDataMinimal().load(this.xmlFile.getAbsolutePath());
+//        final AbstractSequenceDescription< ?, ?, ? > seq = spimData.getSequenceDescription();
+//        Hdf5ImageLoader loader = new Hdf5ImageLoader(hdf5File, null, seq, true);
+//
+//        return loader.getSetupImgLoader(0).getImage(0, 0, ImgLoaderHints.LOAD_COMPLETELY);
+//    }
 
     public SpimDataMinimal getHdf5() throws SpimDataException {
         return new XmlIoSpimDataMinimal().load(this.xmlFile.getAbsolutePath());
@@ -88,6 +92,16 @@ public class AllenRefVol {
 
     public void show() throws SpimDataException {
         BigDataViewer.open(xmlFile.getAbsolutePath(), xmlFile.getName(), new ProgressWriterIJ(), ViewerOptions.options());
+    }
+
+    public AffineTransform3D getTransform() throws SpimDataException {
+        return getHdf5()
+                .getViewRegistrations()
+                .getViewRegistration(new ViewId(0, 0)).getModel().copy();
+    }
+
+    public Dimensions getDimensions() throws SpimDataException {
+        return getHdf5().getSequenceDescription().getViewSetups().get(0).getSize();
     }
 
     /**
@@ -249,6 +263,34 @@ public class AllenRefVol {
     }
 
 
+    public static Img<BitType> getSectionMask(Atlas.VoxelResolution resolution, Atlas.PlaneOfSection plane)
+            throws TransformerException, IOException, URISyntaxException, SpimDataException {
+        return getSetcionMask(resolution, plane, -1);
+    }
+
+    public static Img<BitType> getSetcionMask(Atlas.VoxelResolution resolution, Atlas.PlaneOfSection plane, long sectionNumber)
+            throws TransformerException, IOException, URISyntaxException {
+        AllenImage aimg = new AllenCache().getReferenceVolume(Atlas.Modality.ANNOTATION, resolution);
+
+        ImagePlus imp = loadNrrd(aimg.getFile());
+        RandomAccessibleInterval<UnsignedShortType> rai = ImageJFunctions.wrap(imp);
+
+        int fixedAxis = plane.getFixedDimension();
+        if (sectionNumber < 0) {
+            sectionNumber = rai.dimension(fixedAxis) / 2;
+        }
+
+        RandomAccessibleInterval<UnsignedShortType> sec = Views.hyperSlice(rai, fixedAxis, sectionNumber);
+        if (plane.swapAxes()) {
+            sec = Views.permute(sec,0, 1);
+        }
+        Img<UnsignedShortType> img = ImgView.wrap(sec, new ArrayImgFactory<>());
+
+        return AnnotationImageTool.getRootMask(img);
+    }
+
+    
+    // TODO: move this to the Atlas class
     public enum Plane {
         XY,
         YZ,
@@ -256,11 +298,14 @@ public class AllenRefVol {
     }
 
 
-    public static void main(String[] args) throws SpimDataException {
-        File nrrdFile = new File("/Users/turf/allen-cache/reference-volumes/average_template_10.nrrd");
-        File xmlFile = new File("/Users/turf/Desktop/avg_template_10.xml");
+    public static void main(String[] args) throws SpimDataException, TransformerException, IOException, URISyntaxException {
+//        File nrrdFile = new File("/Users/turf/allen-cache/reference-volumes/average_template_10.nrrd");
+//        File xmlFile = new File("/Users/turf/Desktop/avg_template_10.xml");
+//
+//        AllenRefVol refVol = new AllenRefVol(nrrdFile, xmlFile);
+//        refVol.show();
 
-        AllenRefVol refVol = new AllenRefVol(nrrdFile, xmlFile);
-        refVol.show();
+        Img<BitType> msk = getSectionMask(Atlas.VoxelResolution.FIFTY, Atlas.PlaneOfSection.CORONAL);
+        ImageJFunctions.show(msk);
     }
 }
