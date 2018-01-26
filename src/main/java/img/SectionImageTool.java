@@ -29,7 +29,6 @@ import net.imglib2.view.Views;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Random;
 
 
 /**
@@ -51,7 +50,7 @@ public class SectionImageTool {
             }
         }
 
-        double sigma = ((double) max) / 50;
+        double sigma = ((double) max) / 100;
 
         return createMask(rai, sigma, ops);
     }
@@ -76,6 +75,7 @@ public class SectionImageTool {
     }
 
     public static <T extends RealType<T>> Img<BitType> extractCenterBlob(RandomAccessibleInterval<BitType> msk, OpService ops) {
+        long[] position = new long[msk.numDimensions()];
         long[] upperBounds = new long[msk.numDimensions()];
         msk.max(upperBounds);
 
@@ -83,10 +83,23 @@ public class SectionImageTool {
         Img<BitType> out = ops.create().img(msk);
         ops.morphology().outline(out, msk, false);
 
-        // invert the outline
+        // invert the outline and kill border pixels
         Cursor<BitType> cursor = out.cursor();
         while (cursor.hasNext()) {
-            cursor.next().not();
+            cursor.localize(position);
+            boolean isBorder = false;
+            for (int p = 0; p < position.length; p++) {
+                if (0 == position[p] || position[p] == upperBounds[p]) {
+                    isBorder = true;
+                    break;
+                }
+            }
+
+            if (isBorder) {
+                cursor.next().set(true);
+            } else {
+                cursor.next().not();
+            }
         }
 
         // distance transform
@@ -113,7 +126,7 @@ public class SectionImageTool {
         Cursor<T> dstCursor = dsti.cursor();
         RandomAccess<BitType> mskCursor = msk.randomAccess();
 
-        long[] position = new long[msk.numDimensions()];
+
         long[] maxPosision = new long[msk.numDimensions()];
         while (dstCursor.hasNext()) {
             dstCursor.fwd();
@@ -122,37 +135,37 @@ public class SectionImageTool {
 
             mskCursor.setPosition(position);
 
+            // look for the minimum inside the mask
             if (mskCursor.get().get()) {
                 if (dstValue.compareTo(currentMax) > 0) {
                     currentMax.set(dstValue);
                     dstCursor.localize(maxPosision);
                 }
+            }
+
+            // check if it's a border pixel
+            boolean isBorder = false;
+            for (int p = 0; p < position.length; p++) {
+                if (0 == position[p] || position[p] == upperBounds[p]) {
+                    isBorder = true;
+                    break;
+                }
+            }
+
+            // create border seeds and invert distance
+            if (isBorder) {
+                dstValue.set(min);
+                sdsCursor.setPosition(position);
+                sdsCursor.get().setLabel(2);
+            } else {
                 dstValue.mul(-1.0);
                 dstValue.add(absMax);
-
-            } else {
-                boolean isBorder = false;
-                for (int p = 0; p < position.length; p++) {
-                    if (0 == position[p] || position[p] == upperBounds[p]) {
-                        isBorder = true;
-                        break;
-                    }
-                }
-
-                if (isBorder) {
-                    dstValue.set(min);
-                    sdsCursor.setPosition(position);
-                    sdsCursor.get().setLabel(2);
-                } else {
-                    dstValue.mul(-1.0);
-                    dstValue.add(absMax);
-                }
             }
         }
 
         RandomAccess<T> ra = dst.randomAccess();
         ra.setPosition(maxPosision);
-        ra.get().set(currentMax);
+        ra.get().set(min);
         sdsCursor.setPosition(maxPosision);
         sdsCursor.get().setLabel(1);
 
@@ -195,6 +208,18 @@ public class SectionImageTool {
         return area;
     }
 
+    public static <T extends NativeType<T> & RealType<T>> void maskImage(RandomAccessibleInterval<T> img, RandomAccessibleInterval<BitType> msk) {
+        Cursor<T> curImg = Views.flatIterable(img).cursor();
+        Cursor<BitType> curMsk = Views.flatIterable(msk).cursor();
+        while (curImg.hasNext()) {
+            curImg.fwd();
+            curMsk.fwd();
+            if (!curMsk.get().get()) {
+                curImg.get().setZero();
+            }
+        }
+    }
+
     public static <T extends NativeType<T> & RealType<T>> Img<T> double2Whatever(RandomAccessibleInterval<DoubleType> img, Img<T> ori, OpService ops) {
         IterableInterval<DoubleType> imgIter = Views.iterable(img);
         DoubleType miSrc = new DoubleType(ops.stats().min(imgIter).getRealFloat());
@@ -218,8 +243,9 @@ public class SectionImageTool {
 
     public static void main(String[] args) throws IOException {
 //        String path = "/Users/turf/switchdrive/SJMCS/data/devel/section2volume/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif";
+        String path = "/Users/turf/switchdrive/SJMCS/data/lamy-lab/floating/160128_crym_gng2/ome/series-3/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.ome.tif";
 //        String path = "/Users/turf/Desktop/new section.tif";
-        String path = "/Users/turf/Desktop/reference section.tif";
+//        String path = "/Users/turf/Desktop/reference section.tif";
         ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
