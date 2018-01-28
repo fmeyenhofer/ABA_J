@@ -1,6 +1,5 @@
-package gui;
+package gui.bdv;
 
-import gui.bdv.SectionImageOutlinePoints;
 import img.AraImgPlus;
 import img.SectionImageOutlineSampler;
 import img.SectionImageTool;

@@ -1,4 +1,4 @@
-import gui.InteractiveAlignmentUi;
+import gui.bdv.InteractiveAlignmentUi;
 import gui.SwingUtils;
 import img.AraImgPlus;
 import img.SectionImageTool;
