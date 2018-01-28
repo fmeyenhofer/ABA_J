@@ -648,7 +648,10 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
 
             if (hasChanged) {
                 for (AtlasStructureSelectorListener listener : listeners) {
-                    listener.valueChanged(getSelectedStructures());
+                    HashMap<Integer, AtlasStructure> selection = getSelectedStructures();
+                    if (selection != null) {
+                        listener.valueChanged(selection);
+                    }
                 }
             }
         }
