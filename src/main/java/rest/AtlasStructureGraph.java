@@ -76,11 +76,6 @@ public class AtlasStructureGraph {
             found++;
         }
 
-        // Update parents
-        for (int parent : parents) {
-            graph.get(parent).setHasActiveChildren(true);
-        }
-
         // Add an artificial structure that can serve as parent to orphans
         if (notFound > 0) {
             AtlasStructure structure = new AtlasStructure("-2" ,
@@ -91,6 +86,11 @@ public class AtlasStructureGraph {
                     "0f0f0f",
                     true);
             graph.put(-2, structure);
+        }
+        
+        // Update parents
+        for (int parent : parents) {
+            graph.get(parent).setHasActiveChildren(true);
         }
 
         return new int[]{found, notFound};
