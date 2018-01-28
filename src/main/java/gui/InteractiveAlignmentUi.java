@@ -1,10 +1,10 @@
 package gui;
 
-
 import gui.bdv.SectionImageOutlinePoints;
 import img.AraImgPlus;
 import img.SectionImageOutlineSampler;
 import img.SectionImageTool;
+import img.VolumeSection;
 import rest.AllenRefVol;
 
 import bdv.util.Bdv;
@@ -24,10 +24,10 @@ import bdv.viewer.state.ViewerState;
 import bdv.viewer.VisibilityAndGrouping;
 
 import mpicbg.spim.data.SpimDataException;
-import mpicbg.spim.data.sequence.ViewId;
 
 import jitk.spline.ThinPlateR2LogRSplineKernelTransform;
 
+import org.scijava.app.StatusService;
 import org.scijava.ui.behaviour.KeyStrokeAdder;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.AbstractNamedAction;
@@ -48,6 +48,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.view.Views;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.NativeType;
 
 import javax.swing.JFrame;
 import javax.swing.InputMap;
@@ -55,6 +56,8 @@ import javax.swing.ActionMap;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -67,12 +70,14 @@ import rest.Atlas;
 
 /**
  * TODO: Add possibility to work with different perspectives: coronal works, sagital and horizontal need to be added [1]
+ * TODO: Make it so that the section volume AND the template volume can be transformed. Currently transforming the section volume results in wrong TPS wraps
  *
  * @author Felix Meyenhofer
  */
-public class InteractiveAlignmentUi<V extends RealType<V>>  {
+public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
 
-    private OpService ops;
+    private final StatusService status;
+    private final OpService ops;
 
 
     private static int DISPLAY_WIDTH = 652;
@@ -83,7 +88,7 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
     private static int TEMPLATE_INDEX = 3;
     private static int[] TEMPLATE_OUTLINE_INDICES = new int[]{4, 5};
 
-    private boolean debug = true;
+    private boolean debug = false;
 
 //    private boolean interpolate = true;
 //    private int resolutionOutput = 64;
@@ -104,13 +109,18 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
     private final Dimensions dims;
     private final AffineTransform3D Tr_init;
     private AffineTransform3D Ts_init;
+    private VolumeSection volumeSection;
 
     private final SectionImageOutlineSampler secCon;
     private final ArrayList<SectionImageOutlineSampler.OutlinePoint> secPts;
+    private TpsTransformWrapper t_tps;
+    private TpsTransformWrapper t_tpsi;
 
 
-    public InteractiveAlignmentUi(AraImgPlus<V> secImg, AllenRefVol refVolFile, OpService opService) throws SpimDataException {
+    public InteractiveAlignmentUi(AraImgPlus<V> secImg, AllenRefVol refVolFile, OpService opService, StatusService statusService)
+            throws SpimDataException {
         this.ops = opService;
+        this.status = statusService;
         this.secImg = secImg;
         this.refVol = refVolFile;
         this.dims = refVol.getDimensions();
@@ -119,20 +129,55 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         secVol = secImg.createSectionVolume(refVol);
 
         // Extract the outline points of the input section (once!)
+        status.showStatus(0,100, "create section mask");
         RandomAccessibleInterval<BitType> secMsk = SectionImageTool.createMask(secImg, ops);
+        status.showStatus(60, 100, "create section outline points");
         RandomAccessibleInterval<BitType> secOut = ops.morphology().outline(secMsk, false);
         secCon = new SectionImageOutlineSampler(secOut, triangulationLevels);
         secCon.generatePoints();
         secPts = secCon.getCorrespondencePoints();
+        status.showStatus(100, 100, "done loading section image");
+    }
+
+    private void updateInputSection() {
+        ViewerState state = bdvHandle.getViewerPanel().getState();
+
+        AffineTransform3D tr = new AffineTransform3D();
+        SourceState refState = state.getSources().get(TEMPLATE_INDEX);
+        refState.getSpimSource().getSourceTransform(0, 0, tr);
+
+        AffineTransform3D ts = new AffineTransform3D();
+        SourceState secState = state.getSources().get(SECTION_INDEX);
+        secState.getSpimSource().getSourceTransform(0, 0, ts);
+        
+        secImg.updateRegistrationInfo(t_tps, t_tpsi, ts, tr, volumeSection);
     }
 
     public void createAndShow() throws SpimDataException {
         JFrame window = new JFrame("Interactive Section Alignment");
+        window.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                updateInputSection();
+            }
+        });
 
         // General options
         BdvOptions options = Bdv.options();
         options.axisOrder(AxisOrder.XYZ);
         bdvHandle = new BdvHandlePanel(window, options);
+
+        // Make sure only the reference volume is transformed.
+//        bdvHandle.getViewerPanel().addTransformListener(new TransformListener<AffineTransform3D>() {
+//            @Override
+//            public void transformChanged(AffineTransform3D transform3D) {
+//                ViewerState state = bdvHandle.getViewerPanel().getState();
+//                if (state.getCurrentSource() != TEMPLATE_INDEX) {
+//                    bdvHandle.getViewerPanel().showMessage("transforms only on template!");
+//                    state.setCurrentSource(TEMPLATE_INDEX);
+//                }
+//            }
+//        });
 
         // Configure the UI window
         window.add(bdvHandle.getViewerPanel(), BorderLayout.CENTER);
@@ -213,6 +258,7 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         map.put("warp section", "W");
         map.put("toggle warp", "shift W");
         map.put("toggle points", "shift P");
+        map.put("update section", "shift U");
         map.put("help", "F1", "H");
 
         return inputMap;
@@ -228,6 +274,7 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         new ToggleDialogAction("help", dialog).put(actionMap);
         new ToggleVisibilityAction("toggle warp", this, sections).put(actionMap);
         new ToggleVisibilityAction("toggle points", this, outlines).put(actionMap);
+        new UpdateAction("update section", this).put(actionMap);
 
         return actionMap;
     }
@@ -261,6 +308,22 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
     }
 
 
+    public class UpdateAction extends AbstractNamedAction {
+
+        private final InteractiveAlignmentUi ui;
+
+        UpdateAction(String name, InteractiveAlignmentUi ui) {
+            super(name);
+            this.ui = ui;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            this.ui.updateInputSection();
+        }
+    }
+
+
     public class WarpAction extends AbstractNamedAction {
 
         private final InteractiveAlignmentUi ui;
@@ -276,7 +339,7 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         }
     }
 
-
+    // TODO: messages to BDV or IJ main ui are only triggered at the end of the short-cut callback. Spawn threads?
     private void warpSectionImage() {
         bdvHandle.getViewerPanel().showMessage("mapping sections...");
 //        bdvHandle.getViewerPanel().requestRepaint();
@@ -296,17 +359,24 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
 
         // Transform the outline points back on the input section.
         ViewerState viewerState = bdvHandle.getViewerPanel().getState();
-        AffineTransform3D T_vw = new AffineTransform3D();
-        viewerState.getViewerTransform(T_vw);
+        AffineTransform3D t_vw = new AffineTransform3D();
+        viewerState.getViewerTransform(t_vw);
+
+        // compute the current plane in the global space
+        AffineTransform3D t_vwi = t_vw.inverse();
+
+        volumeSection = new VolumeSection(new double[]{1, 0, 0},
+                new double[]{0, 1, 0},
+                new double[]{0, 0, 0});
+        volumeSection.applyTransform(t_vwi);
 
         SourceState srcState = viewerState.getSources().get(SECTION_INDEX);
-        final AffineTransform3D T_wl_s = new AffineTransform3D();
-        srcState.getSpimSource().getSourceTransform(0, 0, T_wl_s);
+        AffineTransform3D t_wl_s = new AffineTransform3D();
+        srcState.getSpimSource().getSourceTransform(0, 0, t_wl_s);
 
         final InvertibleRealTransformSequence Ts = new InvertibleRealTransformSequence();
-        Ts.add(T_wl_s);
-        Ts.add(T_vw);
-
+        Ts.add(t_wl_s);
+        Ts.add(t_vw);
         InvertibleRealTransform Ts_lv = Ts.inverse();
 
         // Put the points in data-structure for the TPS solver and map section outline points and reference points
@@ -342,13 +412,17 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         }
 
         ThinPlateR2LogRSplineKernelTransform tps = new ThinPlateR2LogRSplineKernelTransform(2, refVects, secVects);
-        TpsTransformWrapper tpsw = new TpsTransformWrapper(2, tps);
+        t_tps = new TpsTransformWrapper(2, tps);
+
+        // TODO: This should not be necessary, but the inverse of t_tps did not work so far
+        ThinPlateR2LogRSplineKernelTransform tpsi = new ThinPlateR2LogRSplineKernelTransform(2, secVects, refVects);
+        t_tpsi = new TpsTransformWrapper(2, tpsi);
 
 //        Affine3DHelpers.extractScale()
 
         RandomAccessibleInterval<V> rai = secImg.copy();
         RealRandomAccessible<V> interp = Views.interpolate(Views.extendZero(rai), new NLinearInterpolatorFactory<>());
-        RealRandomAccessible<V> mapped = RealViews.transform(interp, tpsw);
+        RealRandomAccessible<V> mapped = RealViews.transform(interp, t_tps);
         RandomAccessibleInterval<V> warp = Views.interval(Views.raster(mapped), secImg);
 
         RandomAccessibleInterval secVol = Views.addDimension(warp, 0, dims.dimension(0) - 1);
@@ -369,11 +443,11 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
 
         // Transform the points from the reference section back to the reference volume
         SourceState refState = viewerState.getSources().get(TEMPLATE_INDEX);
-        final AffineTransform3D T_wl_r = new AffineTransform3D();
-        refState.getSpimSource().getSourceTransform(0, 0, T_wl_s);
+        AffineTransform3D t_wl_r = new AffineTransform3D();
+        refState.getSpimSource().getSourceTransform(0, 0, t_wl_s);
         final InvertibleRealTransformSequence Tr = new InvertibleRealTransformSequence();
-        Tr.add(T_wl_r);
-        Tr.add(T_vw);
+        Tr.add(t_wl_r);
+        Tr.add(t_vw);
 
         InvertibleRealTransform Tr_lv = Tr.inverse();
 
@@ -381,7 +455,7 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         templateOutlineSrc1 = BdvFunctions.showOverlay(
                 new SectionImageOutlinePoints(refPts, Tr_lv),
                 "template outline points",
-                Bdv.options().addTo(bdvHandle).sourceTransform(T_wl_r));
+                Bdv.options().addTo(bdvHandle).sourceTransform(t_wl_r));
         templateOutlineSrc1.setColor(new ARGBType(0xFF0000));
         templateOutlineSrc1.setDisplayRangeBounds(0, 1);
         templateOutlineSrc1.setActive(showPoints);
@@ -389,7 +463,7 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         templateOutlineSrc2 = BdvFunctions.showOverlay(
                 new SectionImageOutlinePoints(refCon.getCentroidCoordinates(), refPts.get(0).getCoordinates(), Tr_lv),
                 "template centroid and 1st",
-                Bdv.options().addTo(bdvHandle).sourceTransform(T_wl_r));
+                Bdv.options().addTo(bdvHandle).sourceTransform(t_wl_r));
         templateOutlineSrc2.setColor(new ARGBType(0xFFFF00));
         templateOutlineSrc2.setDisplayRangeBounds(1, 1);
         templateOutlineSrc2.setActive(showPoints);
@@ -404,6 +478,8 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         warpedSectionSource.setActive(true);
 
         bdvHandle.getViewerPanel().requestRepaint();
+
+        updateInputSection();
     }
 
     private static String array2str(double[] a) {
@@ -497,10 +573,10 @@ public class InteractiveAlignmentUi<V extends RealType<V>>  {
         */
 
         Img secImg = (Img) ij.io().open(secPath);
-        AraImgPlus ara = new AraImgPlus(secImg, Atlas.PlaneOfSection.CORONAL, 1);
+        AraImgPlus ara = new AraImgPlus(secImg, 1, Atlas.PlaneOfSection.CORONAL, Atlas.VoxelResolution.TWENTYFIVE);
 
 //        ij.command().run(InteractiveAlignmentUi.class, true);
-        InteractiveAlignmentUi ui = new InteractiveAlignmentUi(ara, refVol, ij.op());
+        InteractiveAlignmentUi ui = new InteractiveAlignmentUi(ara, refVol, ij.op(), ij.status());
         ui.createAndShow();
     }
 }

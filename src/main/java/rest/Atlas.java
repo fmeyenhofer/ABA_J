@@ -1,5 +1,9 @@
 package rest;
 
+import net.imglib2.Dimensions;
+import net.imglib2.FinalInterval;
+import net.imglib2.Interval;
+import org.scijava.util.ListUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,45 +31,67 @@ public class Atlas {
         SAGITAL    ("xy", 2, new int[]{0, 1}, false),
         HORIZONTAL ("xz", 1, new int[]{0, 2}, false);
 
-        private final int[] xy;
+        private final int[] axesIndices;
         private final String name;
-        private final int fixed;
+        private final int fixedAxisIndex;
         private final boolean swap;
 
-        PlaneOfSection(String name, int fixedDimension, int[] xy, boolean swapAxes) {
+        PlaneOfSection(String name, int fixedAxisIndex, int[] axesIndices, boolean swapAxes) {
             this.name = name;
-            this.fixed = fixedDimension;
-            this.xy = xy;
+            this.fixedAxisIndex = fixedAxisIndex;
+            this.axesIndices = axesIndices;
             this.swap = swapAxes;
         }
 
-        public int getFixedDimension() {
-            return this.fixed;
+        public int getFixedAxisIndex() {
+            return this.fixedAxisIndex;
         }
 
-        public int[] getSectionAxes() {
-            return xy;
+        public int[] getSectionAxesIndices() {
+            return axesIndices;
         }
 
         public boolean swapAxes() {
             return swap;
         }
 
+        public String getLabel() {
+            return this.toString().toLowerCase();
+        }
+
+        public String getName() {
+            return this.name;
+        }
+
         public static List<String> getLabels() {
             List<String> labels = new ArrayList<>(PlaneOfSection.class.getEnumConstants().length);
             for (PlaneOfSection section : PlaneOfSection.class.getEnumConstants()) {
-                labels.add(section.toString().toLowerCase());
+                labels.add(section.getLabel());
             }
+
             return labels;
         }
 
         public static PlaneOfSection get(String label) {
             for (PlaneOfSection section : PlaneOfSection.class.getEnumConstants()) {
-                if (section.toString().toLowerCase().equals(label.toLowerCase())) {
+                if (section.getLabel().equals(label.toLowerCase())) {
                     return section;
                 }
             }
-            return null;
+            throw new RuntimeException(label +
+                    " does not exist. Available PlaneOfSections are " +
+                    ListUtils.string(getLabels()));
+        }
+
+        public double[] section2TemplateCoordinate(double[] sPos, double sectionNumber) {
+            double[] tPos = new double[3];
+            int i = 0;
+            for (int axisIndex : axesIndices) {
+                tPos[axisIndex] = sPos[i++];
+            }
+            tPos[fixedAxisIndex] = sectionNumber;
+
+            return tPos;
         }
     }
 
@@ -94,14 +120,17 @@ public class Atlas {
                     return vr;
                 }
             }
-            return null;
+            throw new RuntimeException(resolution +
+                    " does not exist. Available VoxelResolutions are: " +
+                    ListUtils.string(getLabels()));
         }
 
         public static VoxelResolution getClosest(long value, int d) {
             TreeMap<Long, VoxelResolution> map = new TreeMap<>();
             for (VoxelResolution res : VoxelResolution.class.getEnumConstants()) {
-                map.put(res.dim[d] - value, res);
+                map.put(Math.abs(res.dim[d] - value), res);
             }
+
             return map.firstEntry().getValue();
         }
 
@@ -110,6 +139,7 @@ public class Atlas {
             for (VoxelResolution resolution : VoxelResolution.class.getEnumConstants()) {
                 map.put(resolution.getValue() - res, resolution);
             }
+
             return map.firstEntry().getValue();
         }
 
@@ -118,6 +148,7 @@ public class Atlas {
             for (VoxelResolution res : VoxelResolution.class.getEnumConstants()) {
                 lbls.add(res.getLabel());
             }
+
             return lbls;
         }
 
@@ -129,13 +160,17 @@ public class Atlas {
             return this.label;
         }
 
-        public static String getLabel(double res) {
-            for (VoxelResolution vr : VoxelResolution.class.getEnumConstants()) {
-                if (vr.getValue() == res) {
-                    return vr.getLabel();
-                }
+        public long[] getDimension() {
+            return this.dim;
+        }
+
+        public Interval getInterval() {
+            long[] ub = new long[3];
+            for (int d = 0; d < 3; d++) {
+                ub[d] = dim[d] -1;
             }
-            return null;
+
+            return new FinalInterval(new long[]{0, 0, 0}, ub);
         }
     }
 
@@ -167,7 +202,7 @@ public class Atlas {
             return this.name;
         }
 
-        static Modality get(String modality) {
+        public static Modality get(String modality) {
             for (Modality mod : Modality.class.getEnumConstants()) {
                 if (mod.getName().equals(modality.toLowerCase())) {
                     return mod;
@@ -183,5 +218,19 @@ public class Atlas {
             }
             return lbls;
         }
+    }
+
+    public static long[] getVolumeDimension(Dimensions dim, VoxelResolution resolution, PlaneOfSection plane) {
+        long[] dim3d = new long[3];
+
+        int d = 0;
+        for (int axis : plane.getSectionAxesIndices()) {
+            dim3d[axis] = dim.dimension(d++);
+        }
+
+        int df = plane.getFixedAxisIndex();
+        dim3d[df] = resolution.getDimension()[df];
+
+        return dim3d;
     }
 }

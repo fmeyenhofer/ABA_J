@@ -2,6 +2,7 @@ import gui.tree.AtlasStructureSelectorListener;
 import gui.tree.AtlasStructureSelector;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.GenericDialog;
 import ij.gui.ImageRoi;
 import ij.gui.Overlay;
 import ij.gui.Roi;
@@ -9,6 +10,8 @@ import ij.plugin.filter.ThresholdToSelection;
 import ij.plugin.frame.RoiManager;
 import ij.process.*;
 import img.AnnotationImageTool;
+import img.AraImgPlus;
+import img.VolumeSection;
 import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
@@ -18,12 +21,10 @@ import net.imglib2.img.Img;
 import net.imglib2.img.ImgView;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.IntType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.Views;
-import org.scijava.ItemIO;
+import org.scijava.Initializable;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
@@ -31,16 +32,11 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import org.scijava.ui.UIService;
-import rest.AllenAtlas;
-import rest.AllenClient;
-import rest.AtlasStructure;
-import rest.AtlasStructureGraph;
-import sc.fiji.io.Nrrd_Reader;
+import rest.*;
 import img.ImagePlusUtils;
 
 import javax.xml.transform.TransformerException;
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -51,10 +47,12 @@ import java.util.List;
  *
  * (well do everything the plugin name promises... the display of a annotation structure tree already works though ^^)
  *
+ * TODO: Close the display (imp) if the structure hierarchy dialog closes and vice-versa
+ *
  * @author Felix Meyenhofer
  */
 @Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Analysis > Import Annotations")
-public class ImportAnnotations implements Command, AtlasStructureSelectorListener {
+public class ImportAnnotations implements Command, Initializable, AtlasStructureSelectorListener {
 
     @Parameter
     private StatusService status;
@@ -66,32 +64,80 @@ public class ImportAnnotations implements Command, AtlasStructureSelectorListene
     private UIService ui;
 
 
-    @Parameter(type = ItemIO.INPUT)
-    private ImgPlus<IntType> section;
+    @Parameter
+    private ImgPlus section;
 
-    // TODO: put these parameter in a dialog
+
+    // Only working with the mouse ontology for now
     private final AllenAtlas atlas = AllenAtlas.MOUSE3D;
-    private int sliceNumnber = 300;
-    private String atlasResolution = "25";
-    private String productID = "12";
 
-
-    // Keep a reference for the contour display
+    // Keep internal references
     private ImagePlus imp;
-    private RandomAccessibleInterval<IntType> annotationSection;
+    private RandomAccessibleInterval<UnsignedShortType> annotationSection;
+    private AraImgPlus araSection;
+    private Atlas.VoxelResolution voxelResolution;
+    private boolean wasCanceled;
 
 
     @Override
+    public void initialize() {
+        if ((section instanceof AraImgPlus) && ((AraImgPlus)section).hasSectionNumber()){
+            araSection = (AraImgPlus) section;
+
+            Atlas.PlaneOfSection planeOfSection = araSection.getPlaneOfSection();
+            int[] axes = planeOfSection.getSectionAxesIndices();
+            voxelResolution = araSection.getTemplateResolution();//Atlas.VoxelResolution.getClosest(araSection.dimension(0), axes[0]);
+        } else {
+            GenericDialog dialog = new GenericDialog("Image Section Configs");
+            List<String> labels = Atlas.VoxelResolution.getLabels();
+            List<String> planes = Atlas.PlaneOfSection.getLabels();
+
+            dialog.addChoice("plane of section", list2array(planes), Atlas.PlaneOfSection.CORONAL.getLabel());
+            dialog.addChoice("resolution", list2array(labels), Atlas.VoxelResolution.TWENTYFIVE.getLabel());
+            dialog.addNumericField("slice number", 1, 3);
+            dialog.showDialog();
+
+            wasCanceled = dialog.wasCanceled();
+            if (wasCanceled) {
+                return;
+            }
+
+            String planeInput = dialog.getNextString();
+            String resolutionInput = dialog.getNextString();
+            Integer sectionNumber = (int) dialog.getNextNumber();
+
+            voxelResolution = Atlas.VoxelResolution.get(resolutionInput);
+            Atlas.PlaneOfSection planeOfSection = Atlas.PlaneOfSection.get(planeInput);
+
+            long[] refDim = voxelResolution.getDimension();
+
+            int[] axes = planeOfSection.getSectionAxesIndices();
+            double scaleFactor = refDim[axes[0]] / section.dimension(0);
+
+            araSection = new AraImgPlus(section, scaleFactor, planeOfSection, voxelResolution);
+
+            VolumeSection volumeSection = new VolumeSection(planeOfSection, sectionNumber);
+            araSection.setVolumeSection(volumeSection);
+        }
+    }
+
+    @Override
     public void run() {
+        if (wasCanceled) {
+            return;
+        }
+
         imp = ImageJFunctions.wrap(section.getImg(), section.getName());
 
         try {
+            AllenClient client = AllenClient.getInstance();
+
             status.showStatus("Load annotation section");
-            annotationSection = getAnnotationSection(sliceNumnber, atlasResolution);
-//            ui.show(annotationSection);
+            AllenRefVol annotationVolume = client.getReferenceVolume(Atlas.Modality.ANNOTATION, voxelResolution);
+            RandomAccessibleInterval<UnsignedShortType> rai = annotationVolume.getRai();
+            annotationSection = araSection.mapTemplate2Section(rai, Atlas.Modality.ANNOTATION);
 
             status.showStatus("Get the structure graph");
-            AllenClient client = AllenClient.getInstance();
             AtlasStructureGraph structureGraph = client.getAnnotationStructureGraph(atlas);
             log.info("Structure graph size: " + structureGraph.size());
 
@@ -117,23 +163,6 @@ public class ImportAnnotations implements Command, AtlasStructureSelectorListene
             log.error("Unable to download annotation xml");
             e.printStackTrace();
         }
-    }
-
-    static private <T extends RealType<T> & NativeType<T>> RandomAccessibleInterval<T> getAnnotationSection(int sliceNumber, String resolution) throws
-            TransformerException, IOException, URISyntaxException {
-        // Fetch the annotation volume from the ABA API
-        AllenClient client = AllenClient.getInstance();
-        File path = client.getAnnotationGrid(resolution);
-
-        // Load the image file
-        Nrrd_Reader reader = new Nrrd_Reader();
-        ImagePlus imp = reader.load(path.getParent(), path.getName());
-
-        // Get the slice from the volume
-        Img<T> img = ImageJFunctions.wrap(imp);
-        RandomAccessibleInterval<T> sli = Views.hyperSlice(img, 0, sliceNumber);
-
-        return Views.permute(sli, 0, 1);
     }
 
     @Override
@@ -225,7 +254,7 @@ public class ImportAnnotations implements Command, AtlasStructureSelectorListene
 
     @Override
     public void importAction(HashMap<Integer, AtlasStructure> structures, String type) {
-        Img<IntType> img = ImgView.wrap(annotationSection, new ArrayImgFactory<>());
+        Img<UnsignedShortType> img = ImgView.wrap(annotationSection, new ArrayImgFactory<>());
 
         List<Integer> ids = new ArrayList<>();
         List<String> names = new ArrayList<>();
@@ -271,6 +300,17 @@ public class ImportAnnotations implements Command, AtlasStructureSelectorListene
                 log.error("Unknown import type " + type);
         }
     }
+
+    private String[] list2array(List<String> list) {
+        String[] array = new String[list.size()];
+        int i =0;
+        for (String item : list) {
+            array[i++] = item;
+        }
+
+        return array;
+    }
+
 
     public static void main(String[] args) throws IOException, TransformerException, URISyntaxException {
         ImageJ ij = new ImageJ();

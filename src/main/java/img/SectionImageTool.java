@@ -1,6 +1,7 @@
 package img;
 
 import io.scif.img.IO;
+import mpicbg.spim.data.SpimDataException;
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
 
@@ -14,6 +15,7 @@ import net.imglib2.algorithm.morphology.Opening;
 import net.imglib2.algorithm.morphology.StructuringElements;
 import net.imglib2.algorithm.neighborhood.Shape;
 import net.imglib2.img.Img;
+import net.imglib2.img.ImgView;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.labeling.Labeling;
 import net.imglib2.labeling.LabelingType;
@@ -26,13 +28,17 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.view.Views;
+import rest.AllenRefVol;
+import rest.Atlas;
 
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 
 /**
- * Collections of brain section image operations.
+ * Function collection for section image operations.
  *
  * @author Felix Meyenhofer
  */
@@ -125,7 +131,6 @@ public class SectionImageTool {
         RandomAccess<LabelingType<Integer>> sdsCursor = sds.randomAccess();
         Cursor<T> dstCursor = dsti.cursor();
         RandomAccess<BitType> mskCursor = msk.randomAccess();
-
 
         long[] maxPosision = new long[msk.numDimensions()];
         while (dstCursor.hasNext()) {
@@ -238,6 +243,25 @@ public class SectionImageTool {
         }
 
         return con;
+    }
+
+    public static <T extends RealType<T>> double estimateSectionResolution(Img<T> img, Atlas.PlaneOfSection plane, OpService ops) throws TransformerException, IOException, URISyntaxException, SpimDataException {
+        double sectionResolution;
+        Atlas.VoxelResolution refRes = Atlas.VoxelResolution.FIFTY;
+        Img<BitType> refMask = AllenRefVol.getSectionMask(refRes, plane);
+        double refArea = ops.stats().sum(refMask).getRealDouble();
+
+        double scale1 = ((double) refMask.dimension(0)) / ((double) img.dimension(0));
+        RandomAccessibleInterval<T> secImgSca = Views.subsample(img, Math.round(1 / scale1));
+
+        Img secImgScaImg = ImgView.wrap(secImgSca, new ArrayImgFactory());
+        Img<BitType> secMask = SectionImageTool.createMask(secImgScaImg, ops);
+
+        double secArea = ops.stats().sum(secMask).getRealDouble();
+        double scale2 = refArea / secArea;
+        sectionResolution = refRes.getValue() * scale1 * scale2;
+
+        return sectionResolution;
     }
 
 

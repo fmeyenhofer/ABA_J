@@ -103,14 +103,13 @@ public class AllenClient {
         return new AtlasStructureGraph(graph);
     }
 
-    public AllenRefVol getReferenceVolume(String modality, String resolution)
+    public AllenRefVol getReferenceVolume(Atlas.Modality modality, Atlas.VoxelResolution resolution)
             throws TransformerException, IOException, URISyntaxException {
 
-        Atlas.Modality mod = Atlas.Modality.get(modality);
-        Atlas.VoxelResolution res = Atlas.VoxelResolution.get(resolution);
-        AllenImage img = cache.getReferenceVolume(mod, res);
+        AllenImage img = cache.getReferenceVolume(modality, resolution);
 
         return new AllenRefVol(img.getFile());
+
     }
 
     private void parseStructureXmlElements(HashMap<Integer, AtlasStructure> collector, Element element, String path) {

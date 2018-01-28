@@ -8,7 +8,10 @@ import net.imagej.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.img.Img;
+import net.imglib2.img.ImgView;
+import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
+import net.imglib2.realtransform.InvertibleRealTransform;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
@@ -26,7 +29,7 @@ public class SectionImageAlignment2 {
 
     private SectionImageAlignment2() {}
 
-    public static <T extends RealType<T>> void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
@@ -39,7 +42,7 @@ public class SectionImageAlignment2 {
         int meshRes = 64;
 
         Img<UnsignedByteType> sec = (Img<UnsignedByteType>) ij.io().open(secPath);
-        Img<T> ref = (Img<T>) ij.io().open(refPath);
+        Img<UnsignedByteType> ref = (Img<UnsignedByteType>) ij.io().open(refPath);
 
         RandomAccessibleInterval<BitType> secMsk = SectionImageTool.createMask(sec, ij.op());
         RandomAccessibleInterval<BitType> refMsk = SectionImageTool.createMask(ref, ij.op());
@@ -74,18 +77,19 @@ public class SectionImageAlignment2 {
         TpsTransformWrapper transform = new TpsTransformWrapper(2, tps);
         RealRandomAccessible<UnsignedByteType> interp = Views.interpolate(Views.extendZero(sec), new NLinearInterpolatorFactory<>());
         RealRandomAccessible<UnsignedByteType> mapped = RealViews.transform(interp, transform);
-
         RandomAccessibleInterval<UnsignedByteType> warp = Views.interval(Views.raster(mapped), sec);
 
 
-        T miSrc = ref.firstElement().createVariable();
-        miSrc.setReal(0.0);
-        T maSrc = ij.op().stats().max(ref);
-        T maSrcT = ref.firstElement().createVariable();
-        maSrcT.setReal(255.0);
-        RandomAccessibleInterval<UnsignedByteType> nRef = ij.op().convert().uint8(ij.op().image().normalize(ref, miSrc, maSrc, miSrc, maSrcT));
+//        ThinPlateR2LogRSplineKernelTransform tpsi = new ThinPlateR2LogRSplineKernelTransform(2, srcPts, dstPts);
+        InvertibleRealTransform transformi = transform.inverse();//new TpsTransformWrapper(2, tpsi);
+        RealRandomAccessible<UnsignedByteType> interp2 = Views.interpolate(Views.extendZero(ref), new NLinearInterpolatorFactory<>());
+        RealRandomAccessible<UnsignedByteType> mapped2 = RealViews.transform(interp2, transformi);
+        RandomAccessibleInterval<UnsignedByteType> warp2 = Views.interval(Views.raster(mapped2), sec);
+//
+        RandomAccessibleInterval<UnsignedByteType> warp2n = scale2unint8(ij, ImgView.wrap(warp2, new ArrayImgFactory<>()));
+        RandomAccessibleInterval<UnsignedByteType> nRef = scale2unint8(ij, ref);
 
-        RandomAccessibleInterval<UnsignedByteType> stk = Views.stack(sec, warp, nRef);
+        RandomAccessibleInterval<UnsignedByteType> stk = Views.stack(sec, warp, nRef, warp2n);
         ij.ui().show(stk);
 //        ImageJFunctions.show(stk);
 
@@ -103,5 +107,14 @@ public class SectionImageAlignment2 {
 //        list.addAll(alignment.secCon.visualise(dim));
 //        list.addAll(alignment.refCon.visualise(dim));
 //        ImageJFunctions.show(Views.stack(list), "source, optimized(source), target");
+    }
+
+    private static <T extends RealType<T>> RandomAccessibleInterval<UnsignedByteType> scale2unint8(ImageJ ij, Img<T> ref) {
+        T miSrc = ref.firstElement().createVariable();
+        miSrc.setReal(0.0);
+        T maSrc = ij.op().stats().max(ref);
+        T maSrcT = ref.firstElement().createVariable();
+        maSrcT.setReal(255.0);
+        return ij.op().convert().uint8(ij.op().image().normalize(ref, miSrc, maSrc, miSrc, maSrcT));
     }
 }
