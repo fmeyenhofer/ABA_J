@@ -83,10 +83,10 @@ public class ImportAnnotations implements Command, Initializable, AtlasStructure
     public void initialize() {
         if ((section instanceof AraImgPlus) && ((AraImgPlus)section).hasSectionNumber()){
             araSection = (AraImgPlus) section;
-
-            Atlas.PlaneOfSection planeOfSection = araSection.getPlaneOfSection();
-            int[] axes = planeOfSection.getSectionAxesIndices();
-            voxelResolution = araSection.getTemplateResolution();//Atlas.VoxelResolution.getClosest(araSection.dimension(0), axes[0]);
+//            Atlas.PlaneOfSection planeOfSection = araSection.getPlaneOfSection();
+//            int[] axes = planeOfSection.getSectionAxesIndices();
+//            Atlas.VoxelResolution.getClosest(araSection.dimension(0), axes[0]);
+            voxelResolution = araSection.getTemplateResolution();
         } else {
             GenericDialog dialog = new GenericDialog("Image Section Configs");
             List<String> labels = Atlas.VoxelResolution.getLabels();
