@@ -410,6 +410,8 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
             }
         }
 
+        // TODO: Add centroids and weights
+
         ThinPlateR2LogRSplineKernelTransform tps = new ThinPlateR2LogRSplineKernelTransform(2, refVects, secVects);
         t_tps = new TpsTransformWrapper(2, tps);
 

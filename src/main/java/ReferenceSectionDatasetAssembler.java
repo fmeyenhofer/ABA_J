@@ -41,6 +41,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**
+ * TODO: integrate or make a separate plugin to donwload the section datasets (this code is currently in AllenClient, un-accessible to the ij user)
+ *
  * @author Felix Meyenhofer
  */
 @Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Misc. > Reference Section Assembly")
