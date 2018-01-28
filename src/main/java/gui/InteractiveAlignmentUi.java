@@ -188,7 +188,7 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
         InputTriggerConfig triggerConfig = BigDataViewer.getInputTriggerConfig(ViewerOptions.options());
         bdvHandle.getKeybindings().addInputMap("bdv ia", createInputMap(triggerConfig));
         HelpDialog dialog = new HelpDialog(window,
-                InteractiveAlignmentUi.class.getResource("/bdv/InteractiveAlignmentHelp.html"));
+                InteractiveAlignmentUi.class.getResource("/bdv/Help.html"));
         bdvHandle.getKeybindings().addActionMap("bdv ia", createActionMap(dialog));
 
         // Add the section volume
