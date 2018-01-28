@@ -39,8 +39,7 @@ import java.util.Map;
  *
  * @author Felix Meyenhofer
  */
-//@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Mapping > Interactive Alignment")
-@Plugin(type = Command.class, menuPath = "Plugins > Interactive Alignment")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Mapping > Interactive Alignment")
 public class InteractiveAlignment extends DynamicCommand implements Initializable {
 
     @Parameter(label = "Section image")
