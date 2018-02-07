@@ -5,7 +5,7 @@ import img.SectionImageOutlineSampler;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.InvertibleRealTransform;
 import net.imglib2.type.numeric.ARGBType;
-import rest.AllenRefVol;
+import rest.Atlas;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -23,17 +23,10 @@ public class SectionImageOutlinePoints extends BdvOverlay{
     private final List<double[]> points;
     private boolean depthDependentScaling;
 
-    public SectionImageOutlinePoints(double[] centroid, double[] first, double missingCoord, AllenRefVol.Plane p) {
+    public SectionImageOutlinePoints(double[] centroid, double[] first, double section, Atlas.PlaneOfSection plane) {
         points = new ArrayList<>(2);
-        switch (p) {
-            case YZ:
-                points.add(new double[]{missingCoord, centroid[1], centroid[0]});
-                points.add(new double[]{missingCoord, first[1], first[0]});
-                break;
-
-            default:
-                throw new RuntimeException("bla");
-        }
+        points.add(plane.section2TemplateCoordinate(centroid, section));
+        points.add(plane.section2TemplateCoordinate(first, section));
 
         depthDependentScaling = false;
     }
@@ -55,18 +48,12 @@ public class SectionImageOutlinePoints extends BdvOverlay{
     }
 
     public SectionImageOutlinePoints(List<SectionImageOutlineSampler.OutlinePoint> outlinePoints,
-                                     double missingCoord,
-                                     AllenRefVol.Plane p) {
+                                     double section,
+                                     Atlas.PlaneOfSection plane) {
         points = new ArrayList<>(outlinePoints.size());
-        switch (p) {
-            case YZ:
-                for (SectionImageOutlineSampler.OutlinePoint pt : outlinePoints) {
-                    points.add(new double[]{missingCoord, pt.getCoordinates()[1], pt.getCoordinates()[0]});
-                }
-                break;
 
-            default:
-                throw new RuntimeException("bla");
+        for (SectionImageOutlineSampler.OutlinePoint pt : outlinePoints) {
+            points.add(plane.section2TemplateCoordinate(pt.getCoordinates(), section));
         }
 
         depthDependentScaling = false;

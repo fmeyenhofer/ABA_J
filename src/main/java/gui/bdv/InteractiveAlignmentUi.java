@@ -204,10 +204,11 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
         sectionSource.setActive(true);
 
         // Add section contour points
-        double x = dims.dimension(0)/2;
+        double sectionNumber = dims.dimension(0)/2;
+        Atlas.PlaneOfSection plane = secImg.getPlaneOfSection();
 
         sectionOutlineSrc1 = BdvFunctions.showOverlay(
-                new SectionImageOutlinePoints(secPts, x, AllenRefVol.Plane.YZ),
+                new SectionImageOutlinePoints(secPts, sectionNumber, plane),
                 "section outline points",
                 Bdv.options().addTo(bdvHandle).sourceTransform(Ts_init));
         sectionOutlineSrc1.setColor(new ARGBType(0x0000FF));
@@ -215,7 +216,7 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
         sectionOutlineSrc1.setActive(false);
 
         sectionOutlineSrc2 = BdvFunctions.showOverlay(
-                new SectionImageOutlinePoints(secCon.getCentroidCoordinates(), secPts.get(0).getCoordinates(), x, AllenRefVol.Plane.YZ),
+                new SectionImageOutlinePoints(secCon.getCentroidCoordinates(), secPts.get(0).getCoordinates(), sectionNumber, plane),
                 "section centroid and 1st",
                 Bdv.options().addTo(bdvHandle).sourceTransform(Ts_init));
         sectionOutlineSrc2.setColor(new ARGBType(0x00FFFF));

@@ -298,14 +298,6 @@ public class AllenRefVol {
         return AnnotationImageTool.getRootMask(img);
     }
 
-    
-    // TODO: move this to the Atlas class
-    public enum Plane {
-        XY,
-        YZ,
-        ZX
-    }
-
 
     public static void main(String[] args) throws SpimDataException, TransformerException, IOException, URISyntaxException {
 //        File nrrdFile = new File("/Users/turf/allen-cache/reference-volumes/average_template_10.nrrd");

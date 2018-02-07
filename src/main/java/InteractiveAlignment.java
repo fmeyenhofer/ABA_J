@@ -168,7 +168,7 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
 
         double factor;
         switch (unit) {
-            case "milimeter":
+            case "millimeter":
                 factor = 0.001;
                 break;
             case "micrometer":
