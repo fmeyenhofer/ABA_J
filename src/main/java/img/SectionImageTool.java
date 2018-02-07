@@ -58,6 +58,10 @@ public class SectionImageTool {
 
         double sigma = ((double) max) / 100;
 
+        if (sigma < 3) {
+            sigma = 3;
+        }
+
         return createMask(rai, sigma, ops);
     }
 
