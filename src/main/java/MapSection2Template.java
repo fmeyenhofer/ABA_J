@@ -14,7 +14,7 @@ import org.scijava.ui.UIService;
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("unused")
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Mapping > Warp on Template")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 2. Alignment > Warp on Template")
 public class MapSection2Template implements Command {
 
     @Parameter

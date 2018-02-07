@@ -51,7 +51,7 @@ import java.util.List;
  *
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Analysis > Import Annotations")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 3. Analysis > Import Annotations")
 public class ImportAnnotations implements Command, Initializable, AtlasStructureSelectorListener {
 
     @Parameter

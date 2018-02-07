@@ -32,7 +32,7 @@ import java.io.IOException;
 /**
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = " Plugins > Allen Brain Atlas > Pre-Processing > Orient")
+@Plugin(type = Command.class, menuPath = " Plugins > Allen Brain Atlas > 1. Pre-Processing > Orient")
 public class SectionOrientation <T extends RealType<T> & NativeType<T>> implements Command {
     @Parameter
     private OpService ops;

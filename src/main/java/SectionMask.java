@@ -18,7 +18,7 @@ import java.io.IOException;
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("FieldCanBeLocal")
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Pre-Processing > Create Mask")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 1. Pre-Processing > Create Mask")
 public class SectionMask implements Command{
 
     @Parameter

@@ -24,7 +24,7 @@ import java.net.URL;
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("unused")
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Analysis > Gene Expression")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 3. Analysis > Gene Expression")
 public class GeneExpressionAtlas implements Command {
 
     @Parameter(label = "section image")
@@ -92,7 +92,7 @@ public class GeneExpressionAtlas implements Command {
 
         } else {
             ui.showDialog("<html><p>The image appears not to be aligned to the template.</p>" +
-                    "<p>You need to run Plugins > Allen Brain Atlas > Mapping > ...</p>");
+                    "<p>You need to run Plugins > Allen Brain Atlas > 2. Alignment > ...</p>");
         }
     }
 

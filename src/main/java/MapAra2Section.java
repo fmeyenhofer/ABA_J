@@ -23,7 +23,7 @@ import java.net.URISyntaxException;
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("unused")
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Mapping > Warp ARA on Section ")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 2. Alignment > Warp ARA on Section ")
 public class MapAra2Section implements Command {
 
     @Parameter
