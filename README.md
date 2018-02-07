@@ -31,11 +31,6 @@ mvn package
 After compilation the plugin (jar-file) can be dragged and dropped from the target folder on the imageJ main UI. 
 After restarting, the plugin is available through the menu: Plugins > AllenJ
 
-## Optional Steps
-This plugin uses [Deeplearning4J][dl4j] (DL4J) to do the computations with the deep convolutional neural networks (CNN). DL4J has also 
-GPU capabilities. 
-
-
 # Usage
 Once installed in [Fiji][fiji], you can access a collection of functions through _Main Menu > Plugins > Allen Brain Atlas_
 
@@ -44,8 +39,7 @@ Note: This neuroinformatics plugin performs computationally intense operations a
 that fulfills the following requirements:
 * fast internet connection (LAN)
 * a good CPU
-* enough memory (at least 16 GB)
-* CUDA capable GPU (optional, but recommended) 
+* enough memory (at least 16 GB) 
 
 The workflow template is:
 pre-process sections (orient, crop, scale) -> section-template mapping -> analysis
