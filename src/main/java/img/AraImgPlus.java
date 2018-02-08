@@ -1,7 +1,6 @@
 package img;
 
 import net.imglib2.*;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import rest.AllenRefVol;

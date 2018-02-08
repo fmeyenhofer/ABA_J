@@ -42,11 +42,11 @@ public class ImagePlusUtils {
         processor.setMinAndMax((double) lowerBound, (double) upperBound);
     }
 
-    public static int getMaskArea(ImageProcessor processor) {
-        int[] hist = processor.getStats().histogram;
-        
-        return hist[hist.length - 1];
-    }
+//    public static int getMaskArea(ImageProcessor processor) {
+//        int[] hist = processor.getStats().histogram;
+//
+//        return hist[hist.length - 1];
+//    }
 
     public static float meanSquareDifference(ImageProcessor pro1, ImageProcessor pro2) {
         if ((pro1.getHeight() != pro2.getHeight()) || (pro1.getHeight() != pro2.getHeight())) {

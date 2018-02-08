@@ -24,7 +24,7 @@ public final class FilteredTreeModel implements TreeModel {
     private String filter;
     private boolean activeOnly = true;
 
-    public FilteredTreeModel(final TreeModel treeModel) {
+    FilteredTreeModel(final TreeModel treeModel) {
         this.treeModel = treeModel;
         this.filter = "";
     }

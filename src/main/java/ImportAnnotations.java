@@ -314,7 +314,7 @@ public class ImportAnnotations implements Command, Initializable, AtlasStructure
     }
 
 
-    public static void main(String[] args) throws IOException, TransformerException, URISyntaxException {
+    public static void main(String[] args) throws IOException {
         ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
