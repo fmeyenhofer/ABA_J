@@ -90,7 +90,7 @@ public class SectionImagePreprocessing<T extends RealType<T> & NativeType<T>> im
             RandomAccessibleInterval<BitType> mskSca = ops.transform().scaleView(msk, invScale, new NearestNeighborInterpolatorFactory<>());
 //            ImageJFunctions.show(mskSca);
             Img<BitType> mskScaDil = ops.create().img(mskSca);
-            List<Shape> strel = StructuringElements.diamond(1, 1);
+            List<Shape> strel = StructuringElements.diamond(2, 2);
             Dilation.dilate(mskSca, mskScaDil, strel, 1);
             SectionImageTool.maskImage(imgSrc, mskScaDil);
         }
