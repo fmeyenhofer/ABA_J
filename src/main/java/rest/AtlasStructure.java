@@ -50,6 +50,7 @@ public class AtlasStructure {
         setGraphPath(path);
         setColor(color);
         setActivated(active);
+        setHasActiveChildren(false);
     }
 
     /**

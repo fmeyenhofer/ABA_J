@@ -86,6 +86,7 @@ public class AtlasStructureGraph {
                     "0f0f0f",
                     true);
             graph.put(-2, structure);
+            parents.add(structure.getId());
         }
         
         // Update parents

@@ -40,10 +40,6 @@ import java.util.List;
  * {@link AtlasStructureSelector#selection} hashmap. So {@link AtlasStructureSelector#filterAndUpdateTree()}
  * reapplies the selection once the filtering is done.
  *
- * TODO: add a checkbox to filter only "active" nodes (nodes that were found in the current section)
- * TODO: add a button to import the selected annotations
- * TODO: when expanding all nodes, expand only those with active children
- *
  * @author Felix Meyenhofer
  *
  */
@@ -72,6 +68,7 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
 
     /** Register of the selection listeners */
     private List<AtlasStructureSelectorListener> listeners = new ArrayList<>();
+    private final JButton active;
 
 
     /**
@@ -130,6 +127,15 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
             }
         });
 
+        active = new JButton("active");
+        active.setToolTipText("toggle visibility: active nodes / all nodes");
+        active.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                toggleVisibility();
+            }
+        });
+
         // Assemble top panel
         JPanel searchPanel = new JPanel(new GridBagLayout());
         searchPanel.setBorder(new EmptyBorder(10, 0, 10, 0));
@@ -145,6 +151,13 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
                 1,0,
                 GridBagConstraints.WEST,
                 GridBagConstraints.HORIZONTAL,
+                new Insets(0,0,0, 0),
+                0, 0));
+        searchPanel.add(active, new GridBagConstraints(1,1,
+                1,1,
+                0,0,
+                GridBagConstraints.EAST,
+                GridBagConstraints.NONE,
                 new Insets(0,0,0, 0),
                 0, 0));
         searchPanel.add(expand, new GridBagConstraints(2,1,
@@ -591,6 +604,28 @@ public class AtlasStructureSelector extends JPanel implements ActionListener {
         return count;
     }
 
+    private void toggleVisibility() {
+        FilteredTreeModel filteredModel = (FilteredTreeModel) this.tree.getModel();
+        switch (active.getText()) {
+            case "active":
+                active.setText("all");
+                filteredModel.setActiveOnly(false);
+                break;
+            case "all":
+                active.setText("active");
+                filteredModel.setActiveOnly(true);
+                break;
+            default:
+                throw new RuntimeException("Button text unknown " + active.getText() + ". This should not happen.");
+        }
+        this.filterAndUpdateTree();
+    }
+
+    /**
+     * Notify listening classes
+     *
+     * @param type import type
+     */
     private void notifyImportListeners(String type) {
         for (AtlasStructureSelectorListener listener : listeners) {
             listener.importAction(getSelectedStructures(), type);

@@ -1,6 +1,9 @@
 package gui.tree;
 
+import rest.AtlasStructure;
+
 import javax.swing.event.TreeModelListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.JTree;
@@ -19,6 +22,7 @@ public final class FilteredTreeModel implements TreeModel {
 
     private TreeModel treeModel;
     private String filter;
+    private boolean activeOnly = true;
 
     public FilteredTreeModel(final TreeModel treeModel) {
         this.treeModel = treeModel;
@@ -54,6 +58,15 @@ public final class FilteredTreeModel implements TreeModel {
     }
 
     /**
+     * Set the flag to show only active nodes
+     *
+     * @param status false -> show all nodes, true -> show only nodes with active children
+     */
+    public void setActiveOnly(boolean status) {
+        this.activeOnly = status;
+    }
+
+    /**
      * Set the filter string
      *
      * @param filter string
@@ -71,6 +84,12 @@ public final class FilteredTreeModel implements TreeModel {
      * @return true for a match and false for no match.
      */
     private boolean recursiveMatch(final Object node, final String filter) {
+        if (activeOnly) {
+            AtlasStructure structure = (AtlasStructure)((DefaultMutableTreeNode)node).getUserObject();
+            if (!structure.hasActiveChildren() && !structure.isActivated()) {
+                return false;
+            }
+        }
 
         boolean matches = filter.isEmpty() || node.toString().toLowerCase().matches(filter);
 
