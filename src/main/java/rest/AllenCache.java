@@ -1,6 +1,6 @@
 package rest;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 import java.io.File;
 import java.io.FilenameFilter;

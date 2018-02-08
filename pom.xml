@@ -9,18 +9,18 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>19.0.0</version>
+		<version>19.2.0</version>
 		<relativePath />
 	</parent>
 
 	<packaging>jar</packaging>
 	<groupId>ch.imagej</groupId>
-	<artifactId>imagej_allen-brain-atlas</artifactId>
+	<artifactId>aba-j</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 
 	<properties>
-		<package-name>ch.imagej.aba</package-name>
-		<main-class>AllenBrainJ2D</main-class>
+		<package-name>ch.imagej.abaj</package-name>
+		<!--<main-class>AllenBrainJ2D</main-class>-->
 		<scijava.jvm.version>1.8</scijava.jvm.version>
 		<license.copyrightOwners>Felix Meyenhofer</license.copyrightOwners>
 		<license.licenseName>GPLv3</license.licenseName>
@@ -35,11 +35,9 @@
 		<enforcer.skip>true</enforcer.skip>
 	</properties>
 	
-	<name>ABA-J 2D</name>
+	<name>ABA-J</name>
     <description>
-		Toolkit to register histological brain sections to the Allen Brain Atlas.
-		Additional functionality includes overlay of annotations from the reference atlas
-		and correlation analysis with mapped already mapped genes.
+		Toolkit to register histological brain sections using the Allen Brain Atlas.
 	</description>
 	<!--TODO: fill out general url and organisation-->
 	<url>https://github.com/Meyenhofer</url>
@@ -310,8 +308,8 @@
 		<!--</dependency>-->
 		<dependency>
 			<groupId>org.jdom</groupId>
-			<artifactId>jdom</artifactId>
-			<version>1.1</version>
+			<artifactId>jdom2</artifactId>
+			<!--<version>1.1</version>-->
 		</dependency>
 		
 		<!--REST service stuff-->

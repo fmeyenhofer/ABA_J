@@ -4,7 +4,7 @@ import rest.AllenClient;
 import rest.AllenXml;
 import rest.AtlasStructure;
 
-import org.jdom.Element;
+import org.jdom2.Element;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

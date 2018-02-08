@@ -5,7 +5,7 @@ import gui.SvgDisplay;
 import io.scif.img.ImgIOException;
 
 import org.apache.batik.transcoder.TranscoderException;
-import org.jdom.Element;
+import org.jdom2.Element;
 import org.scijava.log.LogService;
 import org.xml.sax.SAXException;
 

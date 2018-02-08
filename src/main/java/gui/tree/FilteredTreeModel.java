@@ -18,13 +18,14 @@ import javax.swing.JTree;
  * @author Adrian Walker (adrian.walker@bcs.org)
  * modified by Feilx Meyenhofer
  */
+@SuppressWarnings("WeakerAccess")
 public final class FilteredTreeModel implements TreeModel {
 
     private TreeModel treeModel;
     private String filter;
     private boolean activeOnly = true;
 
-    FilteredTreeModel(final TreeModel treeModel) {
+    public FilteredTreeModel(final TreeModel treeModel) {
         this.treeModel = treeModel;
         this.filter = "";
     }
