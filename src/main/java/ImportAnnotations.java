@@ -48,6 +48,7 @@ import java.util.List;
  * (well do everything the plugin name promises... the display of a annotation structure tree already works though ^^)
  *
  * TODO: Close the display (imp) if the structure hierarchy dialog closes and vice-versa
+ * TODO: display overlay on the current image
  *
  * @author Felix Meyenhofer
  */
@@ -102,21 +103,22 @@ public class ImportAnnotations implements Command, Initializable, AtlasStructure
                 return;
             }
 
-            String planeInput = dialog.getNextString();
-            String resolutionInput = dialog.getNextString();
+            String planeInput = dialog.getNextChoice();
+            String resolutionInput = dialog.getNextChoice();
             Integer sectionNumber = (int) dialog.getNextNumber();
 
             voxelResolution = Atlas.VoxelResolution.get(resolutionInput);
             Atlas.PlaneOfSection planeOfSection = Atlas.PlaneOfSection.get(planeInput);
-
             long[] refDim = voxelResolution.getDimension();
 
             int[] axes = planeOfSection.getSectionAxesIndices();
             double scaleFactor = refDim[axes[0]] / section.dimension(0);
+            double sectionResolution = voxelResolution.getValue() / scaleFactor;
 
-            araSection = new AraImgPlus(section, scaleFactor, planeOfSection, voxelResolution);
+            araSection = new AraImgPlus(section, sectionResolution, planeOfSection, voxelResolution);
 
-            VolumeSection volumeSection = new VolumeSection(planeOfSection, sectionNumber);
+            Integer sectionNumberG = Math.toIntExact(Math.round(sectionResolution * sectionNumber));
+            VolumeSection volumeSection = new VolumeSection(planeOfSection, sectionNumberG);
             araSection.setVolumeSection(volumeSection);
         }
     }

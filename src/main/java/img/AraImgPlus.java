@@ -1,6 +1,7 @@
 package img;
 
 import net.imglib2.*;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import rest.AllenRefVol;
@@ -234,7 +235,7 @@ public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T
 
         int df = planeOfSection.getFixedAxisIndex();
 
-        if (hasSectionTransform() && hasTemplateTransform()) {
+        if (hasSectionTransform() && hasTemplateTransform() && !t_r.toString().equals(t_s.toString())) {
             long[] upperBound = new long[3];
             int d = 0;
             for (int axis : planeOfSection.getSectionAxesIndices()) {
@@ -255,13 +256,13 @@ public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T
             rastered3d = rai;
         }
 
-        if (planeOfSection.swapAxes()) {
-            int fromAxis = planeOfSection.getSectionAxesIndices()[0];
-            int toAxis = planeOfSection.getSectionAxesIndices()[1];
-            rastered3d = Views.permute(rastered3d, fromAxis, toAxis);
-        }
-        
+
         RandomAccessibleInterval<UnsignedShortType> section = Views.hyperSlice(rastered3d, df, getSectionNumber());
+        if (planeOfSection.swapAxes()) {
+//            int fromAxis = planeOfSection.getSectionAxesIndices()[0];
+//            int toAxis = planeOfSection.getSectionAxesIndices()[1];
+            section = Views.permute(section, 0, 1);
+        }
 
         if (hasTpsTransform()) {
             RealRandomAccessible<UnsignedShortType> interp2d = Views.interpolate(Views.extendZero(section), interpolator);
