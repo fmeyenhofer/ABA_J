@@ -177,7 +177,7 @@ public class Atlas {
 
     public enum Modality {
         AUTOFLUO   ("average_template/",    "average_template_", "auto-fluorescence"),
-        NISSEL     ("ara_nissl/",           "ara_nissl_",        "nissel"),
+        NISSEL     ("ara_nissl/",           "ara_nissl_",        "nissl"),
         ANNOTATION ("annotation/ccf_2016/", "annotation_",       "annotation");
 
         private String suburl;
