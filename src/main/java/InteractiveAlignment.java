@@ -193,8 +193,8 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
 //        String path = "/Users/turf/switchdrive/SJMCS/data/devel/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-10 - Series 3.tif";
 //        String path = "/Users/turf/switchdrive/SJMCS/data/devel/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-07 - series 2.tif";
 //        String path = "/Users/turf/switchdrive/SJMCS/data/devel/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-10 - Series 3.tif";
-        String path = "/Users/turf/switchdrive/SJMCS/data/devel/small-deformations/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif";
-//        String path = "/Users/turf/switchdrive/SJMCS/data/devel/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00 - series 3.tif";
+//        String path = "/Users/turf/switchdrive/SJMCS/data/devel/small-deformations/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif";
+        String path = "/Users/turf/switchdrive/SJMCS/data/devel/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00 - series 3.tif";
 
         ImageJ ij = new ImageJ();
         ij.ui().showUI();
