@@ -83,6 +83,16 @@ public class Atlas {
                     ListUtils.string(getLabels()));
         }
 
+        public long[] template2SectionCoordinate(long[] rPos) {
+            long[] sPos = new long[2];
+            int i = 0;
+            for (int axisIndex : axesIndices) {
+                sPos[i++] = rPos[axisIndex];
+            }
+
+            return sPos;
+        }
+
         public double[] section2TemplateCoordinate(double[] sPos, double sectionNumber) {
             double[] tPos = new double[3];
             int i = 0;

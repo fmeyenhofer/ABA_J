@@ -1,4 +1,5 @@
 import img.AraImgPlus;
+import rest.AllenRefVol;
 
 import net.imagej.ImgPlus;
 
@@ -11,26 +12,31 @@ import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 
 /**
+ * TODO: make it possible to output a 2D section instead of a volume
+ *
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("unused")
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 2. Alignment > Warp on Template")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 2. Alignment > Map: Section to ARA")
 public class MapSection2Template implements Command {
 
-    @Parameter
+    @Parameter(label = "section image")
     private ImgPlus section;
 
     @Parameter(type = ItemIO.OUTPUT)
     private ImgPlus warp;
 
+
     @Parameter
-    UIService ui;
+    private UIService ui;
+
 
     @Override
     public void run() {
         if (section instanceof AraImgPlus) {
-            Img img = ((AraImgPlus) section).mapSection2Template();
-            warp = new ImgPlus(img, section);
+            AraImgPlus ara = (AraImgPlus) section;
+            Img img = ara.mapSection2Template();
+            warp = new ImgPlus(img, "mapped section " + ara.getSectionNumber(), AllenRefVol.getAxis());
         } else {
             ui.showDialog("The section needs to be aligned. ");
         }

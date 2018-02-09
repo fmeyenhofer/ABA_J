@@ -1,6 +1,7 @@
 package img;
 
 import net.imglib2.*;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import rest.AllenRefVol;
@@ -30,6 +31,7 @@ import net.imglib2.view.Views;
  *
  * @author Felix Meyenhofer
  */
+@SuppressWarnings("WeakerAccess")
 public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T> {
 
     /** plane along which the section image is cut */
@@ -173,11 +175,11 @@ public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T
         long[] dim3d = Atlas.getVolumeDimension(getImg(), templateResolution, planeOfSection);
 
         int df = planeOfSection.getFixedAxisIndex();
-        long d3 = (long) volumeSection.getP()[df];
+        long d3 = getSectionNumber();
         long[] lowerBounds = new long[3];
         long[] upperBounds = new long[3];
         for (int d = 0; d < 3; d++) {
-            if (d == d3) {
+            if (d == df) {
                 lowerBounds[d] = d3;
                 upperBounds[d] = d3;
             } else {
@@ -188,10 +190,15 @@ public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T
 
         Img<T> secVol = getImg().factory().create(dim3d, getImg().firstElement());
         RandomAccessibleInterval<T> sec = Views.interval(secVol, lowerBounds, upperBounds);
-        Cursor<T> c1 = Views.flatIterable(rastered2d).cursor();
-        Cursor<T> c2 = Views.flatIterable(sec).cursor();
-        while (c1.hasNext()) {
-            c2.next().set(c1.next());
+        RandomAccess<T> ra = rastered2d.randomAccess();
+        Cursor<T> cu = Views.flatIterable(sec).cursor();
+        long[] rPos = new long[3];
+        while (cu.hasNext()) {
+            T value = cu.next();
+            cu.localize(rPos);
+            long[] sPos = planeOfSection.template2SectionCoordinate(rPos);
+            ra.setPosition(sPos);
+            value.set(ra.get());
         }
 
         if (hasSectionTransform() && hasTemplateTransform()) {
@@ -209,9 +216,9 @@ public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T
         }
     }
 
-    public Img<UnsignedShortType> mapTemplate2Section(RandomAccessibleInterval<UnsignedShortType> rai) {
-        return mapTemplate2Section(rai, new NLinearInterpolatorFactory());
-    }
+//    public Img<UnsignedShortType> mapTemplate2Section(RandomAccessibleInterval<UnsignedShortType> rai) {
+//        return mapTemplate2Section(rai, new NLinearInterpolatorFactory());
+//    }
 
     public Img<UnsignedShortType> mapTemplate2Section(RandomAccessibleInterval<UnsignedShortType> rai, Atlas.Modality modality) {
         InterpolatorFactory interpolator;

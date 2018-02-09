@@ -1,4 +1,7 @@
 import img.AraImgPlus;
+import org.scijava.Initializable;
+import org.scijava.command.DynamicCommand;
+import org.scijava.module.MutableModuleItem;
 import rest.AllenClient;
 import rest.AllenRefVol;
 import rest.Atlas;
@@ -23,33 +26,42 @@ import java.net.URISyntaxException;
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("unused")
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 2. Alignment > Warp ARA on Section ")
-public class MapAra2Section implements Command {
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 2. Alignment > Map: ARA to Section")
+public class MapAra2Section extends DynamicCommand implements Command, Initializable{
 
-    @Parameter
+    @Parameter(label = "input section")
     private ImgPlus section;
+
+    @Parameter(label = "modalityName")
+    private String modalityName;
 
     @Parameter(type = ItemIO.OUTPUT)
     private ImgPlus warp;
 
 
     @Parameter
-    UIService ui;
+    private UIService ui;
 
     @Parameter
-    LogService log;
+    private LogService log;
 
+
+    @Override
+    public void initialize() {
+        final MutableModuleItem<String> araModItem = getInfo().getMutableInput("modalityName", String.class);
+        araModItem.setChoices(Atlas.Modality.getLabels());
+        araModItem.setDefaultValue(Atlas.Modality.AUTOFLUO.toString());
+    }
 
     @Override
     public void run() {
         if (section instanceof AraImgPlus) {
-            // TODO allow for a second input (check if there are several images and propose a dialog to select another one) or select between modalities
-
             try {
+                Atlas.Modality modality = Atlas.Modality.get(modalityName);
                 AraImgPlus ara = (AraImgPlus) section;
                 AllenClient client = AllenClient.getInstance();
-                AllenRefVol refVol = client.getReferenceVolume(Atlas.Modality.AUTOFLUO, ara.getTemplateResolution());
-                Img<UnsignedShortType> img = ara.mapTemplate2Section(refVol.getRai());
+                AllenRefVol refVol = client.getReferenceVolume(modality, ara.getTemplateResolution());
+                Img<UnsignedShortType> img = ara.mapTemplate2Section(refVol.getRai(), modality);
                 warp = new ImgPlus(img, section);
             } catch (TransformerException e) {
                 log.error("Trouble parsing the template data.");

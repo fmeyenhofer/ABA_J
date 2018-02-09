@@ -16,6 +16,8 @@ import bdv.viewer.ViewerOptions;
 import ij.IJ;
 import ij.ImagePlus;
 
+import net.imagej.axis.Axes;
+import net.imagej.axis.AxisType;
 import sc.fiji.io.Nrrd_Reader;
 
 import mpicbg.spim.data.SpimDataException;
@@ -296,6 +298,10 @@ public class AllenRefVol {
         Img<UnsignedShortType> img = ImgView.wrap(sec, new ArrayImgFactory<>());
 
         return AnnotationImageTool.getRootMask(img);
+    }
+
+    public static AxisType[] getAxis() {
+        return new AxisType[]{Axes.X, Axes.Y, Axes.Z};
     }
 
 
