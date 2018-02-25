@@ -8,6 +8,7 @@ import rest.Atlas;
  *
  * @author Felix Meyenhofer
  */
+@SuppressWarnings("WeakerAccess")
 public class VolumeSection {
 
     private double[] p;
@@ -58,17 +59,19 @@ public class VolumeSection {
         };
     }
 
-    public void applyTransform(AffineTransform3D t) {
+    public VolumeSection applyTransform(AffineTransform3D t) {
         double[] ut = new double[3];
         double[] vt = new double[3];
         double[] pt = new double[3];
 
-        t.apply(u, ut);
-        t.apply(v, vt);
-        t.apply(p, pt);
+        t.apply(getU(), ut);
+        t.apply(getV(), vt);
+        t.apply(getP(), pt);
 
         this.u = ut;
         this.v = vt;
         this.p = pt;
+
+        return new VolumeSection(ut, vt, pt);
     }
 }
