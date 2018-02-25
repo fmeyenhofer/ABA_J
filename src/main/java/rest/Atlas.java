@@ -43,6 +43,18 @@ public class Atlas {
             this.swap = swapAxes;
         }
 
+        public int getRotationAxis(PlaneOfSection otherPlane) {
+            for (int cAxis : this.axesIndices) {
+                for (int dAxis : otherPlane.getSectionAxesIndices()) {
+                    if (cAxis == dAxis) {
+                        return cAxis;
+                    }
+                }
+            }
+            throw new RuntimeException("Could not find the common axis between " +
+                    this + " and " + otherPlane + ". This should not be possible!");
+        }
+
         public int getFixedAxisIndex() {
             return this.fixedAxisIndex;
         }
