@@ -93,6 +93,16 @@ public class Atlas {
             return sPos;
         }
 
+        public double[] template2SectionCoordinate(double[] rPos) {
+            double[] sPos = new double[2];
+            int i = 0;
+            for (int axisIndex : axesIndices) {
+                sPos[i++] = rPos[axisIndex];
+            }
+
+            return sPos;
+        }
+
         public double[] section2TemplateCoordinate(double[] sPos, double sectionNumber) {
             double[] tPos = new double[3];
             int i = 0;
