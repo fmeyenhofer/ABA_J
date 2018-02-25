@@ -229,6 +229,35 @@ public class SectionImageTool {
         }
     }
 
+    public static <T extends NativeType<T> & RealType<T>> float normalizedMSD(RandomAccessibleInterval<T> imgA, RandomAccessibleInterval<T> imgB, OpService ops) {
+        IterableInterval<T> aIter = Views.iterable(imgA);
+        float aMin = ops.stats().min(aIter).getRealFloat();
+        float aMax = ops.stats().max(aIter).getRealFloat();
+        float aRan = aMax - aMin;
+
+        IterableInterval<T> bIter = Views.iterable(imgB);
+        float bMin = ops.stats().min(bIter).getRealFloat();
+        float bMax = ops.stats().max(bIter).getRealFloat();
+        float bRan = bMax - bMin;
+
+        float msd = 0;
+
+        Cursor<T> aCur = Views.flatIterable(imgA).cursor();
+        Cursor<T> bCur = Views.flatIterable(imgB).cursor();
+
+        while (aCur.hasNext()) {
+            T aVal = aCur.next();
+            T bVal = bCur.next();
+
+            float a = (aVal.getRealFloat() - aMin) / aRan;
+            float b = (bVal.getRealFloat() - bMin) / bRan;
+
+            msd += Math.pow((a - b), 2);
+        }
+
+        return msd;
+    }
+
     public static <T extends NativeType<T> & RealType<T>> Img<T> double2Whatever(RandomAccessibleInterval<DoubleType> img, Img<T> ori, OpService ops) {
         IterableInterval<DoubleType> imgIter = Views.iterable(img);
         DoubleType miSrc = new DoubleType(ops.stats().min(imgIter).getRealFloat());
@@ -269,7 +298,7 @@ public class SectionImageTool {
     }
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 //        String path = "/Users/turf/switchdrive/SJMCS/data/devel/section2volume/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif";
         String path = "/Users/turf/switchdrive/SJMCS/data/lamy-lab/floating/160128_crym_gng2/ome/series-3/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.ome.tif";
 //        String path = "/Users/turf/Desktop/new section.tif";
