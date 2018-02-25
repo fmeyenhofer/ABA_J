@@ -29,6 +29,8 @@ import net.imglib2.view.Views;
  * holds additionally a mapping that allows to map this image
  * onto the ARA or, conversely, map any data from the ARA onto this image.
  *
+ * TODO: make it extend Dataset
+ *
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("WeakerAccess")
