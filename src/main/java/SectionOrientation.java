@@ -1,4 +1,4 @@
-import img.SectionImageOutlineSampler;
+import img.SectionImageOutline;
 import img.SectionImageTool;
 
 import net.imagej.ImageJ;
@@ -9,15 +9,12 @@ import net.imglib2.*;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgView;
 import net.imglib2.img.array.ArrayImgFactory;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.view.Views;
 
@@ -72,7 +69,7 @@ public class SectionOrientation <T extends RealType<T> & NativeType<T>> implemen
         RandomAccessibleInterval<BitType> out = ops.morphology().outline(msk, false);
 
         status.showStatus(40, 100, "contour analysis");
-        SectionImageOutlineSampler sampler = new SectionImageOutlineSampler(out, 4);
+        SectionImageOutline sampler = new SectionImageOutline(out, 4);
         sampler.doPca();
 
         AffineTransform2D t = new AffineTransform2D();

@@ -1,9 +1,8 @@
 package gui.bdv;
 
 import bdv.util.BdvOverlay;
-import img.SectionImageOutlineSampler;
+import img.SectionImageOutline;
 import net.imglib2.realtransform.AffineTransform3D;
-import net.imglib2.realtransform.InvertibleRealTransform;
 import net.imglib2.type.numeric.ARGBType;
 import rest.Atlas;
 
@@ -23,53 +22,64 @@ public class SectionImageOutlinePoints extends BdvOverlay{
     private final List<double[]> points;
     private boolean depthDependentScaling;
 
-    public SectionImageOutlinePoints(double[] centroid, double[] first, double section, Atlas.PlaneOfSection plane) {
+    SectionImageOutlinePoints(double[] centroid, double[] first, double section, Atlas.PlaneOfSection plane) {
+        this(centroid, first, section, plane, true);
+    }
+    
+    SectionImageOutlinePoints(double[] centroid, double[] first, double section, Atlas.PlaneOfSection plane, boolean scaling) {
         points = new ArrayList<>(2);
         points.add(plane.section2TemplateCoordinate(centroid, section));
         points.add(plane.section2TemplateCoordinate(first, section));
 
-        depthDependentScaling = false;
+        depthDependentScaling = scaling;
     }
 
-    public SectionImageOutlinePoints(double[] centroid, double[] first, InvertibleRealTransform t) {
-        double[] cVPos = new double[]{centroid[0], centroid[1], 0};
-        double[] cLPos = new double[3];
-        t.apply(cVPos, cLPos);
+//    SectionImageOutlinePoints(double[] centroid, double[] first, InvertibleRealTransform t) {
+//        double[] cVPos = new double[]{centroid[0], centroid[1], 0};
+//        double[] cLPos = new double[3];
+//        t.apply(cVPos, cLPos);
+//
+//        double[] fVPos = new double[]{first[0], first[1], 0};
+//        double[] fLPos = new double[3];
+//        t.apply(fVPos, fLPos);
+//
+//        points = new ArrayList<>(2);
+//        points.add(cLPos);
+//        points.add(fLPos);
+//
+//        depthDependentScaling = true;
+//    }
+    SectionImageOutlinePoints(List<SectionImageOutline.OutlinePoint> outlinePoints,
+                              double section,
+                              Atlas.PlaneOfSection plane) {
+        this(outlinePoints, section, plane, true);
 
-        double[] fVPos = new double[]{first[0], first[1], 0};
-        double[] fLPos = new double[3];
-        t.apply(fVPos, fLPos);
-
-        points = new ArrayList<>(2);
-        points.add(cLPos);
-        points.add(fLPos);
-
-        depthDependentScaling = true;
     }
 
-    public SectionImageOutlinePoints(List<SectionImageOutlineSampler.OutlinePoint> outlinePoints,
-                                     double section,
-                                     Atlas.PlaneOfSection plane) {
+    SectionImageOutlinePoints(List<SectionImageOutline.OutlinePoint> outlinePoints,
+                              double section,
+                              Atlas.PlaneOfSection plane,
+                              boolean scaling) {
         points = new ArrayList<>(outlinePoints.size());
 
-        for (SectionImageOutlineSampler.OutlinePoint pt : outlinePoints) {
+        for (SectionImageOutline.OutlinePoint pt : outlinePoints) {
             points.add(plane.section2TemplateCoordinate(pt.getCoordinates(), section));
         }
 
-        depthDependentScaling = false;
+        depthDependentScaling = scaling;
     }
 
-    public SectionImageOutlinePoints(List<SectionImageOutlineSampler.OutlinePoint> outlinePoints, InvertibleRealTransform t) {
-        points = new ArrayList<>(outlinePoints.size());
-        for (SectionImageOutlineSampler.OutlinePoint pt : outlinePoints) {
-            double[] lPos = new double[3];
-            double[] vPos = new double[]{pt.getCoordinates()[0], pt.getCoordinates()[1], 0};
-            t.apply(vPos, lPos);
-            points.add(lPos);
-        }
-
-        depthDependentScaling = true;
-    }
+//    SectionImageOutlinePoints(List<SectionImageOutline.OutlinePoint> outlinePoints, InvertibleRealTransform t) {
+//        points = new ArrayList<>(outlinePoints.size());
+//        for (SectionImageOutline.OutlinePoint pt : outlinePoints) {
+//            double[] lPos = new double[3];
+//            double[] vPos = new double[]{pt.getCoordinates()[0], pt.getCoordinates()[1], 0};
+//            t.apply(vPos, lPos);
+//            points.add(lPos);
+//        }
+//
+//        depthDependentScaling = true;
+//    }
 
     @Override
     protected void draw(Graphics2D graphics) {
@@ -87,6 +97,10 @@ public class SectionImageOutlinePoints extends BdvOverlay{
             graphics.setColor(getColor(gPos[2]));
             graphics.fillOval(x, y, wh, wh);
         }
+    }
+
+    public void setMaxPointSize(int size) {
+        MAX_POINT_SIZE = size;
     }
 
     private Color getColor(final double depth) {

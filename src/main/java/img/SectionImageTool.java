@@ -229,7 +229,7 @@ public class SectionImageTool {
         }
     }
 
-    public static <T extends NativeType<T> & RealType<T>> float normalizedMSD(RandomAccessibleInterval<T> imgA, RandomAccessibleInterval<T> imgB, OpService ops) {
+    public static <T extends NativeType<T> & RealType<T>> float normalizedSSD(RandomAccessibleInterval<T> imgA, RandomAccessibleInterval<T> imgB, OpService ops) {
         IterableInterval<T> aIter = Views.iterable(imgA);
         float aMin = ops.stats().min(aIter).getRealFloat();
         float aMax = ops.stats().max(aIter).getRealFloat();
@@ -240,7 +240,7 @@ public class SectionImageTool {
         float bMax = ops.stats().max(bIter).getRealFloat();
         float bRan = bMax - bMin;
 
-        float msd = 0;
+        float ssd = 0;
 
         Cursor<T> aCur = Views.flatIterable(imgA).cursor();
         Cursor<T> bCur = Views.flatIterable(imgB).cursor();
@@ -252,10 +252,10 @@ public class SectionImageTool {
             float a = (aVal.getRealFloat() - aMin) / aRan;
             float b = (bVal.getRealFloat() - bMin) / bRan;
 
-            msd += Math.pow((a - b), 2);
+            ssd += Math.pow((a - b), 2);
         }
 
-        return msd;
+        return ssd;
     }
 
     public static <T extends NativeType<T> & RealType<T>> Img<T> double2Whatever(RandomAccessibleInterval<DoubleType> img, Img<T> ori, OpService ops) {

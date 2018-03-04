@@ -50,15 +50,15 @@ public class SectionImageAlignment2 {
         RandomAccessibleInterval<BitType> secOut = ij.op().morphology().outline(secMsk, false);
         RandomAccessibleInterval<BitType> refOut = ij.op().morphology().outline(refMsk, false);
 
-        SectionImageOutlineSampler secCon = new SectionImageOutlineSampler(secOut, levels);
-        secCon.generatePoints();
-        SectionImageOutlineSampler refCon = new SectionImageOutlineSampler(refOut, levels);
-        refCon.generatePoints();
+        SectionImageOutline secCon = new SectionImageOutline(secOut, levels);
+        secCon.sample();
+        SectionImageOutline refCon = new SectionImageOutline(refOut, levels);
+        refCon.sample();
 
         // Contour landmark extraction
         secCon.optimize(refCon);
-        ArrayList<SectionImageOutlineSampler.OutlinePoint> secPts = secCon.getCorrespondencePoints();
-        ArrayList<SectionImageOutlineSampler.OutlinePoint> refPts = refCon.getCorrespondencePoints();
+        ArrayList<SectionImageOutline.OutlinePoint> secPts = secCon.getSamples();
+        ArrayList<SectionImageOutline.OutlinePoint> refPts = refCon.getSamples();
 
         int N = refPts.size();
         double[][] srcPts = new double[2][N];
@@ -97,8 +97,8 @@ public class SectionImageAlignment2 {
 //        // Show the contour without optimization
 //        RandomAccessibleInterval<BitType> msk = SectionImageTool.createMask(sec, ij.op());
 //        RandomAccessibleInterval<BitType> out = ij.op().morphology().outline(msk, false);
-//        SectionImageOutlineSampler sampler = new SectionImageOutlineSampler(out, levels);
-//        sampler.generatePoints();
+//        SectionImageOutline sampler = new SectionImageOutline(out, levels);
+//        sampler.sample();
 //
 //        long[] dim = new long[sec.numDimensions()];
 //        sec.dimensions(dim);

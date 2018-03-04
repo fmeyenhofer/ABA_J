@@ -1,4 +1,4 @@
-import img.SectionImageOutlineSampler;
+import img.SectionImageOutline;
 import img.SectionImageTool;
 
 import net.imagej.ImageJ;
@@ -103,7 +103,7 @@ public class SectionImagePreprocessing<T extends RealType<T> & NativeType<T>> im
         RandomAccessibleInterval<BitType> out = ops.morphology().outline(msk, false);
 
         status.showStatus(40, 100, "contour analysis");
-        SectionImageOutlineSampler sampler = new SectionImageOutlineSampler(out, 4);
+        SectionImageOutline sampler = new SectionImageOutline(out, 4);
         sampler.doPca();
         double theta = sampler.getRotation();
         double[] bb = sampler.getRotatedBoundingBox();

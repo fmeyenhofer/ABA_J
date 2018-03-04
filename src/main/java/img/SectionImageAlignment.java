@@ -34,8 +34,8 @@ public class SectionImageAlignment <T extends RealType<T> & NativeType<T>>  {
     private int resolutionOutput = 64;
     private int triangulationLevels = 4;
 
-    private SectionImageOutlineSampler secCon;
-    private SectionImageOutlineSampler refCon;
+    private SectionImageOutline secCon;
+    private SectionImageOutline refCon;
     private OpService ops;
     private final Img<T> source;
     private final Img<T> target;
@@ -68,15 +68,15 @@ public class SectionImageAlignment <T extends RealType<T> & NativeType<T>>  {
         RandomAccessibleInterval<BitType> secOut = ops.morphology().outline(secMsk, false);
         RandomAccessibleInterval<BitType> refOut = ops.morphology().outline(refMsk, false);
 
-        secCon = new SectionImageOutlineSampler(secOut, triangulationLevels);
-        secCon.generatePoints();
-        refCon = new SectionImageOutlineSampler(refOut, triangulationLevels);
-        refCon.generatePoints();
+        secCon = new SectionImageOutline(secOut, triangulationLevels);
+        secCon.sample();
+        refCon = new SectionImageOutline(refOut, triangulationLevels);
+        refCon.sample();
 
         // Alignment
         secCon.optimize(refCon);
-        ArrayList<SectionImageOutlineSampler.OutlinePoint> secPts = secCon.getCorrespondencePoints();
-        ArrayList<SectionImageOutlineSampler.OutlinePoint> refPts = refCon.getCorrespondencePoints();
+        ArrayList<SectionImageOutline.OutlinePoint> secPts = secCon.getSamples();
+        ArrayList<SectionImageOutline.OutlinePoint> refPts = refCon.getSamples();
 
         int nMatches = refPts.size() + 1;
         ArrayList<PointMatch> matches = new ArrayList<>(nMatches);
@@ -186,13 +186,13 @@ public class SectionImageAlignment <T extends RealType<T> & NativeType<T>>  {
         // Show the contour without optimization
         RandomAccessibleInterval<BitType> msk = SectionImageTool.createMask(sec, ij.op());
         RandomAccessibleInterval<BitType> out = ij.op().morphology().outline(msk, false);
-        SectionImageOutlineSampler sampler = new SectionImageOutlineSampler(out, levels);
-        sampler.generatePoints();
+        SectionImageOutline outline = new SectionImageOutline(out, levels);
+        outline.sample();
 
         long[] dim = new long[sec.numDimensions()];
         sec.dimensions(dim);
         List<RandomAccessibleInterval<UnsignedByteType>> list = new ArrayList<>();
-        list.addAll(sampler.visualise(dim));
+        list.addAll(outline.visualise(dim));
         list.addAll(alignment.secCon.visualise(dim));
         list.addAll(alignment.refCon.visualise(dim));
         ImageJFunctions.show(Views.stack(list), "source, optimized(source), target");

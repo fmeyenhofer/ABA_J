@@ -1,10 +1,13 @@
 package gui.bdv;
 
 import img.AraImgPlus;
-import img.SectionImageOutlineSampler;
+import img.SectionImageOutline;
 import img.SectionImageTool;
 import img.VolumeSection;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
+import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import rest.AllenRefVol;
+import rest.Atlas;
 
 import bdv.util.Bdv;
 import bdv.util.BdvSource;
@@ -65,7 +68,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
-import rest.Atlas;
+
 
 /**
  * TODO: Add possibility to work with different perspectives: coronal works, sagital and horizontal need to be added [1]
@@ -73,7 +76,7 @@ import rest.Atlas;
  *
  * @author Felix Meyenhofer
  */
-public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
+public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
 
     private final StatusService status;
     private final OpService ops;
@@ -82,23 +85,24 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
     private static int DISPLAY_WIDTH = 652;
     private static int DISPLAY_HEIGHT = 512;
     private static int SECTION_INDEX = 0;
-    private static int[] SECTION_OUTLIINE_INDICES = new int[]{1, 2};
+    private static int[] SECTION_OUTLIINE_INDICES = new int[]{1, 2, 7};
     private static int SECTION_WARP_INDEX = 6;
     private static int TEMPLATE_INDEX = 3;
     private static int[] TEMPLATE_OUTLINE_INDICES = new int[]{4, 5};
 
     private boolean debug = false;
 
-//    private boolean interpolate = true;
+    //    private boolean interpolate = true;
 //    private int resolutionOutput = 64;
-    private int triangulationLevels = 4;
+    private int triangulationLevels;
+    private boolean optimizeCorrespondences;
+    private boolean removeOutliers;
 
 
     private BdvHandlePanel bdvHandle;
     private static BdvSource sectionSource = null;
     private static BdvSource warpedSectionSource = null;
-    private static BdvSource sectionOutlineSrc1 = null;
-    private static BdvSource sectionOutlineSrc2 = null;
+    private static BdvSource sectionOutlierSrc = null;
     private static BdvSource templateOutlineSrc1 = null;
     private static BdvSource templateOutlineSrc2 = null;
 
@@ -110,45 +114,41 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
     private AffineTransform3D Ts_init;
     private VolumeSection volumeSection;
 
-    private final SectionImageOutlineSampler secCon;
-    private final ArrayList<SectionImageOutlineSampler.OutlinePoint> secPts;
+    private final SectionImageOutline secCon;
     private TpsTransformWrapper t_tps;
     private TpsTransformWrapper t_tpsi;
 
 
-    public InteractiveAlignmentUi(AraImgPlus<V> secImg, AllenRefVol refVolFile, OpService opService, StatusService statusService)
+    public InteractiveAlignmentUi(AraImgPlus<V> secImg, AllenRefVol refVolFile,
+                                  int levels, boolean optimizeCorrespondences, boolean removeOutliers,
+                                  OpService opService, StatusService statusService)
             throws SpimDataException {
         this.ops = opService;
         this.status = statusService;
         this.secImg = secImg;
         this.refVol = refVolFile;
+        this.triangulationLevels = levels;
+        this.optimizeCorrespondences = optimizeCorrespondences;
+        this.removeOutliers = removeOutliers;
         this.dims = refVol.getDimensions();
         this.Tr_init = refVol.getTransform();
 
         secVol = secImg.createSectionVolume(refVol);
 
         // Extract the outline points of the input section (once!)
-        status.showStatus(0,100, "create section mask");
+        status.showStatus(0, 100, "create section mask");
         RandomAccessibleInterval<BitType> secMsk = SectionImageTool.createMask(secImg, ops);
         status.showStatus(60, 100, "create section outline points");
         RandomAccessibleInterval<BitType> secOut = ops.morphology().outline(secMsk, false);
-        secCon = new SectionImageOutlineSampler(secOut, triangulationLevels);
-        secCon.generatePoints();
-        secPts = secCon.getCorrespondencePoints();
+        secCon = new SectionImageOutline(secOut, triangulationLevels);
+        secCon.sample();
         status.showStatus(100, 100, "done loading section image");
     }
 
     private void updateInputSection() {
-        ViewerState state = bdvHandle.getViewerPanel().getState();
+        AffineTransform3D tr = getSourceTransformation(TEMPLATE_INDEX);
+        AffineTransform3D ts = getSourceTransformation(SECTION_INDEX);
 
-        AffineTransform3D tr = new AffineTransform3D();
-        SourceState refState = state.getSources().get(TEMPLATE_INDEX);
-        refState.getSpimSource().getSourceTransform(0, 0, tr);
-
-        AffineTransform3D ts = new AffineTransform3D();
-        SourceState secState = state.getSources().get(SECTION_INDEX);
-        secState.getSpimSource().getSourceTransform(0, 0, ts);
-        
         secImg.updateRegistrationInfo(t_tps, t_tpsi, ts, tr, volumeSection);
     }
 
@@ -204,19 +204,21 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
         sectionSource.setActive(true);
 
         // Add section contour points
-        double sectionNumber = dims.dimension(0)/2;
+        double sectionNumber = dims.dimension(0) / 2;
         Atlas.PlaneOfSection plane = secImg.getPlaneOfSection();
+        ArrayList<SectionImageOutline.OutlinePoint> secPts = secCon.getSamples();
 
-        sectionOutlineSrc1 = BdvFunctions.showOverlay(
-                new SectionImageOutlinePoints(secPts, sectionNumber, plane),
+        BdvSource sectionOutlineSrc1 = BdvFunctions.showOverlay(
+                new SectionImageOutlinePoints(secPts, sectionNumber, plane, false),
                 "section outline points",
                 Bdv.options().addTo(bdvHandle).sourceTransform(Ts_init));
         sectionOutlineSrc1.setColor(new ARGBType(0x0000FF));
         sectionOutlineSrc1.setDisplayRangeBounds(0, 1);
         sectionOutlineSrc1.setActive(false);
 
-        sectionOutlineSrc2 = BdvFunctions.showOverlay(
-                new SectionImageOutlinePoints(secCon.getCentroidCoordinates(), secPts.get(0).getCoordinates(), sectionNumber, plane),
+        BdvSource sectionOutlineSrc2 = BdvFunctions.showOverlay(
+                new SectionImageOutlinePoints(secCon.getCentroidCoordinates(), secPts.get(0).getCoordinates(),
+                        sectionNumber, plane, false),
                 "section centroid and 1st",
                 Bdv.options().addTo(bdvHandle).sourceTransform(Ts_init));
         sectionOutlineSrc2.setColor(new ARGBType(0x00FFFF));
@@ -233,7 +235,8 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
         // Get the current view transform and rotate it to the yz-plane
         AffineTransform3D tvw = new AffineTransform3D();
         bdvHandle.getViewerPanel().getState().getViewerTransform(tvw);
-        tvw.rotate(1, Math.PI/2);   // TODO: [1]
+        int rotationAxisIndex = plane.getRotationAxis(Atlas.PlaneOfSection.SAGITAL);
+        tvw.rotate(rotationAxisIndex, Math.PI / 2);
 
         // Assemble the entire transform from source to display
         InvertibleRealTransformSequence tlv = new InvertibleRealTransformSequence();
@@ -242,23 +245,24 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
 
         // Check where the center of the reference volume is and put it in the middle of the display
         double[] cen = new double[]{(double) (dims.dimension(0) / 2),
-                                    (double) (dims.dimension(1) / 2),
-                                    (double) (dims.dimension(2) / 2)};
+                (double) (dims.dimension(1) / 2),
+                (double) (dims.dimension(2) / 2)};
         double[] cen_t = new double[3];
         tlv.apply(cen, cen_t);
-        double[] dcen = new double[]{DISPLAY_WIDTH/2 - cen_t[0], DISPLAY_HEIGHT/2 - cen_t[1], -cen_t[2]};
+        double[] dcen = new double[]{DISPLAY_WIDTH / 2 - cen_t[0], DISPLAY_HEIGHT / 2 - cen_t[1], -cen_t[2]};
         tvw.translate(dcen);
         bdvHandle.getViewerPanel().setCurrentViewerTransform(tvw);
     }
 
     private InputMap createInputMap(final KeyStrokeAdder.Factory keyProperties) {
         final InputMap inputMap = new InputMap();
-        final KeyStrokeAdder map = keyProperties.keyStrokeAdder( inputMap );
+        final KeyStrokeAdder map = keyProperties.keyStrokeAdder(inputMap);
 
         map.put("warp section", "W");
         map.put("toggle warp", "shift W");
         map.put("toggle points", "shift P");
         map.put("update section", "shift U");
+        map.put("section difference", "shift D");
         map.put("help", "F1", "H");
 
         return inputMap;
@@ -275,8 +279,25 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
         new ToggleVisibilityAction("toggle warp", this, sections).put(actionMap);
         new ToggleVisibilityAction("toggle points", this, outlines).put(actionMap);
         new UpdateAction("update section", this).put(actionMap);
+        new SectionDifferenceAction("section difference", this).put(actionMap);
 
         return actionMap;
+    }
+
+
+    public class SectionDifferenceAction extends AbstractNamedAction {
+
+        private final InteractiveAlignmentUi ui;
+
+        SectionDifferenceAction(String name, InteractiveAlignmentUi ui) {
+            super(name);
+            this.ui = ui;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            this.ui.computeSectionDifference();
+        }
     }
 
 
@@ -345,79 +366,114 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
 //        bdvHandle.getViewerPanel().requestRepaint();
 
         // Extract the outline points from the currently visible section.
-        Img<UnsignedShortType> refImg = getCurrentlyVisibleTemplateSection();
+        Img<UnsignedShortType> refImg = getCurrentlyVisibleSection(TEMPLATE_INDEX);
 
         // TODO: given the smoothness of the templates, consider a simpler and faster mask creation
         RandomAccessibleInterval<BitType> refMsk = SectionImageTool.createMask(refImg, ops);
         RandomAccessibleInterval<BitType> refOut = ops.morphology().outline(refMsk, false);
 
-        SectionImageOutlineSampler refCon = new SectionImageOutlineSampler(refOut, triangulationLevels);
-        refCon.generatePoints();
-        ArrayList<SectionImageOutlineSampler.OutlinePoint> refPts = refCon.getCorrespondencePoints();
+        SectionImageOutline refCon = new SectionImageOutline(refOut, triangulationLevels);
 
-        // TODO optimize correspondences
-
-        // Transform the outline points back on the input section.
-        ViewerState viewerState = bdvHandle.getViewerPanel().getState();
-        AffineTransform3D t_vw = new AffineTransform3D();
-        viewerState.getViewerTransform(t_vw);
-
-        // compute the current plane in the global space
-        AffineTransform3D t_vwi = t_vw.inverse();
-
+        // Get current section and transform into the global space
         volumeSection = new VolumeSection(new double[]{1, 0, 0},
                 new double[]{0, 1, 0},
                 new double[]{0, 0, 0});
-        volumeSection.applyTransform(t_vwi);
+        AffineTransform3D t_vw = getViewerTransformation();
+        AffineTransform3D t_vwi = t_vw.inverse();
+        volumeSection = volumeSection.applyTransform(t_vwi);
 
-        SourceState srcState = viewerState.getSources().get(SECTION_INDEX);
-        AffineTransform3D t_wl_s = new AffineTransform3D();
-        srcState.getSpimSource().getSourceTransform(0, 0, t_wl_s);
-
+        // Get the transformation between the input section and the global space
+        AffineTransform3D t_wl_s = getSourceTransformation(SECTION_INDEX);
         final InvertibleRealTransformSequence Ts = new InvertibleRealTransformSequence();
         Ts.add(t_wl_s);
         Ts.add(t_vw);
         InvertibleRealTransform Ts_lv = Ts.inverse();
+        
+        // Map the reference contour on the input section
+        Atlas.PlaneOfSection plane = secImg.getPlaneOfSection();
+        SectionImageOutline refConMap = refCon.map(Ts_lv, plane);
+        refConMap.sample();
+
+        ArrayList<SectionImageOutline.OutlinePoint> refPts;
+        if (optimizeCorrespondences) {
+            refPts = refConMap.getOptimizedCorrespondencePoints(secCon);
+        } else {
+            refPts = refConMap.getSamples();
+        }
+
+        // Get copy of the section points
+        ArrayList<SectionImageOutline.OutlinePoint> secPts = secCon.getSamples();
+
+        // remove outliers
+        ArrayList<SectionImageOutline.OutlinePoint> secOut = new ArrayList<>();
+        if (removeOutliers) {
+            double[] distances = new double[secPts.size()];
+            for (int i = 0; i < secPts.size(); i++) {
+                double[] v1 = secPts.get(i).getCoordinates();
+                double[] v2 = refPts.get(i).getCoordinates();
+
+                distances[i] = Math.sqrt(Math.pow(v1[0] - v2[0], 2) + Math.pow(v1[1] - v2[1], 2));
+            }
+
+            double m = new Mean().evaluate(distances);
+            double sd = new StandardDeviation().evaluate(distances, m);
+            double d_max = m + 2 * sd;
+            double d_min = m - 2 * sd;
+
+            int o = 0;
+            for (int i = 0; i < secPts.size(); i++) {
+                if (d_min > distances[i] || distances[i] > d_max) {
+                    secOut.add(secPts.remove(i));
+                    refPts.remove(i);
+                    o++;
+                }
+            }
+
+            System.out.println("Removed " + o + " outliers in outline correspondence set.");
+        }
+
 
         // Put the points in data-structure for the TPS solver and map section outline points and reference points
         // into the same space (local)
         int N = secPts.size();
-        double[][] secVects = new double[2][N];
-        double[][] refVects = new double[2][N];
+        double[][] secVects = new double[2][N + 1];
+        double[][] refVects = new double[2][N + 1];
+        double[] weights = new double[N + 1];
         StringBuilder str = null;
 
-        for (int i = 0; i < N; i++) {
+        for (int i = 0; i < (N); i++) {
             if (debug) {
                 str = new StringBuilder().append(i).append(":");
             }
 
-            double[] srcVect = new double[]{refPts.get(i).getCoordinates()[0], refPts.get(i).getCoordinates()[1], 0};
-            double[] dstVect = new double[3];
-            Ts_lv.apply(srcVect, dstVect);
-
-            double[] secVect = new double[]{secPts.get(i).getCoordinates()[0], secPts.get(i).getCoordinates()[1]};  // TODO: [1]
             for (int d = 0; d < 2; d++) {
-                refVects[d][i] = dstVect[2-d]; // TODO: [1]
-                secVects[d][i] = secVect[d];
+                refVects[d][i] = refPts.get(i).getCoordinates()[d];
+                secVects[d][i] = secPts.get(i).getCoordinates()[d];
             }
 
+            weights[i] = 0.5;
+
             if (debug && (str != null)) {
-                str.append(array2str(srcVect))
-                        .append( " <-> ")
-                        .append(array2str(new double[]{ refVects[0][i], refVects[1][i]}))
-                        .append(" - ")
-                        .append(array2str(dstVect));
+                str.append(array2str(secPts.get(i).getCoordinates()))
+                        .append(" <-> ")
+                        .append(array2str(refPts.get(i).getCoordinates()));
                 System.out.println(str);
             }
         }
 
-        // TODO: Add centroids and weights
+        // Add centroids and weights
+        for (int d = 0; d < 2; d++) {
+            refVects[d][N] = refConMap.getCentroidCoordinates()[d];
+            secVects[d][N] = secCon.getCentroidCoordinates()[d];
+        }
+        weights[N] = 1;
 
-        ThinPlateR2LogRSplineKernelTransform tps = new ThinPlateR2LogRSplineKernelTransform(2, refVects, secVects);
+        // Compute the TPS transforms
+        ThinPlateR2LogRSplineKernelTransform tps = new ThinPlateR2LogRSplineKernelTransform(2, refVects, secVects, weights);
         t_tps = new TpsTransformWrapper(2, tps);
 
         // TODO: This should not be necessary, but the inverse of t_tps did not work so far
-        ThinPlateR2LogRSplineKernelTransform tpsi = new ThinPlateR2LogRSplineKernelTransform(2, secVects, refVects);
+        ThinPlateR2LogRSplineKernelTransform tpsi = new ThinPlateR2LogRSplineKernelTransform(2, secVects, refVects, weights);
         t_tpsi = new TpsTransformWrapper(2, tpsi);
 
 //        Affine3DHelpers.extractScale()
@@ -440,32 +496,27 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
         if (templateOutlineSrc1 != null) {
             templateOutlineSrc1.removeFromBdv();
         }
+        if (sectionOutlierSrc != null) {
+            sectionOutlierSrc.removeFromBdv();
+        }
 
         boolean showPoints = bdvHandle.getViewerPanel().getState().getSources().get(SECTION_OUTLIINE_INDICES[0]).isActive();
-
-        // Transform the points from the reference section back to the reference volume
-        SourceState refState = viewerState.getSources().get(TEMPLATE_INDEX);
-        AffineTransform3D t_wl_r = new AffineTransform3D();
-        refState.getSpimSource().getSourceTransform(0, 0, t_wl_s);
-        final InvertibleRealTransformSequence Tr = new InvertibleRealTransformSequence();
-        Tr.add(t_wl_r);
-        Tr.add(t_vw);
-
-        InvertibleRealTransform Tr_lv = Tr.inverse();
+        VolumeSection vs = volumeSection.applyTransform(t_wl_s.inverse());
+        double section = vs.getP()[plane.getFixedAxisIndex()];
 
         // Create the point overlays
         templateOutlineSrc1 = BdvFunctions.showOverlay(
-                new SectionImageOutlinePoints(refPts, Tr_lv),
+                new SectionImageOutlinePoints(refPts, section, plane),
                 "template outline points",
-                Bdv.options().addTo(bdvHandle).sourceTransform(t_wl_r));
+                Bdv.options().addTo(bdvHandle).sourceTransform(t_wl_s));
         templateOutlineSrc1.setColor(new ARGBType(0xFF0000));
         templateOutlineSrc1.setDisplayRangeBounds(0, 1);
         templateOutlineSrc1.setActive(showPoints);
 
         templateOutlineSrc2 = BdvFunctions.showOverlay(
-                new SectionImageOutlinePoints(refCon.getCentroidCoordinates(), refPts.get(0).getCoordinates(), Tr_lv),
+                new SectionImageOutlinePoints(refConMap.getCentroidCoordinates(), refPts.get(0).getCoordinates(), section, plane),
                 "template centroid and 1st",
-                Bdv.options().addTo(bdvHandle).sourceTransform(t_wl_r));
+                Bdv.options().addTo(bdvHandle).sourceTransform(t_wl_s));
         templateOutlineSrc2.setColor(new ARGBType(0xFFFF00));
         templateOutlineSrc2.setDisplayRangeBounds(1, 1);
         templateOutlineSrc2.setActive(showPoints);
@@ -479,8 +530,20 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
         warpedSectionSource.setColor(new ARGBType(0x0000FF));
         warpedSectionSource.setActive(true);
 
-        bdvHandle.getViewerPanel().requestRepaint();
+        // Add outliers visualization
+        if (secOut.size() > 0) {
+            SectionImageOutlinePoints outlierPts = new SectionImageOutlinePoints(secOut, section, plane, false);
+            outlierPts.setMaxPointSize(6);
+            templateOutlineSrc1 = BdvFunctions.showOverlay(
+                    outlierPts,
+                    "outlier points",
+                    Bdv.options().addTo(bdvHandle).sourceTransform(t_wl_s));
+            templateOutlineSrc1.setColor(new ARGBType(0x000000));
+            templateOutlineSrc1.setDisplayRangeBounds(0, 1);
+            templateOutlineSrc1.setActive(showPoints);
+        }
 
+        bdvHandle.getViewerPanel().requestRepaint();
         updateInputSection();
     }
 
@@ -494,7 +557,62 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
         return str.toString();
     }
 
-    private Img<UnsignedShortType> getCurrentlyVisibleTemplateSection() {
+    private void computeSectionDifference() {
+        AffineTransform3D t = getSourceTransformation(TEMPLATE_INDEX);
+        double[] p = new double[3];
+
+        t.inverse().apply(volumeSection.getP(), p);
+        Atlas.PlaneOfSection plane = secImg.getPlaneOfSection();
+        double section = p[plane.getFixedAxisIndex()];
+
+        Img<UnsignedShortType> img1;
+        boolean isWarped = !bdvHandle.getViewerPanel().getState().getSources().get(SECTION_INDEX).isActive();
+        if (isWarped) {
+            img1 = getCurrentlyVisibleSection(SECTION_WARP_INDEX);
+        } else {
+            img1 = getCurrentlyVisibleSection(SECTION_INDEX);
+        }
+
+        Img<UnsignedShortType> img2 = getCurrentlyVisibleSection(TEMPLATE_INDEX);
+
+        float nssd = SectionImageTool.normalizedSSD(img1, img2, ops);
+
+        String line = secImg.getSource() + ";" + plane + ";" + section + ";" + nssd + ";" + isWarped + "\n";
+        System.out.print(line);
+
+//        File file = new File("/Users/turf/Desktop/interactive-alignment-results.csv");
+//        if (!file.exists()) {
+//            try {
+//                Files.write(Paths.get(file.getAbsolutePath()), "path;plane;section;NSSD;warped\n".getBytes());
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        try {
+//            Files.write(Paths.get(file.getAbsolutePath()), line.getBytes(), StandardOpenOption.APPEND);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+    }
+
+    private AffineTransform3D getViewerTransformation() {
+        ViewerState viewerState = bdvHandle.getViewerPanel().getState();
+        AffineTransform3D t = new AffineTransform3D();
+        viewerState.getViewerTransform(t);
+
+        return t;
+    }
+
+    private AffineTransform3D getSourceTransformation(int srcIndex) {
+        SourceState srcState = this.bdvHandle.getViewerPanel().getState().getSources().get(srcIndex);
+        AffineTransform3D t = new AffineTransform3D();
+        srcState.getSpimSource().getSourceTransform(0, 0, t);
+
+        return t;
+    }
+
+    private Img<UnsignedShortType> getCurrentlyVisibleSection(int srcIndex) {
         ViewerState viewerState = bdvHandle.getViewerPanel().getState();
 
         int yMax = bdvHandle.getViewerPanel().getDisplay().getHeight();
@@ -505,7 +623,7 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
         final AffineTransform3D T_vw = new AffineTransform3D();
         bdvHandle.getViewerPanel().getState().getViewerTransform(T_vw);
 
-        SourceState srcState = viewerState.getSources().get(TEMPLATE_INDEX);
+        SourceState srcState = viewerState.getSources().get(srcIndex);
         final AffineTransform3D T_wl = new AffineTransform3D();
         srcState.getSpimSource().getSourceTransform(0, 0, T_wl);
 
@@ -575,10 +693,11 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>>  {
         */
 
         Img secImg = (Img) ij.io().open(secPath);
-        AraImgPlus ara = new AraImgPlus(secImg, 1, Atlas.PlaneOfSection.CORONAL, Atlas.VoxelResolution.TWENTYFIVE);
+//        double scale = secImg.dimension(0) / refVol.getDimensions().dimension(0);
+        AraImgPlus ara = new AraImgPlus(secImg, 25, Atlas.PlaneOfSection.CORONAL, Atlas.VoxelResolution.TWENTYFIVE);
 
 //        ij.command().run(InteractiveAlignmentUi.class, true);
-        InteractiveAlignmentUi ui = new InteractiveAlignmentUi(ara, refVol, ij.op(), ij.status());
+        InteractiveAlignmentUi ui = new InteractiveAlignmentUi(ara, refVol, 4, false, false, ij.op(), ij.status());
         ui.createAndShow();
     }
 }

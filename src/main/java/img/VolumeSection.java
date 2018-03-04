@@ -68,9 +68,9 @@ public class VolumeSection {
         t.apply(getV(), vt);
         t.apply(getP(), pt);
 
-        this.u = ut;
-        this.v = vt;
-        this.p = pt;
+//        this.u = ut;
+//        this.v = vt;
+//        this.p = pt;
 
         return new VolumeSection(ut, vt, pt);
     }

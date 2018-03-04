@@ -54,10 +54,17 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
     @Parameter(label = "Section resolution", style = ChoiceWidget.RADIO_BUTTON_HORIZONTAL_STYLE, choices = {"estimate", "metadata"})
     private String resolutionMethod;
 
-
     @Parameter(label = "Reference modality")
     private String araModality;
 
+    @Parameter(label = "Outline sampling levels")
+    private int levels = 4;
+
+    @Parameter(label = "Optimize correspondences")
+    private boolean optimize = false;
+
+    @Parameter(label = "Remove correspondance outliers")
+    private boolean outliers = false;
 
     @Parameter
     private OpService ops;
@@ -115,7 +122,7 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
                 case "estimate":
                     sectionResolution = SectionImageTool.estimateSectionResolution(secImg, plane, ops);
                     break;
-                    
+
                 case "metadata":
                     sectionResolution = getResolution();
                     break;
@@ -138,7 +145,7 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
 //            imgWindow.close();
 
             // initialize the UI and open it
-            InteractiveAlignmentUi ui = new InteractiveAlignmentUi(section, refVol, ops, status);
+            InteractiveAlignmentUi ui = new InteractiveAlignmentUi(section, refVol, levels, optimize, outliers, ops, status);
             ui.createAndShow();
 
         } catch (TransformerException e) {

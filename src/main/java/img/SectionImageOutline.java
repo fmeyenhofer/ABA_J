@@ -10,6 +10,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
 import net.imglib2.img.Img;
 import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.realtransform.InvertibleRealTransform;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
@@ -19,8 +20,8 @@ import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.correlation.Covariance;
+import rest.Atlas;
 
-import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.*;
@@ -34,12 +35,12 @@ import java.util.*;
  *
  * Similar outlines can be matches by generating the correspondences with this class.
  *
- * TODO: It might be worth looking into fitting a contour function to have sub-pixel accuracy (see {@link SectionImageOutlineSampler#outlineTriangulation})
+ * TODO: It might be worth looking into fitting a contour function to have sub-pixel accuracy (see {@link SectionImageOutline#outlineTriangulation})
  *
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("WeakerAccess")
-public class SectionImageOutlineSampler {
+public class SectionImageOutline {
 
     /** Contour coordinates */
     private final RealMatrix O;
@@ -69,7 +70,7 @@ public class SectionImageOutlineSampler {
      * @param coords contour coordinates
      * @param levels number of triangulation iteration levels
      */
-    public SectionImageOutlineSampler(List<double[]> coords, int levels) {
+    public SectionImageOutline(List<double[]> coords, int levels) {
         lvls = levels;
 
         rows = coords.size();
@@ -96,7 +97,7 @@ public class SectionImageOutlineSampler {
      * @param outline contour coordinates
      * @param levels number of triangulation iteration levels
      */
-    public SectionImageOutlineSampler(RandomAccessibleInterval<BitType> outline, int levels) {
+    public SectionImageOutline(RandomAccessibleInterval<BitType> outline, int levels) {
         this(extractOutlineCoordinates(outline), levels);
     }
 
@@ -146,7 +147,7 @@ public class SectionImageOutlineSampler {
     }
 
     /**
-     * Get the bounding box of the {@link SectionImageOutlineSampler#theta}- rotated
+     * Get the bounding box of the {@link SectionImageOutline#theta}- rotated
      * coordinates.
      *
      * @return bounding box [x_min y_min x_max y_max]
@@ -198,7 +199,7 @@ public class SectionImageOutlineSampler {
      *
      * @return correspondence points coordinates. 4*2^levels by 2 matrix
      */
-    public ArrayList<OutlinePoint> generatePoints() {
+    public ArrayList<OutlinePoint> sample() {
         if (this.theta == null) {
             doPca();
         }
@@ -271,7 +272,6 @@ public class SectionImageOutlineSampler {
 
         // Get back the original coordinates
         for (OutlinePoint point : correspondences) {
-//            INDArray row = O.getRow(point.index);
             double[] coord = O.getRow(point.index);
             samples.add(new OutlinePoint(coord, point.index));
         }
@@ -389,6 +389,27 @@ public class SectionImageOutlineSampler {
     }
 
     /**
+     * Map the coordinates
+     *
+     * @param t transformation
+     * @param section plane of section
+     * @return transformed outline
+     */
+    public SectionImageOutline map(InvertibleRealTransform t, Atlas.PlaneOfSection section) {
+        List<double[]> coords = new ArrayList<>(rows);
+
+        for (int r = 0; r < rows; r++) {
+            double[] srcVect = new double[]{O.getEntry(r, 0), O.getEntry(r, 1), 0};
+            double[] dstVect = new double[3];
+            t.apply(srcVect, dstVect);
+            double[] coord = section.template2SectionCoordinate(dstVect);
+            coords.add(coord);
+        }
+
+        return new SectionImageOutline(coords, this.lvls);
+    }
+
+    /**
      * Try greedily to reduce the global distance between the point sets by
      * moving them along the respective outline.
      *
@@ -397,7 +418,7 @@ public class SectionImageOutlineSampler {
      * @param soc Outline samples to match
      * @return optimized set of points
      */
-    public ArrayList<OutlinePoint> getOptimizedCorrespondencePoints(SectionImageOutlineSampler soc) {
+    public ArrayList<OutlinePoint> getOptimizedCorrespondencePoints(SectionImageOutline soc) {
         // Center this outline and order them according the radial coordinate
         TreeSet<OutlinePoint> out1 = new TreeSet<>();
         for (int r = 0; r < rows; r++) {
@@ -406,8 +427,8 @@ public class SectionImageOutlineSampler {
             out1.add(p);
         }
 
-        ArrayList<OutlinePoint> pts1 = getCorrespondencePoints();
-        ArrayList<OutlinePoint> pts2 = soc.getCorrespondencePoints();
+        ArrayList<OutlinePoint> pts1 = getSamples();
+        ArrayList<OutlinePoint> pts2 = soc.getSamples();
 
         // Center the sampled outline points
         ArrayList<OutlinePoint> cor1 = new ArrayList<>(pts1.size());
@@ -429,6 +450,8 @@ public class SectionImageOutlineSampler {
         // Determine the search direction along the outline
         boolean clockwise = dPhi > 1;
 
+        double dRi = 0;
+        int iter = 0;
         while (true) {
             OutlinePoint p_;
             double dR_ = 0;
@@ -453,13 +476,22 @@ public class SectionImageOutlineSampler {
                 dR_ += p_.deltaR2(cor2.get(i));
             }
 
+            if (iter == 0) {
+                dRi = dR;
+            }
+
             if (dR_ < dR) {
                 cor1 = cor1_;
                 dR = dR_;
             } else {
                 break;
             }
+
+            iter++;
+            System.out.println("" + dR);
         }
+
+        System.out.println("Greedy correspondence optimization: " + iter + " iterations. distance sum: " + dRi + "->" + dR);
 
         // Get back the original coordinates
         ArrayList<OutlinePoint> optimizedSamples = new ArrayList<>(cor1.size());
@@ -476,7 +508,7 @@ public class SectionImageOutlineSampler {
      *
      * @param outlineSampler outline to optimize for
      */
-    public void optimize(SectionImageOutlineSampler outlineSampler) {
+    public void optimize(SectionImageOutline outlineSampler) {
         this.samples = getOptimizedCorrespondencePoints(outlineSampler);
     }
 
@@ -578,16 +610,22 @@ public class SectionImageOutlineSampler {
     }
 
     /**
-     * Get the generated correspondence points or null if {@link SectionImageOutlineSampler#generatePoints()}
+     * Get the generated correspondence points or null if {@link SectionImageOutline#sample()}
      * was not yet called.
      *
      * @return correspondence points
      */
-    public ArrayList<OutlinePoint> getCorrespondencePoints() {
+    public ArrayList<OutlinePoint> getSamples() {
         if (samples == null) {
-            generatePoints();
+            sample();
         }
-        return samples;
+
+        ArrayList<OutlinePoint> pts = new ArrayList<>(samples.size());
+        for (OutlinePoint pt : samples) {
+            pts.add(pt.duplicate());
+        }
+
+        return pts;
     }
 
     /**
@@ -693,9 +731,8 @@ public class SectionImageOutlineSampler {
      * Functionality Testing
      *
      * @param args not used
-     * @throws IOException because
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
@@ -705,8 +742,8 @@ public class SectionImageOutlineSampler {
         ArrayImgFactory<BitType> factory = new ArrayImgFactory<>();
         Img<BitType> out = IO.openImgs(path, factory, type).get(0);
 
-        SectionImageOutlineSampler sampler = new SectionImageOutlineSampler(out, 4);
-        sampler.generatePoints();
+        SectionImageOutline sampler = new SectionImageOutline(out, 4);
+        sampler.sample();
         RandomAccessibleInterval<UnsignedByteType> vis = sampler.visualise();
 
 //        ImgPlus<UnsignedByteType> img = new ImgPlus<UnsignedByteType>(vis, "Contour sampling", new AxisType[]{Axes.X, Axes.Y, Axes.CHANNEL});
