@@ -73,6 +73,7 @@ import org.apache.commons.lang.ArrayUtils;
 /**
  * TODO: Add possibility to work with different perspectives: coronal works, sagital and horizontal need to be added [1]
  * TODO: Make it so that the section volume AND the template volume can be transformed. Currently transforming the section volume results in wrong TPS wraps
+ * TODO: shortcuts F1, F10, F11 and F12 do not work (BDV functionality for help, movie recording, and load/save settings). Added workaround/override for F1
  *
  * @author Felix Meyenhofer
  */
