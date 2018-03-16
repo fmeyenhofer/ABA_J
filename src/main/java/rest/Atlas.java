@@ -22,7 +22,25 @@ public class Atlas {
 
     public enum Species {
         HUMAN,
-        MOUSE
+        MOUSE;
+
+        public static Species get(String name) {
+            for (Species species : Species.class.getEnumConstants()) {
+                if (species.toString().toLowerCase().equals(name.toLowerCase())) {
+                    return species;
+                }
+            }
+            throw new RuntimeException("No species with the name '" + name.toLowerCase() + "' exists.");
+        }
+
+        public static List<String> getNames() {
+            List<String> names = new ArrayList<>(Species.class.getEnumConstants().length);
+            for (Species species : Species.class.getEnumConstants()) {
+                names.add(species.toString().toLowerCase());
+            }
+
+            return names;
+        }
     }
 
 

@@ -45,7 +45,7 @@ import java.util.Collections;
  *
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Misc. > Reference Section Assembly")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Misc. > Assemble SectionDataset")
 public class ReferenceSectionDatasetAssembler implements Command {
 
     @Parameter

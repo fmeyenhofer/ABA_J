@@ -39,7 +39,7 @@ class AllenImage extends AllenFile {
         HttpURLConnection host = (HttpURLConnection) url.openConnection();
         host.connect();
 
-        System.out.println("content length: " + host.getContentLength());
+//        System.out.println("content length: " + host.getContentLength());
 
         InputStream is = host.getInputStream();
 

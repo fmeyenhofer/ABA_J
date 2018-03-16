@@ -67,25 +67,24 @@ class AllenAPI {
                     ARG_CRITERIA + "[id$eq" + URLEncoder.encode("'" + product_id + "'", "UTF-8") + "]");
         }
 
-        static URL createSectionDataSetsQuery(String treatment_name, Atlas.PlaneOfSection section) throws MalformedURLException {
-            return addSectionDataSetInclusionAttributes(
-                    new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
-                    ARG_MODEL + "SectionDataSet" +
-                    ARG_CRITERIA + "[failed$eqfalse]," +
-                                   "plane_of_section[name$eq" + section + "]," +
-                                   "treatments[name$il" + treatment_name + "]"));
+        static URL createSectionDataSetsQuery(Integer product_id, Atlas.PlaneOfSection section) throws MalformedURLException {
+            return createSectionDataSetsQuery(product_id.toString(), section);
         }
 
-        static URL createSectionDataSetsQuery(Integer product_id, Atlas.PlaneOfSection section) throws MalformedURLException {
+        static URL createSectionDataSetsQuery(String product_id, Atlas.PlaneOfSection section) throws MalformedURLException {
             return addSectionDataSetInclusionAttributes(
                     new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
                     ARG_MODEL + "SectionDataSet" +
                     ARG_CRITERIA + "[failed$eqfalse]," +
                                    "products[id$eq" + product_id + "]," +
-                                   "plane_of_section[name$eq" + section + "]"));
+                                   "plane_of_section[name$eq" + section.toString().toLowerCase() + "]"));
         }
 
-        static URL createSectionDataSetsQuery(Integer dataset_id) throws MalformedURLException {
+        static URL createSectionDataSetQuery(Integer dataset_id) throws MalformedURLException {
+            return createSectionDataSetQuery(dataset_id.toString());
+        }
+
+        static URL createSectionDataSetQuery(String dataset_id) throws MalformedURLException {
             return addSectionDataSetInclusionAttributes(
                     new URL(BASE_URL + SUB_URL + FUN_QUERY + FILE_EXTENSION +
                             ARG_MODEL + "SectionDataSet" +
@@ -103,6 +102,10 @@ class AllenAPI {
                     "specimen," +
                     "reference_space," +
                     "products");
+        }
+
+        static URL createSectionImagesQuery(int dataset_id) throws MalformedURLException {
+            return createSectionImagesQuery(Integer.toString(dataset_id));
         }
 
         static URL createSectionImagesQuery(String dataset_id) throws MalformedURLException {

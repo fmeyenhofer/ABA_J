@@ -6,6 +6,7 @@ import io.scif.img.ImgIOException;
 
 import org.apache.batik.transcoder.TranscoderException;
 import org.jdom2.Element;
+import org.scijava.app.StatusService;
 import org.scijava.log.LogService;
 import org.xml.sax.SAXException;
 
@@ -14,7 +15,10 @@ import javax.xml.transform.TransformerException;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 
 /**
@@ -49,6 +53,9 @@ public class AllenClient {
     /** ImageJ logger service */
     private LogService log = null;
 
+    /** ImageJ status service */
+    private StatusService status = null;
+
 
     /**
      * Constructor
@@ -59,8 +66,12 @@ public class AllenClient {
         return singleton;
     }
 
-    public void setLogger(LogService logger) {
-        this.log = logger;
+    public void setLoggerService(LogService logService) {
+        this.log = logService;
+    }
+
+    public void setStatusService(StatusService statusService) {
+        this.status = statusService;
     }
 
     public void setSvgDisplay(boolean status) {
@@ -109,7 +120,32 @@ public class AllenClient {
         AllenImage img = cache.getReferenceVolume(modality, resolution);
 
         return new AllenRefVol(img.getFile());
+    }
 
+    public List<String> getProductList(String species) throws IOException, TransformerException, URISyntaxException {
+        AllenXml mouse_products = cache.getResponseXml(AllenAPI.RMA.createProductQueryUrl(Atlas.Species.get(species)));
+
+        List<String> products = new ArrayList<>();
+        for (Element product : mouse_products.getElements()) {
+            String product_name = product.getChild("name").getValue();
+            String product_id = product.getChild("id").getValue();
+            products.add(product_name + " (" + product_id + ")");
+        }
+
+        return products;
+    }
+
+    public List<String> getDatasetList(String product_id) throws IOException, TransformerException, URISyntaxException {
+        URL query = AllenAPI.RMA.createSectionDataSetsQuery(Integer.parseInt(product_id), Atlas.PlaneOfSection.CORONAL);
+        AllenXml datasets = cache.getResponseXml(query);
+
+        List<String> list = new ArrayList<>();
+        for (Element dataset_element : datasets.getElements()) {
+            String dataset_id = dataset_element.getChild("id").getValue();
+            list.add(dataset_id);
+        }
+
+        return list;
     }
 
     private void parseStructureXmlElements(HashMap<Integer, AtlasStructure> collector, Element element, String path) {
@@ -138,6 +174,20 @@ public class AllenClient {
         } else {
             log.info(message);
         }
+
+        if (status != null) {
+            status.showStatus(message);
+        }
+    }
+
+    private void tell(int n, int of, String msg) {
+        if (status != null) {
+            status.showStatus(n, of, msg);
+        } else if (log != null) {
+            log.info(msg);
+        } else {
+            System.out.println(msg);
+        }
     }
 
     /**
@@ -164,41 +214,37 @@ public class AllenClient {
     /**
      * Download all the section images of a section dataset
      *
-     * @param datasets id of the dataset
-     * @param downsample downs ampling of the images
+     * @param dataset_id id of the dataset
+     * @param downsample down sampling of the images
      * @param quality jpg quality
      * @throws IOException
      * @throws TransformerException
      * @throws URISyntaxException
      */
-    private void downloadSectionDataSet(AllenXml datasets, int downsample, int quality)
+    public void downloadSectionDataSet(String dataset_id, int downsample, int quality)
             throws IOException, TransformerException, URISyntaxException {
-        
-        for (Element dataset_element : datasets.getElements()) {
-            String dataset_id = dataset_element.getChild("id").getValue();
-            String product_name = dataset_element.getChild("products").getChild("product").getChild("abbreviation").getValue();
-            cache.getImageMetadataXml(dataset_element, product_name, dataset_id);
 
-            tell("\t" + dataset_id);
-            AllenXml sub_images = cache.getResponseXml(AllenAPI.RMA.createSectionImagesQuery(dataset_id));
-            System.out.print("\t");
-            int n = 1;
-            for (Element image_element : sub_images.getElements()) {
-                System.out.print(".");
-                String image_id = image_element.getChild("id").getValue();
+        URL query = AllenAPI.RMA.createSectionDataSetQuery(dataset_id);
+        AllenXml datasetXml = cache.getResponseXml(query);
+        Element dataset_element = datasetXml.getElements().get(0);
+        String product_name = dataset_element.getChild("products").getChild("product").getChild("abbreviation").getValue();
 
-                cache.getImageMetadataXml(dataset_element, product_name, dataset_id, image_id);
-                cache.getImage(downsample, quality, product_name, dataset_id, image_id);
-//                cache.getAnnotationSvg(product_name, dataset_id, image_id);
 
-                if ((n % 50) == 0) {
-                    System.out.print("\n\t");
-                }
+        tell(0,0,"Downloading SectionDataset " + dataset_id);
 
-                n++;
-            }
-            System.out.print("\n");
+        AllenXml sub_images = cache.getResponseXml(AllenAPI.RMA.createSectionImagesQuery(dataset_id));
+        System.out.print("\t");
+        int N = sub_images.getElements().size();
+        int n = 1;
+        for (Element image_element : sub_images.getElements()) {
+            tell(n, N, "Downloading SectionDataset " + dataset_id);
+            String image_id = image_element.getChild("id").getValue();
+            cache.getImageMetadataXml(dataset_element, product_name, dataset_id, image_id);
+            cache.getImage(downsample, quality, product_name, dataset_id, image_id);
+            n++;
         }
+
+        tell(N, N, "Downloaded SectionDataset " + dataset_id + "(" + N + " images)");
     }
   
 

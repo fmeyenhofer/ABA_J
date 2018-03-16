@@ -241,7 +241,7 @@ class AllenCache {
             int level = path_parts.length;
             URL query;
             if (level == 2) {
-                query = AllenAPI.RMA.createSectionDataSetsQuery(Integer.parseInt(path_parts[1]));
+                query = AllenAPI.RMA.createSectionDataSetQuery(Integer.parseInt(path_parts[1]));
             } else if (level == 3) {
                 query = AllenAPI.RMA.createSectionImageQuery(path_parts[2]);  //TODO: this is not a general solution for different data models
             } else {
