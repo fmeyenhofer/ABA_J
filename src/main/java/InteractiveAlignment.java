@@ -63,7 +63,7 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
     @Parameter(label = "Optimize correspondences")
     private boolean optimize = false;
 
-    @Parameter(label = "Remove correspondance outliers")
+    @Parameter(label = "Remove correspondence outliers")
     private boolean outliers = false;
 
     @Parameter
@@ -110,7 +110,7 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
         Atlas.Modality modality = Atlas.Modality.get(araModality);
 
         AllenClient client = AllenClient.getInstance();
-        client.setLogger(log);
+        client.setLoggerService(log);
 
         try {
             status.showStatus("load reference volume (template)");
