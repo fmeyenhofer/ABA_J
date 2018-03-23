@@ -62,6 +62,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -581,20 +584,20 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
         String line = secImg.getSource() + ";" + plane + ";" + section + ";" + nssd + ";" + isWarped + "\n";
         System.out.print(line);
 
-//        File file = new File("/Users/turf/Desktop/interactive-alignment-results.csv");
-//        if (!file.exists()) {
-//            try {
-//                Files.write(Paths.get(file.getAbsolutePath()), "path;plane;section;NSSD;warped\n".getBytes());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        try {
-//            Files.write(Paths.get(file.getAbsolutePath()), line.getBytes(), StandardOpenOption.APPEND);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        File file = new File("/Users/turf/Desktop/interactive-alignment-results.csv");
+        if (!file.exists()) {
+            try {
+                Files.write(Paths.get(file.getAbsolutePath()), "path;plane;section;NSSD;warped\n".getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        try {
+            Files.write(Paths.get(file.getAbsolutePath()), line.getBytes(), StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private AffineTransform3D getViewerTransformation() {
