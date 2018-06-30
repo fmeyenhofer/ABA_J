@@ -9,7 +9,6 @@ import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
 import img.SectionImageTool;
 
 import java.io.IOException;
@@ -17,9 +16,8 @@ import java.io.IOException;
 /**
  * @author Felix Meyenhofer
  */
-@SuppressWarnings("FieldCanBeLocal")
 @Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 1. Pre-Processing > Create Mask")
-public class SectionMask implements Command{
+public class SectionMask implements Command {
 
     @Parameter
     private OpService ops;
@@ -32,8 +30,8 @@ public class SectionMask implements Command{
     private Double sigma = -1.;
 
     @Parameter(type = ItemIO.OUTPUT)
+    @SuppressWarnings("FieldCanBeLocal")
     private ImgPlus<BitType> output;
-
 
     @Override
     public void run() {
