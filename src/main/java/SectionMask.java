@@ -16,7 +16,7 @@ import java.io.IOException;
 /**
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 1. Pre-Processing > Create Mask")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 1. Pre-Processing > Create Section Mask")
 public class SectionMask implements Command {
 
     @Parameter
@@ -30,7 +30,6 @@ public class SectionMask implements Command {
     private Double sigma = -1.;
 
     @Parameter(type = ItemIO.OUTPUT)
-    @SuppressWarnings("FieldCanBeLocal")
     private ImgPlus<BitType> output;
 
     @Override
