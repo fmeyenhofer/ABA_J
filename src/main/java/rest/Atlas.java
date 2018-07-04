@@ -5,6 +5,7 @@ import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import org.scijava.util.ListUtils;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -14,13 +15,13 @@ import java.util.TreeMap;
  *
  * @author Felix Meyenhofer
  */
-public class Atlas {
+public class Atlas implements Serializable {
 
     static final String DEFAULT_PRODUCT_NAME = "Mouse Brain Reference Data";
     static final int DEFAULT_PRODUCT_ID = 12;
 
 
-    public enum Species {
+    public enum Species implements Serializable {
         HUMAN,
         MOUSE;
 
@@ -44,7 +45,7 @@ public class Atlas {
     }
 
 
-    public enum PlaneOfSection {
+    public enum PlaneOfSection implements Serializable {
         CORONAL    ("yz", 0, new int[]{2, 1}, true),
         SAGITAL    ("xy", 2, new int[]{0, 1}, false),
         HORIZONTAL ("xz", 1, new int[]{0, 2}, false);
@@ -146,7 +147,7 @@ public class Atlas {
     }
 
 
-    public enum VoxelResolution {
+    public enum VoxelResolution implements Serializable {
         TEN        (10,  "10um", new long[]{1320, 800, 1140}),
         TWENTYFIVE (25,  "25um", new long[]{ 528, 320,  456}),
         FIFTY      (50,  "50um", new long[]{ 264, 160,  228}),
@@ -225,7 +226,7 @@ public class Atlas {
     }
 
 
-    public enum Modality {
+    public enum Modality implements Serializable {
         AUTOFLUO   ("average_template/",    "average_template_", "auto-fluorescence"),
         NISSEL     ("ara_nissl/",           "ara_nissl_",        "nissl"),
         ANNOTATION ("annotation/ccf_2016/", "annotation_",       "annotation");

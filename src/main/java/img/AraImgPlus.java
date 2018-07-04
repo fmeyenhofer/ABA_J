@@ -1,7 +1,7 @@
 package img;
 
+import io.AraMapping;
 import net.imglib2.*;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.InterpolatorFactory;
 import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import rest.AllenRefVol;
@@ -67,6 +67,11 @@ public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T
         this.t_r.scale(templateResolution.getValue());
     }
 
+    public AraImgPlus(Img<T> img, AraMapping map) {
+        super(img);
+        setAraMapping(map);
+    }
+
     public void updateRegistrationInfo(TpsTransformWrapper tps,
                                        TpsTransformWrapper tpsi,
                                        AffineTransform3D Ts,
@@ -103,6 +108,20 @@ public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T
 
     public boolean hasSectionNumber() {
         return volumeSection != null;
+    }
+
+    public AraMapping getAraMapping() {
+        return new AraMapping(planeOfSection, templateResolution, volumeSection, t_s, t_r, t_tps, t_tpsi);
+    }
+
+    public void setAraMapping(AraMapping mapping) {
+        this.planeOfSection = mapping.getPlaneOfSection();
+        this.templateResolution = mapping.getTemplateResolution();
+        this.volumeSection = mapping.getVolumeSection();
+        this.t_r = mapping.getAffineTr();
+        this.t_s = mapping.getAffineTs();
+        this.t_tps = mapping.getT_tps();
+        this.t_tpsi = mapping.getT_tpsi();
     }
 
     public double getSectionPosition() {
