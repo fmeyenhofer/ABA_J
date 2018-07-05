@@ -1,7 +1,10 @@
 package img;
 
-import net.imglib2.realtransform.AffineTransform3D;
 import rest.Atlas;
+
+import net.imglib2.realtransform.AffineTransform3D;
+
+import java.io.Serializable;
 
 /**
  * Class defining a plane in a (template) volume
@@ -9,7 +12,7 @@ import rest.Atlas;
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("WeakerAccess")
-public class VolumeSection {
+public class VolumeSection implements Serializable {
 
     private double[] p;
     private double[] v;
