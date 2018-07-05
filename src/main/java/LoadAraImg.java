@@ -20,7 +20,7 @@ import java.io.IOException;
  * @author Felix Meyenhofer
  */
 @Plugin(type = Command.class, menuPath = "File > Import > ARA.SEC...")
-public class LoadAraImg implements Command {
+public class LoadAraImg extends AraIO implements Command {
 
     @Parameter
     File file;
@@ -44,18 +44,17 @@ public class LoadAraImg implements Command {
         File imgFile;
         File mapFile;
         try {
-            if (file.getAbsolutePath().endsWith(AraIO.MAPPING_FILE_FORMAT)) {
+            if (file.getAbsolutePath().endsWith(MAPPING_FILE_FORMAT)) {
                 mapFile = file;
-                imgFile = AraIO.getImageFile(mapFile);
-
+                imgFile = getImageFile(mapFile);
             } else {
                 imgFile = file;
-                mapFile = AraIO.getMappingFile(imgFile);
+                mapFile = getMappingFile(imgFile);
             }
 
-            log.info("Read image file " + imgFile.getName());
+            log.info("Read section image file: " + imgFile.getName());
             Dataset dataset = dsio.open(imgFile.getAbsolutePath());
-            log.info("Read mapping metadata " + mapFile.getName());
+            log.info("Read mapping metadata:   " + mapFile.getName());
             AraMapping mapping = AraMapping.load(mapFile);
 
             araImg = new AraImgPlus(dataset.getImgPlus().getImg(), mapping);

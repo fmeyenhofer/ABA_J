@@ -17,7 +17,7 @@ public class AraIO {
     public static String MAPPING_FILE_FORMAT = ".ara.map";
     
 
-    public static File deriveMappingFile(File imageFile) {
+    public File deriveMappingFile(File imageFile) {
         File mapFile;
         if (imageFile.getName().contains(DEFAULT_IMAGE_FORMAT)) {
             mapFile = new File(imageFile.getAbsolutePath().replace(DEFAULT_IMAGE_FORMAT, MAPPING_FILE_FORMAT));
@@ -28,7 +28,7 @@ public class AraIO {
         return mapFile;
     }
 
-    public static File getMappingFile(File imageFile) throws FileNotFoundException {
+    public File getMappingFile(File imageFile) throws FileNotFoundException {
         File mapFile = deriveMappingFile(imageFile);
 
         if (!mapFile.exists()) {
@@ -38,7 +38,7 @@ public class AraIO {
         return mapFile;
     }
 
-    public static File getImageFile(File mappingFile) throws FileNotFoundException {
+    public File getImageFile(File mappingFile) throws FileNotFoundException {
         ImageReader bfreader = new ImageReader();
         String[] imageFileSuffixes = bfreader.getSuffixes();
         
@@ -68,7 +68,7 @@ public class AraIO {
         }
     }
 
-    private static boolean hasSupportedSuffix(String fileName, String trunk, String[] suffixes) {
+    private boolean hasSupportedSuffix(String fileName, String trunk, String[] suffixes) {
         for (String suffix : suffixes) {
             if (fileName.equals(trunk + "." + suffix)) {
                 return true;

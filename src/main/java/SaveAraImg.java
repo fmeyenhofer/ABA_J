@@ -24,7 +24,7 @@ import java.io.IOException;
  * @author Felix Meyenhofer
  */
 @Plugin(type = Command.class, menuPath = "File > Save As > ARA.SEC")
-public class SaveAraImg implements Command {
+public class SaveAraImg extends AraIO implements Command {
 
     @Parameter(label = "section image")
     ImgPlus secImg;
@@ -49,7 +49,7 @@ public class SaveAraImg implements Command {
             JFileChooser dialog = new JFileChooser();
             dialog.setCurrentDirectory(currentFile.getParentFile());
             dialog.setSelectedFile(new File(currentFile.getName()));
-            int status = dialog.showSaveDialog(SwingUtils.grabFrame(currentFile.getName()));
+            int status = dialog.showSaveDialog(null);
 
             if (status != JFileChooser.APPROVE_OPTION) {
                 return;
@@ -67,7 +67,7 @@ public class SaveAraImg implements Command {
                     dsio.save(dataset, imgFile.getAbsolutePath());
                 }
 
-                File mapFile = AraIO.deriveMappingFile(imgFile);
+                File mapFile = deriveMappingFile(imgFile);
                 if (mapFile.exists()) {
                     DialogPrompt.Result answer =  ui.showDialog(mapFile.getName() + " exists. Overwrite?",
                             DialogPrompt.MessageType.QUESTION_MESSAGE, DialogPrompt.OptionType.YES_NO_OPTION);
@@ -78,6 +78,7 @@ public class SaveAraImg implements Command {
                 log.info("Saving mapping metadata " + mapFile.getAbsolutePath());
                 AraMapping metadata = ara.getAraMapping();
                 metadata.save(mapFile);
+                ara.setName(imgFile.getName());
             } catch (IOException e) {
                 e.printStackTrace();
             }
