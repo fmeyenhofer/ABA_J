@@ -68,12 +68,12 @@ public class SectionDatasetDownloadDialog extends JPanel implements ActionListen
         speciesSelector.setSelectedIndex(1); // default to mouse
         speciesSelector.addActionListener(this);
 
-        JButton button1 = new JButton(OK_BUTTON_NAME);
-        button1.setName(OK_BUTTON_NAME);
-        button1.addActionListener(this);
-        JButton button2 = new JButton(CANCEL_BUTTON_NAME);
-        button2.setName(CANCEL_BUTTON_NAME);
+        JButton button2 = new JButton(OK_BUTTON_NAME);
+        button2.setName(OK_BUTTON_NAME);
         button2.addActionListener(this);
+        JButton button1 = new JButton(CANCEL_BUTTON_NAME);
+        button1.setName(CANCEL_BUTTON_NAME);
+        button1.addActionListener(this);
         JPanel panel = new JPanel();
         panel.setBorder(new EmptyBorder(10, 0, 0, 0));
         panel.add(button1);
@@ -190,11 +190,7 @@ public class SectionDatasetDownloadDialog extends JPanel implements ActionListen
     }
 
     public String getDatasetId() {
-        String dataset = (String) datasetSelector.getSelectedItem();
-        if (dataset != null) {
-            return dataset;
-        }
-        return null;
+        return (String) datasetSelector.getSelectedItem();
     }
 
     public int getSampling() {
@@ -215,6 +211,8 @@ public class SectionDatasetDownloadDialog extends JPanel implements ActionListen
     }
 
     private void update(String control) {
+        JDialog dialog = (JDialog) SwingUtilities.getWindowAncestor(this);
+
         switch (control) {
 
             case SPECIES_SELECTOR_NAME:
@@ -237,14 +235,15 @@ public class SectionDatasetDownloadDialog extends JPanel implements ActionListen
             case OK_BUTTON_NAME:
                 int index = datasetSelector.getSelectedIndex();
                 if (index < 0) {
-                    JDialog parent = (JDialog) SwingUtilities.getWindowAncestor(this);
-                    JOptionPane.showMessageDialog(parent, "You have to select all the way through to a quality.");
+                    JOptionPane.showMessageDialog(dialog,
+                            "You have to select all the way through to a quality.");
                     break;
                 }
+                dialog.dispose();
+                break;
 
             case CANCEL_BUTTON_NAME:
                 datasetSelector.setSelectedIndex(-1);
-                JDialog dialog = (JDialog) SwingUtilities.getWindowAncestor(this);
                 dialog.dispose();
                 break;
         }
