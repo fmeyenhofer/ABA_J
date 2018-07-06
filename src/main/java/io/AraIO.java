@@ -7,17 +7,19 @@ import java.io.FileFilter;
 import java.io.FileNotFoundException;
 
 /**
+ * Abstract class for IO plugins.
+ *
  * @author Felix Meyenhofer
  */
 public class AraIO {
 
     @SuppressWarnings("WeakerAccess")
-    public static String DEFAULT_IMAGE_FORMAT = ".ome.tif";
+    protected static String DEFAULT_IMAGE_FORMAT = ".ome.tif";
 
-    public static String MAPPING_FILE_FORMAT = ".ara.map";
-    
+    protected static String MAPPING_FILE_FORMAT = ".ara.map";
 
-    public File deriveMappingFile(File imageFile) {
+
+    protected File deriveMappingFile(File imageFile) {
         File mapFile;
         if (imageFile.getName().contains(DEFAULT_IMAGE_FORMAT)) {
             mapFile = new File(imageFile.getAbsolutePath().replace(DEFAULT_IMAGE_FORMAT, MAPPING_FILE_FORMAT));
@@ -28,7 +30,7 @@ public class AraIO {
         return mapFile;
     }
 
-    public File getMappingFile(File imageFile) throws FileNotFoundException {
+    protected File getMappingFile(File imageFile) throws FileNotFoundException {
         File mapFile = deriveMappingFile(imageFile);
 
         if (!mapFile.exists()) {
@@ -38,7 +40,7 @@ public class AraIO {
         return mapFile;
     }
 
-    public File getImageFile(File mappingFile) throws FileNotFoundException {
+    protected File getImageFile(File mappingFile) throws FileNotFoundException {
         ImageReader bfreader = new ImageReader();
         String[] imageFileSuffixes = bfreader.getSuffixes();
         

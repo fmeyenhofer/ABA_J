@@ -1,5 +1,9 @@
 package rest;
 
+import log.FeedbackGate;
+import org.scijava.app.StatusService;
+import org.scijava.log.LogService;
+
 import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,7 +20,7 @@ import java.net.URL;
  *
  * @author Felix Meyenhofer
  */
-abstract class AllenFile {
+abstract class AllenFile extends FeedbackGate {
 
     /** Allen API URL to fetch an image file from the RESTful service */
     private URL url;
@@ -36,6 +40,14 @@ abstract class AllenFile {
      * @throws IOException
      */
     AllenFile(URL url, File file) throws TransformerException, IOException, URISyntaxException {
+        this(url, file, null, null);
+    }
+
+    AllenFile(URL url, File file, LogService logService, StatusService statusService)
+            throws TransformerException, IOException, URISyntaxException {
+        setLogService(logService);
+        setStatusService(statusService);
+
         setUrl(url);
         setFile(file);
         setNew(true);

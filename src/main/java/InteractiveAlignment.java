@@ -110,7 +110,8 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
         Atlas.Modality modality = Atlas.Modality.get(araModality);
 
         AllenClient client = AllenClient.getInstance();
-        client.setLoggerService(log);
+        client.setLogService(log);
+        client.setStatusService(status);
 
         try {
             status.showStatus("load reference volume (template)");

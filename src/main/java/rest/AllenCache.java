@@ -1,5 +1,6 @@
 package rest;
 
+import log.FeedbackGate;
 import org.jdom2.Element;
 
 import java.io.File;
@@ -51,7 +52,7 @@ import javax.xml.transform.TransformerException;
  *
  * @author Felix Meyenhofer
  */
-class AllenCache {
+class AllenCache extends FeedbackGate {
 
     /** Root directory of the cache */
     private File root;
@@ -318,7 +319,7 @@ class AllenCache {
             int end = path_parts.length - 1;
             String image_id = path_parts[end].replace(AllenAPI.Download.Image.FILE_EXTENSION, "");
             URL query = AllenAPI.Download.Image.createImageUrl(image_id, downsample, quality);
-            return new AllenImage(query, path);
+            return new AllenImage(query, path, getLogService(), getStatusService());
         }
     }
 
@@ -359,7 +360,7 @@ class AllenCache {
             return new AllenImage(path);
         } else {
             URL query = AllenAPI.Download.RefVol.createUrl(type, voxelResolution);
-            return new AllenImage(query, path);
+            return new AllenImage(query, path, getLogService(), getStatusService());
         }
     }
 
@@ -408,7 +409,7 @@ class AllenCache {
             return new AllenImage(path);
         } else {
             URL query = AllenAPI.Download.RefVol.createUrl(modality, resolution);
-            return new AllenImage(query, path);
+            return new AllenImage(query, path, getLogService(), getStatusService());
         }
     }
 }

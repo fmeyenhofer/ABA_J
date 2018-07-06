@@ -1,5 +1,4 @@
 
-import gui.SwingUtils;
 import img.AraImgPlus;
 import io.AraIO;
 import io.AraMapping;
@@ -27,17 +26,18 @@ import java.io.IOException;
 public class SaveAraImg extends AraIO implements Command {
 
     @Parameter(label = "section image")
-    ImgPlus secImg;
+    private ImgPlus secImg;
 
 
     @Parameter
-    LogService log;
+    private LogService log;
 
     @Parameter
-    UIService ui;
+    private UIService ui;
 
     @Parameter
-    DatasetIOService dsio;
+    private DatasetIOService dsio;
+
 
     @Override
     public void run() {
