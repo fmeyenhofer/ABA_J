@@ -7,7 +7,7 @@ import org.scijava.plugin.Plugin;
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("unused")
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 4. IO > Save ARA.SEC")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 5. IO > Save ARA.SEC")
 public class SaveAraImgMenuEntry implements Command {
 
     @Parameter

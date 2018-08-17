@@ -24,7 +24,7 @@ import java.net.URISyntaxException;
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("unused")
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 2. Alignment > Map: ARA to Section")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 4. Mapping > ARA to Section")
 public class MapAra2Section extends DynamicCommand implements Command, Initializable{
 
     @Parameter(label = "input section")

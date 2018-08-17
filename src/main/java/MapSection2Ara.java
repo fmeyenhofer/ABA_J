@@ -11,12 +11,13 @@ import org.scijava.ui.UIService;
 
 /**
  * TODO: make it possible to output a 2D section instead of a volume
+ * TODO: allow mapping of multiple sections (open or from directory)
  *
  * @author Felix Meyenhofer
  */
 @SuppressWarnings("unused")
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 2. Alignment > Map: Section to ARA")
-public class MapSection2Template implements Command {
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 4. Mapping > Section(s) to ARA")
+public class MapSection2Ara implements Command {
 
     @Parameter(label = "section image")
     private ImgPlus section;
