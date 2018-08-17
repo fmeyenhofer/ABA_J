@@ -1,10 +1,16 @@
 ABA-J is an [ImageJ][ij] plugin to register 1 single or a series of 
 subsequent histology sections to the [Allen Brain Atlas][aba] (ABA), 
-an online ressource providing a reference space, 
+an online resources providing a reference space, 
 annotations and access to many mapped genes. 
 Once the section images are registered to the reference atlas, 
 the plugin allows to retrieve annotations and use them as 
 regions of interest (ROI's). 
+
+
+| Acronym | Description                 | 
+|:-------:|:---------------------------:|
+| CCF     | Common Coordinate Framework | 
+| ARA     | Allen Reference Atlas       |
 
 
 # Installation
