@@ -1,5 +1,11 @@
+import rest.*;
 import gui.tree.AtlasStructureSelectorListener;
 import gui.tree.AtlasStructureSelector;
+import img.AnnotationImageTool;
+import img.AraImgPlus;
+import img.VolumeSection;
+import img.ImagePlusUtils;
+
 import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.GenericDialog;
@@ -9,9 +15,7 @@ import ij.gui.Roi;
 import ij.plugin.filter.ThresholdToSelection;
 import ij.plugin.frame.RoiManager;
 import ij.process.*;
-import img.AnnotationImageTool;
-import img.AraImgPlus;
-import img.VolumeSection;
+
 import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
@@ -30,10 +34,7 @@ import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
 import org.scijava.ui.UIService;
-import rest.*;
-import img.ImagePlusUtils;
 
 import javax.xml.transform.TransformerException;
 import java.awt.*;

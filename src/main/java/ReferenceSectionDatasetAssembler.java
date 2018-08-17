@@ -1,5 +1,8 @@
-import bdv.util.BdvFunctions;
+import rest.AllenClient;
+import rest.AllenXml;
 import gui.SectionDatasetSelector;
+import bdv.util.BdvFunctions;
+
 import loci.common.services.DependencyException;
 import loci.common.services.ServiceException;
 import loci.common.services.ServiceFactory;
@@ -8,6 +11,8 @@ import loci.formats.IFormatReader;
 import loci.formats.ImageReader;
 import loci.formats.meta.MetadataStore;
 import loci.formats.services.OMEXMLService;
+import ome.xml.meta.IMetadata;
+
 import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
@@ -22,15 +27,12 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
-import ome.xml.meta.IMetadata;
 import org.scijava.command.Command;
 import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
-import rest.AllenClient;
-import rest.AllenXml;
 
 import javax.xml.transform.TransformerException;
 import java.io.File;

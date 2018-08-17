@@ -1,10 +1,7 @@
-
-import gui.SwingUtils;
 import img.AraImgPlus;
 import io.AraIO;
 import io.AraMapping;
 
-import io.scif.services.DatasetIOService;
 import net.imagej.Dataset;
 import net.imagej.DefaultDataset;
 import net.imagej.ImageJ;
@@ -15,6 +12,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.DialogPrompt;
 import org.scijava.ui.UIService;
+import io.scif.services.DatasetIOService;
 
 import javax.swing.*;
 import java.io.File;
@@ -38,6 +36,7 @@ public class SaveAraImg extends AraIO implements Command {
 
     @Parameter
     DatasetIOService dsio;
+
 
     @Override
     public void run() {

@@ -4,8 +4,6 @@ import img.AraImgPlus;
 import img.SectionImageOutline;
 import img.SectionImageTool;
 import img.VolumeSection;
-import org.apache.commons.math3.stat.descriptive.moment.Mean;
-import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 import rest.AllenRefVol;
 import rest.Atlas;
 
@@ -27,8 +25,6 @@ import bdv.viewer.VisibilityAndGrouping;
 
 import mpicbg.spim.data.SpimDataException;
 
-import jitk.spline.ThinPlateR2LogRSplineKernelTransform;
-
 import org.scijava.app.StatusService;
 import org.scijava.ui.behaviour.KeyStrokeAdder;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
@@ -36,7 +32,6 @@ import org.scijava.ui.behaviour.util.AbstractNamedAction;
 
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
-
 import net.imglib2.type.logic.BitType;
 import net.imglib2.Dimensions;
 import net.imglib2.RealRandomAccessible;
@@ -51,6 +46,11 @@ import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.view.Views;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.NativeType;
+
+import jitk.spline.ThinPlateR2LogRSplineKernelTransform;
+
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
+import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
 
 import javax.swing.JFrame;
 import javax.swing.InputMap;

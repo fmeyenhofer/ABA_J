@@ -2,6 +2,7 @@ package img;
 
 import io.scif.img.IO;
 import mpicbg.models.Point;
+
 import net.imagej.ImageJ;
 import net.imglib2.Cursor;
 import net.imglib2.Interval;
@@ -16,8 +17,6 @@ import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
-
-
 
 import java.io.IOException;
 import java.util.ArrayList;

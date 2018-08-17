@@ -1,10 +1,12 @@
 package gui.bdv;
 
-import bdv.util.BdvOverlay;
 import img.SectionImageOutline;
+import rest.Atlas;
+
+import bdv.util.BdvOverlay;
+
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
-import rest.Atlas;
 
 import java.awt.*;
 import java.util.ArrayList;

@@ -1,3 +1,6 @@
+import img.ImagePlusUtils;
+import img.SectionImageTool;
+
 import ij.CompositeImage;
 import ij.IJ;
 import ij.ImagePlus;
@@ -5,11 +8,13 @@ import ij.ImageStack;
 import ij.gui.Plot;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
+
 import mpicbg.ij.InverseTransformMapping;
 import mpicbg.ij.Mapping;
 import mpicbg.ij.SIFT;
 import mpicbg.imagefeatures.*;
 import mpicbg.models.*;
+
 import net.imagej.ImageJ;
 import net.imagej.Dataset;
 import net.imagej.ops.OpService;
@@ -17,15 +22,11 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.logic.BitType;
-import org.scijava.app.StatusService;
 import org.scijava.command.Command;
-import org.scijava.io.IOService;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
-import img.ImagePlusUtils;
-import img.SectionImageTool;
 
 import java.awt.*;
 import java.io.IOException;

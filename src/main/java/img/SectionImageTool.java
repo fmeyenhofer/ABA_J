@@ -1,10 +1,13 @@
 package img;
 
+import rest.AllenRefVol;
+import rest.Atlas;
+
 import io.scif.img.IO;
 import mpicbg.spim.data.SpimDataException;
+
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
-
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
@@ -28,14 +31,11 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.view.Views;
-import rest.AllenRefVol;
-import rest.Atlas;
 
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
-
 
 /**
  * Function collection for section image operations.

@@ -15,9 +15,6 @@ import bdv.viewer.ViewerOptions;
 
 import ij.IJ;
 import ij.ImagePlus;
-
-import net.imagej.axis.Axes;
-import net.imagej.axis.AxisType;
 import sc.fiji.io.Nrrd_Reader;
 
 import mpicbg.spim.data.SpimDataException;
@@ -26,6 +23,8 @@ import mpicbg.spim.data.registration.ViewRegistration;
 import mpicbg.spim.data.registration.ViewRegistrations;
 import mpicbg.spim.data.sequence.*;
 
+import net.imagej.axis.Axes;
+import net.imagej.axis.AxisType;
 import net.imglib2.Dimensions;
 import net.imglib2.FinalDimensions;
 import net.imglib2.RandomAccessibleInterval;

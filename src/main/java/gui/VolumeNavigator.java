@@ -1,17 +1,14 @@
 package gui;
 
-import de.mpicbg.jug.clearvolume.gui.GenericClearVolumeGui;
 import ij.ImagePlus;
-import net.imagej.ImageJ;
+import sc.fiji.io.Nrrd_Reader;
+
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
-import net.imagej.axis.CalibratedAxis;
 import net.imglib2.*;
 import net.imglib2.converter.Converter;
 import net.imglib2.converter.Converters;
-import net.imglib2.converter.RealARGBConverter;
-import net.imglib2.display.RealARGBColorConverter;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgView;
 import net.imglib2.img.array.ArrayImgFactory;
@@ -20,24 +17,15 @@ import net.imglib2.img.list.ListCursor;
 import net.imglib2.img.list.ListImg;
 import net.imglib2.img.list.ListImgFactory;
 import net.imglib2.interpolation.randomaccess.NLinearInterpolatorFactory;
-import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.realtransform.RealViews;
 import net.imglib2.type.NativeType;
-import net.imglib2.type.Type;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.LongType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.type.operators.SetZero;
-import net.imglib2.ui.viewer.InteractiveRealViewer;
-import net.imglib2.ui.viewer.InteractiveRealViewer2D;
-import net.imglib2.ui.viewer.InteractiveRealViewer3D;
-import net.imglib2.util.Intervals;
-import net.imglib2.util.Util;
 import net.imglib2.view.Views;
-import sc.fiji.io.Nrrd_Reader;
+
+import de.mpicbg.jug.clearvolume.gui.GenericClearVolumeGui;
 
 import javax.swing.*;
 import java.io.File;

@@ -1,27 +1,18 @@
 import gui.SectionDatasetDownloadDialog;
-import gui.SwingUtils;
-import org.scijava.ui.UIService;
 import rest.AllenClient;
-import rest.Atlas;
 
 import net.imagej.ImageJ;
-
 import org.scijava.Initializable;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
-import org.scijava.module.MutableModuleItem;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
 import javax.xml.transform.TransformerException;
-import java.awt.*;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author Felix Meyenhofer

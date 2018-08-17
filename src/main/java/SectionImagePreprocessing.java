@@ -4,7 +4,6 @@ import img.SectionImageTool;
 import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.ops.OpService;
-
 import net.imglib2.*;
 import net.imglib2.algorithm.morphology.Dilation;
 import net.imglib2.algorithm.morphology.StructuringElements;
@@ -21,7 +20,6 @@ import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.view.Views;
-
 import org.scijava.ItemIO;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;

@@ -5,7 +5,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLConnection;
 
 /**
  * Class to handle the image files from the Allen API

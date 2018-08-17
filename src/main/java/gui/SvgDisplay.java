@@ -13,7 +13,6 @@ import org.apache.batik.swing.svg.SVGDocumentLoaderEvent;
 import org.apache.batik.swing.svg.GVTTreeBuilderAdapter;
 import org.apache.batik.swing.svg.GVTTreeBuilderEvent;
 
-
 /**
  * Example code taken from
  * https://xmlgraphics.apache.org/batik/using/swing.html

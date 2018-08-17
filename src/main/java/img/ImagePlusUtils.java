@@ -2,8 +2,10 @@ package img;
 
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
+
 import mpicbg.imagefeatures.FloatArray2D;
 import mpicbg.imagefeatures.ImageArrayConverter;
+
 import net.imagej.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.display.imagej.ImageJFunctions;

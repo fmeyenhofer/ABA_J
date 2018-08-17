@@ -2,9 +2,7 @@ import img.AraImgPlus;
 import rest.AllenRefVol;
 
 import net.imagej.ImgPlus;
-
 import net.imglib2.img.Img;
-
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;

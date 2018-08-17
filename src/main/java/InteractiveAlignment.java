@@ -66,6 +66,7 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
     @Parameter(label = "Remove correspondence outliers")
     private boolean outliers = false;
 
+    
     @Parameter
     private OpService ops;
 

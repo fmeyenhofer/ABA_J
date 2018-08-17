@@ -1,6 +1,6 @@
 package img;
 
-import io.scif.img.IO;
+import rest.Atlas;
 
 import net.imagej.ImageJ;
 import net.imglib2.Cursor;
@@ -14,13 +14,13 @@ import net.imglib2.realtransform.InvertibleRealTransform;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.view.Views;
+import io.scif.img.IO;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.linear.EigenDecomposition;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.correlation.Covariance;
-import rest.Atlas;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;

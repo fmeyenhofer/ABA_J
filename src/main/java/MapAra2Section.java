@@ -1,16 +1,14 @@
 import img.AraImgPlus;
-import org.scijava.Initializable;
-import org.scijava.command.DynamicCommand;
-import org.scijava.module.MutableModuleItem;
 import rest.AllenClient;
 import rest.AllenRefVol;
 import rest.Atlas;
 
 import net.imagej.ImgPlus;
-
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
-
+import org.scijava.Initializable;
+import org.scijava.command.DynamicCommand;
+import org.scijava.module.MutableModuleItem;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;

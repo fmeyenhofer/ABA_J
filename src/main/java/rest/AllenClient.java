@@ -2,13 +2,12 @@ package rest;
 
 import gui.SvgDisplay;
 
-import io.scif.img.ImgIOException;
-
 import org.apache.batik.transcoder.TranscoderException;
 import org.jdom2.Element;
 import org.scijava.app.StatusService;
 import org.scijava.log.LogService;
 import org.xml.sax.SAXException;
+import io.scif.img.ImgIOException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -19,7 +18,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
 
 /**
  * RESTful client for the http://atlas.brain-map.org

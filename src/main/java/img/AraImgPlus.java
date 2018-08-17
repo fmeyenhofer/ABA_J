@@ -1,16 +1,13 @@
 package img;
 
 import io.AraMapping;
-import net.imglib2.*;
-import net.imglib2.interpolation.InterpolatorFactory;
-import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import rest.AllenRefVol;
 import rest.Atlas;
 
-import bdv.img.TpsTransformWrapper;
-import mpicbg.spim.data.SpimDataException;
 import net.imagej.ImgPlus;
-
+import net.imglib2.*;
+import net.imglib2.interpolation.InterpolatorFactory;
+import net.imglib2.interpolation.randomaccess.NearestNeighborInterpolatorFactory;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgView;
 import net.imglib2.img.array.ArrayImgFactory;
@@ -23,6 +20,8 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.Views;
 
+import bdv.img.TpsTransformWrapper;
+import mpicbg.spim.data.SpimDataException;
 
 /**
  * Allen Reference Atlas (ARA) ImgPlus.

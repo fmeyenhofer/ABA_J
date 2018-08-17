@@ -1,8 +1,8 @@
 import ij.ImagePlus;
 import ij.gui.PointRoi;
 import img.AraImgPlus;
-import net.imagej.ImgPlus;
 
+import net.imagej.ImgPlus;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;

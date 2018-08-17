@@ -10,7 +10,6 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileFilter;
 
-
 /**
  * Dialog to select a SectionDataset from the {@link AllenClient}.
  *
