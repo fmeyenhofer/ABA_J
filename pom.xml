@@ -16,7 +16,7 @@
 	<packaging>jar</packaging>
 	<groupId>ch.imagej</groupId>
 	<artifactId>aba_j</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.3-SNAPSHOT</version>
 
 	<properties>
 		<package-name>ch.imagej.abaj</package-name>
