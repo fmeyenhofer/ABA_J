@@ -15,6 +15,8 @@ import bdv.viewer.ViewerOptions;
 
 import ij.IJ;
 import ij.ImagePlus;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.NumericType;
 import sc.fiji.io.Nrrd_Reader;
 
 import mpicbg.spim.data.SpimDataException;
@@ -84,7 +86,7 @@ public class AllenRefVol {
         return reader.load(file.getParent(), file.getName());
     }
 
-    public RandomAccessibleInterval<UnsignedShortType> getRai() {
+    public <T extends NumericType<T> & NativeType<T>> RandomAccessibleInterval<T> getRai() {
         ImagePlus imp = loadNrrd(nrrdFile);
         return ImageJFunctions.wrap(imp);
     }
@@ -299,7 +301,7 @@ public class AllenRefVol {
         return AnnotationImageTool.getRootMask(img);
     }
 
-    public static AxisType[] getAxis() {
+    public static AxisType[] getAxes() {
         return new AxisType[]{Axes.X, Axes.Y, Axes.Z};
     }
 

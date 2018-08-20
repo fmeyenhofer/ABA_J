@@ -11,10 +11,11 @@ import java.io.FileNotFoundException;
  */
 public class AraIO {
 
-    @SuppressWarnings("WeakerAccess")
-    public static String DEFAULT_IMAGE_FORMAT = ".ome.tif";
+    protected static String DEFAULT_IMAGE_FORMAT = ".ome.tif";
 
-    public static String MAPPING_FILE_FORMAT = ".ara.map";
+    protected static String MAPPING_FILE_FORMAT = ".ara.map";
+
+    protected static String FILE_TYPE_NAME = "ARA.SEC";
     
 
     public File deriveMappingFile(File imageFile) {
@@ -28,7 +29,7 @@ public class AraIO {
         return mapFile;
     }
 
-    public File getMappingFile(File imageFile) throws FileNotFoundException {
+    protected File getMappingFile(File imageFile) throws FileNotFoundException {
         File mapFile = deriveMappingFile(imageFile);
 
         if (!mapFile.exists()) {
@@ -38,7 +39,7 @@ public class AraIO {
         return mapFile;
     }
 
-    public File getImageFile(File mappingFile) throws FileNotFoundException {
+    protected File getImageFile(File mappingFile) throws FileNotFoundException {
         ImageReader bfreader = new ImageReader();
         String[] imageFileSuffixes = bfreader.getSuffixes();
         
