@@ -28,7 +28,7 @@ import mpicbg.spim.data.SpimDataException;
  * holds additionally a mapping that allows to map this image
  * onto the ARA or, conversely, map any data from the ARA onto this image.
  *
- * TODO: make it extend Dataset
+ * TODO: make it extend Dataset (That way if there is a AraImgPlus input using scijava @Parameter, the class will not be lost)
  *
  * @author Felix Meyenhofer
  */
@@ -55,9 +55,11 @@ public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T
     private VolumeSection volumeSection;
 
 
-    public AraImgPlus(Img<T> img, double scale, Atlas.PlaneOfSection planeOfSection, Atlas.VoxelResolution templateResolution) {
+    public AraImgPlus(Img<T> img,
+                      double scale,
+                      Atlas.PlaneOfSection planeOfSection,
+                      Atlas.VoxelResolution templateResolution) {
         super(img);
-
         this.planeOfSection = planeOfSection;
         this.templateResolution = templateResolution;
         this.t_s = new AffineTransform3D();
@@ -163,12 +165,23 @@ public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T
 
     public double[] getTemplateCoordinate(double[] lPos) {
         double[] dPos = new double[2];
-        t_tps.apply(lPos, dPos);
+        if (hasTpsTransform()) {
+            t_tps.apply(lPos, dPos);
+        } else {
+            dPos = lPos;
+        }
 
         double[] sPos = planeOfSection.section2TemplateCoordinate(dPos, getSectionPosition());
 
         double[] tPos = new double[3];
-        t_s.apply(sPos, tPos);
+        InvertibleRealTransformSequence t = new InvertibleRealTransformSequence();
+        if (hasSectionTransform()) {
+            t.add(t_s);
+        }
+        if (hasTemplateTransform()) {
+            t.add(t_r.inverse());
+        }
+        t.apply(sPos, tPos);
 
         return tPos;
     }
@@ -203,7 +216,6 @@ public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T
                 lowerBounds[d] = d3;
                 upperBounds[d] = d3;
             } else {
-                lowerBounds[d] = 0;
                 upperBounds[d] = dim3d[d] - 1;
             }
         }
@@ -221,7 +233,8 @@ public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T
             value.set(ra.get());
         }
 
-        if (hasSectionTransform() && hasTemplateTransform()) {
+        if (hasSectionTransform() && hasTemplateTransform() &&
+                (!t_r.toString().equals(t_s.toString()))) {
             InvertibleRealTransformSequence t = new InvertibleRealTransformSequence();
             t.add(t_s);
             t.add(t_r.inverse());
@@ -261,7 +274,8 @@ public class AraImgPlus<T extends RealType<T> & NativeType<T>> extends ImgPlus<T
 
         int df = planeOfSection.getFixedAxisIndex();
 
-        if (hasSectionTransform() && hasTemplateTransform() && !t_r.toString().equals(t_s.toString())) {
+        if (hasSectionTransform() && hasTemplateTransform() &&
+                (!t_r.toString().equals(t_s.toString()))) {
             long[] upperBound = new long[3];
             int d = 0;
             for (int axis : planeOfSection.getSectionAxesIndices()) {
