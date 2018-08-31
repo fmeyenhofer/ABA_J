@@ -2,6 +2,9 @@ package rest;
 
 import gui.SvgDisplay;
 
+import io.scif.img.ImgIOException;
+
+import log.FeedbackGate;
 import org.apache.batik.transcoder.TranscoderException;
 import org.jdom2.Element;
 import org.scijava.app.StatusService;
@@ -36,7 +39,7 @@ import java.util.List;
  *
  * @author Felix Meyenhofer
  */
-public class AllenClient {
+public class AllenClient extends FeedbackGate {
 
     /** Singleton instance of the class */
     private static AllenClient singleton = new AllenClient();
@@ -48,12 +51,6 @@ public class AllenClient {
     private boolean doDisplay = false;
     private SvgDisplay display;
 
-    /** ImageJ logger service */
-    private LogService log = null;
-
-    /** ImageJ status service */
-    private StatusService status = null;
-
 
     /**
      * Constructor
@@ -64,12 +61,16 @@ public class AllenClient {
         return singleton;
     }
 
-    public void setLoggerService(LogService logService) {
-        this.log = logService;
+    @Override
+    public void setLogService(LogService logService) {
+        super.setLogService(logService);
+        this.cache.setLogService(logService);
     }
 
+    @Override
     public void setStatusService(StatusService statusService) {
-        this.status = statusService;
+        super.setStatusService(statusService);
+        this.cache.setStatusService(statusService);
     }
 
     public void setSvgDisplay(boolean status) {
@@ -166,27 +167,7 @@ public class AllenClient {
      *
      * @param message to output
      */
-    private void tell(String message) {
-        if (log == null) {
-            System.out.println(message);
-        } else {
-            log.info(message);
-        }
 
-        if (status != null) {
-            status.showStatus(message);
-        }
-    }
-
-    private void tell(int n, int of, String msg) {
-        if (status != null) {
-            status.showStatus(n, of, msg);
-        } else if (log != null) {
-            log.info(msg);
-        } else {
-            System.out.println(msg);
-        }
-    }
 
     /**
      * Download a reference volume (average template) image
@@ -205,7 +186,7 @@ public class AllenClient {
 
         for (Atlas.Modality type : types) {
             String msg = cache.getReferenceVolume(type, resolution).getStatusMessage();
-            tell(msg);
+            consoleAndStatusUpdate(msg);
         }
     }
 
@@ -227,22 +208,22 @@ public class AllenClient {
         Element dataset_element = datasetXml.getElements().get(0);
         String product_name = dataset_element.getChild("products").getChild("product").getChild("abbreviation").getValue();
 
-
-        tell(0,0,"Downloading SectionDataset " + dataset_id);
+        cache.setStatusService(null);
+        cache.setLogService(null);
+        consoleAndStatusUpdate(0,0,"Downloading SectionDataset " + dataset_id);
 
         AllenXml sub_images = cache.getResponseXml(AllenAPI.RMA.createSectionImagesQuery(dataset_id));
-        System.out.print("\t");
         int N = sub_images.getElements().size();
         int n = 1;
         for (Element image_element : sub_images.getElements()) {
-            tell(n, N, "Downloading SectionDataset " + dataset_id);
             String image_id = image_element.getChild("id").getValue();
             cache.getImageMetadataXml(dataset_element, product_name, dataset_id, image_id);
             cache.getImage(downsample, quality, product_name, dataset_id, image_id);
+            consoleAndStatusUpdate(n, N, "Downloaded SectionImage " + image_id);
             n++;
         }
 
-        tell(N, N, "Downloaded SectionDataset " + dataset_id + "(" + N + " images)");
+        consoleAndStatusUpdate(N, N, "Downloaded SectionDataset " + dataset_id + "(" + N + " images)");
     }
   
 
@@ -273,18 +254,18 @@ public class AllenClient {
 
         // List all the products for mouse and the associated datasets
         AllenXml mouse_products = client.cache.getResponseXml(AllenAPI.RMA.createProductQueryUrl(Atlas.Species.MOUSE));
-        client.tell("Mouse products: ");
+        client.consoleAndStatusUpdate("Mouse products: ");
         for (Element product : mouse_products.getElements()) {
             String product_name = product.getChild("name").getValue();
             String product_id = product.getChild("id").getValue();
-            client.tell("\t" + product_name + " (" + product_id + ")");
+            client.consoleAndStatusUpdate("\t" + product_name + " (" + product_id + ")");
 
             if (product_name.contains("Reference")) {
                 AllenXml datasets = client.cache.getResponseXml(
                         AllenAPI.RMA.createSectionDataSetsQuery(Integer.parseInt(product_id), Atlas.PlaneOfSection.CORONAL));
                 for (Element dataset : datasets.getElements()) {
                     String dataset_id = dataset.getChild("id").getValue();
-                    client.tell("\t\t" + dataset_id);
+                    client.consoleAndStatusUpdate("\t\t" + dataset_id);
                 }
             }
         }
@@ -292,24 +273,24 @@ public class AllenClient {
 
 //        // List all the treatments
 //        AllenXml treatments = client.cache.getResponseXml(AllenAPI.RMA.createModelQueryUrl("Treatment"));
-//        client.tell("\nTreatments:");
+//        client.consoleAndStatusUpdate("\nTreatments:");
 //        for (Element treatment : treatments.getElements()) {
 //            String name = treatment.getChild("name").getValue();
 //            String tags = treatment.getChild("tags").getValue();
-//            client.tell("\t" + name + " (" + tags + ")");
+//            client.consoleAndStatusUpdate("\t" + name + " (" + tags + ")");
 //        }
 
 
 //        // Download the all mouse reference datasets for the given products
 //        String[] product_ids = {"7", "12"};
-//        client.tell("Download reference products");
+//        client.consoleAndStatusUpdate("Download reference products");
 //        for (String product_id : product_ids) {
 //            URL query = AllenAPI.RMA.createProductQueryUrl(product_id);
 //            AllenXml atlas = client.cache.getResponseXml(query);
 //
 //            String product_name = (String) atlas.getValue("abbreviation");
 //            client.cache.getMetadataXml(atlas.getDom().getRootElement(), product_name);
-//            client.tell("* " + product_name + " (" + product_id + ")");
+//            client.consoleAndStatusUpdate("* " + product_name + " (" + product_id + ")");
 //
 //            query = AllenAPI.RMA.createSectionDataSetsQuery(Integer.parseInt(product_id), Atlas.PlaneOfSection.coronal);
 //            AllenXml datasets = client.cache.getResponseXml(query);
@@ -317,7 +298,7 @@ public class AllenClient {
 //        }
 
 
-//        client.tell("\nDownloading section datasets");
+//        client.consoleAndStatusUpdate("\nDownloading section datasets");
 //        for (int id : new int[]{100141805}){
 //            URL query = AllenAPI.RMA.createSectionDataSetsQuery(id);
 //            AllenXml datasets = client.cache.getResponseXml(query);
@@ -327,17 +308,17 @@ public class AllenClient {
 
 //        // Download some grid data
 //        AllenImage grid = client.cache.getGrid("72109410");
-//        client.tell("Query: " + grid.getUrl());
-//        client.tell("Downloaded " + grid.getFile());
+//        client.consoleAndStatusUpdate("Query: " + grid.getUrl());
+//        client.consoleAndStatusUpdate("Downloaded " + grid.getFile());
 
 
 //        // Download the Mouse reference data
-//        client.tell("\nReference volume dataset:");
+//        client.consoleAndStatusUpdate("\nReference volume dataset:");
 //        client.downloadMouseRefVol(AllenAPI.Download.RefVol.VoxelResolution.TEN);
 
 
 //        // Download some section dataset with a particular treatment
-//        client.tell("Download the NeuN dataset");
+//        client.consoleAndStatusUpdate("Download the NeuN dataset");
 //        URL treatment_query = AllenAPI.RMA.createSectionDataSetsQuery("neun", Atlas.PlaneOfSection.coronal);
 //        AllenXml treatment_datasets = client.cache.getResponseXml(treatment_query);
 //        client.downloadSectionDataSet(treatment_datasets, 1, 100);
@@ -373,9 +354,9 @@ public class AllenClient {
 //        // Download a registered volume
 //        URL query = AllenAPI.Download.WellKnownFileType.createURL("310037372");
 //        AllenXml response = client.cache.getResponseXml(query);
-//        client.tell(query.toString());
+//        client.consoleAndStatusUpdate(query.toString());
 //        client.cache.getImage();
 
-        client.tell("\nDone.");
+        client.consoleAndStatusUpdate("\nDone.");
     }
 }

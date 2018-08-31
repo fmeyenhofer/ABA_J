@@ -7,6 +7,8 @@ import java.io.FileFilter;
 import java.io.FileNotFoundException;
 
 /**
+ * Abstract class for IO plugins.
+ *
  * @author Felix Meyenhofer
  */
 public class AraIO {
@@ -16,9 +18,8 @@ public class AraIO {
     protected static String MAPPING_FILE_FORMAT = ".ara.map";
 
     protected static String FILE_TYPE_NAME = "ARA.SEC";
-    
 
-    public File deriveMappingFile(File imageFile) {
+    protected File deriveMappingFile(File imageFile) {
         File mapFile;
         if (imageFile.getName().contains(DEFAULT_IMAGE_FORMAT)) {
             mapFile = new File(imageFile.getAbsolutePath().replace(DEFAULT_IMAGE_FORMAT, MAPPING_FILE_FORMAT));

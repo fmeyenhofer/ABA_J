@@ -9,7 +9,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>19.2.0</version>
+		<version>22.4.0</version>
 		<relativePath />
 	</parent>
 
@@ -25,6 +25,9 @@
 		<license.copyrightOwners>Felix Meyenhofer</license.copyrightOwners>
 		<license.licenseName>GPLv3</license.licenseName>
 
+		<!--TODO: remove this in production-->
+		<maven.test.skip>true</maven.test.skip>
+
 		<!--TODO: simplify versions (remove if possible)-->
 		<clearcl.version>0.4.6</clearcl.version>
 		<cleargl.version>2.0.4</cleargl.version>
@@ -34,7 +37,6 @@
 		<bioformats.version>5.5.3</bioformats.version>
 		<mpicbg.version>1.1.1</mpicbg.version>
 		<json.version>20160212</json.version>
-
 		<enforcer.skip>true</enforcer.skip>
 	</properties>
 	
