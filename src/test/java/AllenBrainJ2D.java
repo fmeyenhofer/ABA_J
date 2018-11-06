@@ -126,7 +126,7 @@ public class AllenBrainJ2D implements Command {
         // Allen RESTful client
         if (client == null) {
             client = AllenClient.getInstance();
-            client.setLoggerService(log);
+//            client.setLoggerService(log);
             client.setSvgDisplay(showSvg);
 //            client = new AllenClient();
         }
