@@ -19,7 +19,7 @@ public class AraIO {
 
     protected static String FILE_TYPE_NAME = "ARA.SEC";
 
-    protected File deriveMappingFile(File imageFile) {
+    public File deriveMappingFile(File imageFile) {
         File mapFile;
         if (imageFile.getName().contains(DEFAULT_IMAGE_FORMAT)) {
             mapFile = new File(imageFile.getAbsolutePath().replace(DEFAULT_IMAGE_FORMAT, MAPPING_FILE_FORMAT));

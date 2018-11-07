@@ -1,5 +1,6 @@
 package img;
 
+import net.imglib2.type.Type;
 import rest.AllenRefVol;
 import rest.Atlas;
 
@@ -46,22 +47,22 @@ import java.util.List;
 @SuppressWarnings("WeakerAccess")
 public class SectionImageTool {
 
-//    public static <T extends Type<T> & NativeType<T>> Img<T> copy(final Img<T> img) {
-//        ArrayImgFactory<T> factory = new ArrayImgFactory<>(img.firstElement());
-//
-//        Img<T> cpy = factory.create(img);
-//
-//        Cursor<T> targetCursor = cpy.localizingCursor();
-//        RandomAccess<T> sourceRandomAccess = img.randomAccess();
-//
-//        while (targetCursor.hasNext()) {
-//            targetCursor.fwd();
-//            sourceRandomAccess.setPosition(targetCursor);
-//            targetCursor.get().set(sourceRandomAccess.get());
-//        }
-//
-//        return cpy;
-//    }
+    public static <T extends Type<T> & NativeType<T>> Img<T> copy(final Img<T> img) {
+        ArrayImgFactory<T> factory = new ArrayImgFactory<>(img.firstElement());
+
+        Img<T> cpy = factory.create(img);
+
+        Cursor<T> targetCursor = cpy.localizingCursor();
+        RandomAccess<T> sourceRandomAccess = img.randomAccess();
+
+        while (targetCursor.hasNext()) {
+            targetCursor.fwd();
+            sourceRandomAccess.setPosition(targetCursor);
+            targetCursor.get().set(sourceRandomAccess.get());
+        }
+
+        return cpy;
+    }
 
     public static <T extends RealType<T> & NativeType<T>> Img<BitType> createMask(Img<T> rai, OpService ops) {
         long[] dims = new long[rai.numDimensions()];
@@ -84,8 +85,8 @@ public class SectionImageTool {
     }
 
     public static <T extends RealType<T> & NativeType<T>> Img<BitType> createMask(Img<T> rai, double sigma, OpService ops) {
-        Img<T> fil = rai.copy();
-//        Img<T> fil = SectionImageTool.copy(rai);
+//        Img<T> fil = rai.copy();
+        Img<T> fil = SectionImageTool.copy(rai);
         ops.filter().gauss(fil, sigma);
 //        Gauss3.gauss(new double[]{sigma,0}, rai, fil, 1);
 
