@@ -44,8 +44,8 @@
     <description>
 		Toolkit to register histological brain sections using the Allen Brain Atlas.
 	</description>
-	<!--TODO: fill out general url and organisation-->
-	<url>https://github.com/Meyenhofer</url>
+
+	<url>https://github.com/fmeyenhofer</url>
 	<inceptionYear>2016</inceptionYear>
 	<organization>
 		<name>University of Fribourg</name>
@@ -65,7 +65,7 @@
 			<id>f.meyenhofer</id>
 			<name>Felix Meyenhofer</name>
 			<email>f.meyenhofer@me.com</email>
-			<url>https://github.com/Meyenhofer</url>
+			<url>https://github.com/fmeyenhofer</url>
 			<timezone>+2</timezone>
 			<roles>
 				<role>lead</role>
@@ -87,15 +87,15 @@
 
 	<!--TODO: fill out the scm and issue management-->
 	<scm>
-		<connection>https://github.com/Meyenhofer</connection>
-		<developerConnection>https://github.com/Meyenhofer</developerConnection>
+		<connection>https://github.com/fmeyenhofer</connection>
+		<developerConnection>https://github.com/fmeyenhofer</developerConnection>
         <tag>HEAD</tag>
-		<url>https://github.com/Meyenhofer</url>
+		<url>https://github.com/fmeyenhofer</url>
 	</scm>
 
 	<issueManagement>
 		<system>GitHub Issues</system>
-		<url>https://github.com/Meyenhofer</url>
+		<url>https://github.com/fmeyenhofer</url>
 	</issueManagement>
 
 	<mailingLists>
