@@ -13,7 +13,7 @@ import java.util.ArrayList;
  */
 public class TableConventions {
 
-    public enum Header {
+    public enum Header implements XYHeaders {
         CENTROID("X", "Y"),
         BARYCENTER("XM", "YM");
 
@@ -32,11 +32,11 @@ public class TableConventions {
             }};
         }
 
-        public String getX() {
+        public String getXColumn() {
             return x;
         }
 
-        public String getY() {
+        public String getYColumn() {
             return y;
         }
 

@@ -1,3 +1,4 @@
+import gui.CoordinateColumnHeaderDialog;
 import rest.*;
 import io.AraIO;
 import io.AraMapping;
@@ -23,12 +24,14 @@ import org.scijava.ui.UIService;
 import ij.gui.Roi;
 import ij.measure.ResultsTable;
 import ij.plugin.frame.RoiManager;
+import table.XYHeaders;
 
 import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * @author Felix Meyenhofer
@@ -58,6 +61,7 @@ public class MapSectionCoordinates2Ara implements Command {
     public void run() {
         if (secImg instanceof AraImgPlus) {
             AraImgPlus araImg = (AraImgPlus) secImg;
+            log.info("Mapped section: " + araImg.getName());
 
             AllenClient client = AllenClient.getInstance();
             try {
@@ -72,14 +76,24 @@ public class MapSectionCoordinates2Ara implements Command {
                 for (int c = 0; c < outputTable.getColumnCount(); c++) {
                     headerNames.add(outputTable.getColumnHeader(c));
                 }
-                TableConventions.Header header = TableConventions.Header.findContained(headerNames);
+                XYHeaders header = TableConventions.Header.findContained(headerNames);
+
+                // Prompt the user to select headers
+                // TODO: The logic of what source (ROI/Table) is chosen is weird.
+                // TODO; Calling a dialog here is not very ij2-like
+                if (header == null) {
+                    HashMap<String, String[]> tableInfo = new HashMap<>();
+                    tableInfo.put(outputTable.toString(), headerNames.toArray(new String[0]));
+                    header = CoordinateColumnHeaderDialog.createAndShow(tableInfo);
+                }
+
 
                 // Get the ROI centroids if the table does not contain any coordinate columns
                 if (header == null) {
                     header = TableConventions.Header.CENTROID;
 
-                    DoubleColumn sec_x = new DoubleColumn(header.getX());
-                    DoubleColumn sec_y = new DoubleColumn(header.getY());
+                    DoubleColumn sec_x = new DoubleColumn(header.getXColumn());
+                    DoubleColumn sec_y = new DoubleColumn(header.getYColumn());
                     GenericColumn roi_name = new GenericColumn("Label");
                     RoiManager roim = RoiManager.getRoiManager();
                     if (roim.getCount() > 0) {
@@ -111,8 +125,8 @@ public class MapSectionCoordinates2Ara implements Command {
                 GenericColumn name_col = new GenericColumn("Annotation Name");
                 GenericColumn acro_col = new GenericColumn("Annotation Acronym");
 
-                DoubleColumn xCol = (DoubleColumn) outputTable.get(header.getX());
-                DoubleColumn yCol = (DoubleColumn) outputTable.get(header.getY());
+                DoubleColumn xCol = (DoubleColumn) outputTable.get(header.getXColumn());
+                DoubleColumn yCol = (DoubleColumn) outputTable.get(header.getYColumn());
                 
                 RandomAccessibleInterval<FloatType> rai = refVol.getRai();
                 RandomAccess<FloatType> ra = rai.randomAccess();
@@ -183,7 +197,8 @@ public class MapSectionCoordinates2Ara implements Command {
         ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        String path = "/Users/turf/switchdrive/SJMCS/data/devel/alignment/ali50/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-13.ome.tif";
+//        String path = "/Users/turf/switchdrive/SJMCS/data/devel/alignment/ali50/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-13.ome.tif";
+        String path = "/Users/meyenhof/switchdrive/SJMCS/data/devel/coordmap/170815_Insu1_1_Fos - 2018-04-10 17.26.21-FITC_section-00_FITC.ome.tif";
         Object img = ij.io().open(path);
         DefaultDataset ds = (DefaultDataset) img;
         AraIO araIO = new AraIO();
@@ -194,19 +209,22 @@ public class MapSectionCoordinates2Ara implements Command {
         araImg.setSource(imgFile.getAbsolutePath());
         araImg.setName(imgFile.getName());
         ij.ui().show(araImg);
-        
-        DoubleColumn x = new DoubleColumn("X");
-        x.add(50.0);
-        x.add(100.5);
-        x.add(210.0);
-        DoubleColumn y = new DoubleColumn("Y");
-        y.add(70.0);
-        y.add(110.1);
-        y.add(300.0);
-        DefaultGenericTable table = new DefaultGenericTable();
-        table.add(x);
-        table.add(y);
-        ij.ui().show("example coordinates", table);
+
+        ResultsTable table = ResultsTable.open2("/Users/meyenhof/switchdrive/SJMCS/data/devel/coordmap/170815_Insu1_1_Fos - 2018-04-10 17.26.21-FITC_section-00_FITC.txt");
+        table.show("Results");
+
+//        DoubleColumn x = new DoubleColumn("X");
+//        x.add(50.0);
+//        x.add(100.5);
+//        x.add(210.0);
+//        DoubleColumn y = new DoubleColumn("Y");
+//        y.add(70.0);
+//        y.add(110.1);
+//        y.add(300.0);
+//        DefaultGenericTable table = new DefaultGenericTable();
+//        table.add(x);
+//        table.add(y);
+//        ij.ui().show("example coordinates", table);
 
         ij.command().run(MapSectionCoordinates2Ara.class, true);
     }
