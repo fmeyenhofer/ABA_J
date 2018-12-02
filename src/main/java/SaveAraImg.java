@@ -13,12 +13,21 @@ import org.scijava.plugin.Plugin;
 import org.scijava.ui.DialogPrompt;
 import org.scijava.ui.UIService;
 import io.scif.services.DatasetIOService;
+import org.scijava.widget.FileWidget;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 
 /**
+ * Saving a ARA.SEC file.
+ *
+ * This file contains the mapping of a given section to the ABA CCF.
+ *
+ * The pixel data is never overwritten! This is because it should not be changed during the alignment.
+ * In case the orignal file disappeared during the manipulation, the user is prompted to save it somewhere.
+ *
+ * The mapping data can be overwritten and the user will be prompted if necessary.
+ *
  * @author Felix Meyenhofer
  */
 @Plugin(type = Command.class, menuPath = "File > Save As > ARA.SEC")
@@ -38,36 +47,30 @@ public class SaveAraImg extends AraIO implements Command {
     private DatasetIOService dsio;
 
 
-
     @Override
     public void run() {
 
         if (secImg instanceof AraImgPlus) {
             AraImgPlus ara = (AraImgPlus) secImg;
-//            File imgFile = ui.chooseFile(new File(ara.getName() + AraIO.DEFAULT_IMAGE_FORMAT), FileWidget.SAVE_STYLE);
-            File currentFile = new File(ara.getSource());
-            JFileChooser dialog = new JFileChooser();
-            dialog.setCurrentDirectory(currentFile.getParentFile());
-            dialog.setSelectedFile(new File(currentFile.getName()));
-            int status = dialog.showSaveDialog(null);
+            File imgPath = new File(ara.getSource());
 
-            if (status != JFileChooser.APPROVE_OPTION) {
-                return;
+            // In case the data that was opened disappeared while working on it
+            if (!imgPath.exists()) {
+                imgPath = ui.chooseFile(imgPath, FileWidget.SAVE_STYLE);
+                if (imgPath == null) {
+                    log.info("Saving ARA.SEC aborted.");
+                    return;
+                }
             }
 
-            File imgFile = dialog.getSelectedFile();
-            
-
             try {
-                if (imgFile.exists()) {
-                    log.info("Skipped pixel data saving: " + imgFile.getAbsolutePath() + " already exists.");
-                } else {
-                    log.info("Saving pixel data to: " + imgFile.getAbsolutePath());
+                if (!imgPath.exists()) {
+                    log.info("Saving pixel data to: " + imgPath.getAbsolutePath());
                     Dataset dataset = new DefaultDataset(dsio.getContext(), secImg);
-                    dsio.save(dataset, imgFile.getAbsolutePath());
+                    dsio.save(dataset, imgPath.getAbsolutePath());
                 }
 
-                File mapFile = deriveMappingFile(imgFile);
+                File mapFile = deriveMappingFile(imgPath);
                 if (mapFile.exists()) {
                     DialogPrompt.Result answer =  ui.showDialog(mapFile.getName() + " exists. Overwrite?",
                             DialogPrompt.MessageType.QUESTION_MESSAGE, DialogPrompt.OptionType.YES_NO_OPTION);
@@ -78,7 +81,7 @@ public class SaveAraImg extends AraIO implements Command {
                 log.info("Saving mapping metadata " + mapFile.getAbsolutePath());
                 AraMapping metadata = ara.getAraMapping();
                 metadata.save(mapFile);
-                ara.setName(imgFile.getName());
+                ara.setName(imgPath.getName());
             } catch (IOException e) {
                 e.printStackTrace();
             }
