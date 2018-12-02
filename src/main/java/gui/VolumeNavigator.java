@@ -81,7 +81,7 @@ public class VolumeNavigator {
 //        ImageJ ij = new ImageJ();
 //        ij.ui().showUI();
 
-        String volPath = "/Users/turf/allen-cache/reference-volumes/average_template_50.nrrd";
+        String volPath = "/Users/meyenhof/allen-cache/reference-volumes/average_template_50.nrrd";
         File volFile = new File(volPath);
 
         Nrrd_Reader reader = new Nrrd_Reader();
