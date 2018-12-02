@@ -37,13 +37,13 @@ import java.util.List;
 public class SectionImagePreprocessing<T extends RealType<T> & NativeType<T>> implements Command {
 
     @Parameter
-    private OpService ops;
+    private OpService opService;
 
     @Parameter
-    private UIService uis;
+    private UIService uiService;
 
     @Parameter
-    private StatusService status;
+    private StatusService statusService;
 
 
     @Parameter(label = "Input section")
@@ -58,21 +58,25 @@ public class SectionImagePreprocessing<T extends RealType<T> & NativeType<T>> im
     @Parameter(label = "Show image mask")
     private boolean showMask = false;
 
-    @SuppressWarnings("unused")
     @Parameter(type = ItemIO.OUTPUT)
     private ImgPlus outputSection;
 
 
     @Override
     public void run() {
+        outputSection = cropAndRotate(inputSection, margin, maskSection, showMask, opService, uiService, statusService);
+    }
+
+    static <T extends RealType<T> & NativeType<T>> ImgPlus<T> cropAndRotate(ImgPlus<T> img, long margin, boolean masking, boolean show,
+                                     OpService ops, UIService uis, StatusService status) {
         status.showStatus(0, 100, "process input");
 
-        RandomAccessibleInterval<DoubleType> imgSrc = ops.convert().float64(inputSection);
+        RandomAccessibleInterval<DoubleType> imgSrc = ops.convert().float64(img);
 
-        double factor = 500.0 / (double) inputSection.dimension(0);  //TODO: figure out an acceptable precision given an image size and determine the scaling accordingly
-        double[] fwdScale = new double[inputSection.numDimensions()];
-        double[] invScale = new double[inputSection.numDimensions()];
-        for (int d = 0; d < inputSection.numDimensions(); d++) {
+        double factor = 500.0 / (double) img.dimension(0);  //TODO: figure out an acceptable precision given an image size and determine the scaling accordingly
+        double[] fwdScale = new double[img.numDimensions()];
+        double[] invScale = new double[img.numDimensions()];
+        for (int d = 0; d < img.numDimensions(); d++) {
             fwdScale[d] = factor;
             invScale[d] = 1 / factor;
         }
@@ -83,7 +87,7 @@ public class SectionImagePreprocessing<T extends RealType<T> & NativeType<T>> im
         status.showStatus(10, 100,"create section mask");
         Img<BitType> msk = SectionImageTool.createMask(ImgView.wrap(sca, new ArrayImgFactory<>()), ops);
 
-        if (maskSection) {
+        if (masking) {
             status.showStatus(20, 100, "masking section image");
             RandomAccessibleInterval<BitType> mskSca = ops.transform().scaleView(msk, invScale, new NearestNeighborInterpolatorFactory<>());
 //            ImageJFunctions.show(mskSca);
@@ -93,7 +97,7 @@ public class SectionImagePreprocessing<T extends RealType<T> & NativeType<T>> im
             SectionImageTool.maskImage(imgSrc, mskScaDil);
         }
 
-        if (showMask) {
+        if (show) {
             uis.show(msk);
         }
 
@@ -152,15 +156,17 @@ public class SectionImagePreprocessing<T extends RealType<T> & NativeType<T>> im
         RandomAccessibleInterval<DoubleType> raster = Views.interval(Views.raster(transf), interval);
 //        ImageJFunctions.show(raster);
         status.showStatus(60,100, "crop");
-        RandomAccessibleInterval crop = ops.transform().crop(raster, boundingBox);
+        RandomAccessibleInterval<DoubleType> crop = ops.transform().crop(raster, boundingBox);
 //        RandomAccessibleInterval crop = Views.interval(Views.extendZero(raster), boundingBox); // This does not work for some reason
 
         status.showStatus(80, 100, "intensity scaling");
-        Img<T> imgTar = SectionImageTool.double2Whatever(crop, inputSection, ops);
+        Img<T> imgTar = SectionImageTool.double2Whatever(crop, img, ops);
 
-        outputSection = new ImgPlus(imgTar, inputSection);
+        ImgPlus<T> output = new ImgPlus(imgTar, img);
 
         status.showStatus(100,100, "done");
+
+        return output;
     }
 
 
