@@ -49,7 +49,7 @@ public class FeedbackGate {
         }
     }
 
-    public void statusUpdate(int n, int of, String msg) {
+    protected void statusUpdate(int n, int of, String msg) {
         if ( status != null) {
             this.status.showStatus(n, of, msg);
         }
