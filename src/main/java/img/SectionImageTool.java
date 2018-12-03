@@ -75,7 +75,7 @@ public class SectionImageTool {
             }
         }
 
-        double sigma = ((double) max) / 100;
+        double sigma = ((double) max) / 100;//TODO: Parameter (be explicit when using this method in a plugin)
 
         if (sigma < 3) {
             sigma = 3;
