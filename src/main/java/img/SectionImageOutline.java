@@ -519,7 +519,7 @@ public class SectionImageOutline {
      */
     public RandomAccessibleInterval<UnsignedByteType> visualise() {
         double[] bb = getBoundingBox(O);
-        long[] dim = new long[]{(long) (bb[0] +bb[2]), (long) (bb[1] + bb[3])};
+        long[] dim = new long[]{(long) (bb[0] +bb[2]+1), (long) (bb[1] + bb[3])+1};
         List<RandomAccessibleInterval<UnsignedByteType>> stk = visualise(dim);
 
         return Views.stack(stk);
@@ -736,13 +736,13 @@ public class SectionImageOutline {
         ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        String path = "/Users/turf/switchdrive/SJMCS/data/devel/masks/section-mask-outline.tif";
+        String path = "/Users/meyenhof/switchdrive/SJMCS/data/devel/masks/section-mask-outline-2.tif";
 
         BitType type = new BitType();
         ArrayImgFactory<BitType> factory = new ArrayImgFactory<>();
         Img<BitType> out = IO.openImgs(path, factory, type).get(0);
 
-        SectionImageOutline sampler = new SectionImageOutline(out, 4);
+        SectionImageOutline sampler = new SectionImageOutline(out, 3);
         sampler.sample();
         RandomAccessibleInterval<UnsignedByteType> vis = sampler.visualise();
 
