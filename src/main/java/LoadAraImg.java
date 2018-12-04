@@ -9,10 +9,9 @@ import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
-import io.scif.services.DatasetIOService;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 /**
@@ -31,12 +30,6 @@ public class LoadAraImg extends AraIO implements Command {
     @Parameter
     LogService log;
 
-    @Parameter
-    UIService ui;
-
-    @Parameter
-    DatasetIOService dsio;
-
 
     @Override
     public void run() {
@@ -48,7 +41,11 @@ public class LoadAraImg extends AraIO implements Command {
                 imgFile = getImageFile(mapFile);
             } else {
                 imgFile = file;
-                mapFile = getMappingFile(imgFile);
+                mapFile = deriveMappingFile(imgFile);
+
+                if (!mapFile.exists()) {
+                    throw new FileNotFoundException(mapFile.getName() + " does not exist in " + imgFile.getParent());
+                }
             }
 
             log.info("Read section image file: " + imgFile.getName());

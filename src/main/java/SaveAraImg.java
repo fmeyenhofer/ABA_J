@@ -11,8 +11,6 @@ import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.DialogPrompt;
-import org.scijava.ui.UIService;
-import io.scif.services.DatasetIOService;
 import org.scijava.widget.FileWidget;
 
 import java.io.File;
@@ -39,12 +37,6 @@ public class SaveAraImg extends AraIO implements Command {
 
     @Parameter
     private LogService log;
-
-    @Parameter
-    private UIService ui;
-
-    @Parameter
-    private DatasetIOService dsio;
 
 
     @Override

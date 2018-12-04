@@ -29,6 +29,7 @@ import mpicbg.spim.data.SpimDataException;
  * onto the ARA or, conversely, map any data from the ARA onto this image.
  *
  * TODO: make it extend Dataset (That way if there is a AraImgPlus input using scijava @Parameter, the class will not be lost)
+ * TODO: implement lazy image loading (so it goes faster if we just need the mapping)
  *
  * @author Felix Meyenhofer
  */

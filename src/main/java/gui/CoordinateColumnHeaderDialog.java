@@ -88,7 +88,7 @@ public class CoordinateColumnHeaderDialog extends JPanel implements ActionListen
         frame.setTitle("Select the Coordinate Columns");
         frame.add(dialog);
         frame.setModal(true);
-        frame.setSize(new Dimension(300,210));
+        frame.setSize(new Dimension(300,260));
         frame.setLocationByPlatform(true);
         frame.setVisible(true);
 
