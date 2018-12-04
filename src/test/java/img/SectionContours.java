@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * TODO: fininsh it or delete the "brouillon"
- *
  * @author Felix Meyenhofer
  */
 public class SectionContours {
