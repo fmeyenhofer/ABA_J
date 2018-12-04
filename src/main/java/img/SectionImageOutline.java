@@ -414,6 +414,7 @@ public class SectionImageOutline {
      * moving them along the respective outline.
      *
      * TODO: consider using contour curvature as additional optimization criterion
+     * TODO: choose a more flexible approach. rotating all the points in the same direction is too broad. -> Maybe constrained local point-by-point optimization?
      *
      * @param soc Outline samples to match
      * @return optimized set of points

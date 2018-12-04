@@ -17,23 +17,34 @@ import java.util.List;
  *
  * @author Felix Meyenhofer
  */
-public class SectionImageOutlinePoints extends BdvOverlay{
+public class SectionImageOutlinePoints extends BdvOverlay {
+
+    enum PointMarker {
+        CROSS,
+        OVAL
+    }
 
     private static int MAX_POINT_SIZE = 10;
 
     private final List<double[]> points;
     private boolean depthDependentScaling;
+    private PointMarker pointMarker;
 
-    SectionImageOutlinePoints(double[] centroid, double[] first, double section, Atlas.PlaneOfSection plane) {
-        this(centroid, first, section, plane, true);
+
+    SectionImageOutlinePoints(double[] centroid, double[] first,
+                              double section, Atlas.PlaneOfSection plane) {
+        this(centroid, first, section, plane, true, PointMarker.OVAL);
     }
     
-    SectionImageOutlinePoints(double[] centroid, double[] first, double section, Atlas.PlaneOfSection plane, boolean scaling) {
+    SectionImageOutlinePoints(double[] centroid, double[] first,
+                              double section, Atlas.PlaneOfSection plane,
+                              boolean scaling, PointMarker marker) {
         points = new ArrayList<>(2);
         points.add(plane.section2TemplateCoordinate(centroid, section));
         points.add(plane.section2TemplateCoordinate(first, section));
 
         depthDependentScaling = scaling;
+        pointMarker = marker;
     }
 
 //    SectionImageOutlinePoints(double[] centroid, double[] first, InvertibleRealTransform t) {
@@ -52,16 +63,14 @@ public class SectionImageOutlinePoints extends BdvOverlay{
 //        depthDependentScaling = true;
 //    }
     SectionImageOutlinePoints(List<SectionImageOutline.OutlinePoint> outlinePoints,
-                              double section,
-                              Atlas.PlaneOfSection plane) {
-        this(outlinePoints, section, plane, true);
+                              double section, Atlas.PlaneOfSection plane) {
+        this(outlinePoints, section, plane, true, PointMarker.OVAL);
 
     }
 
     SectionImageOutlinePoints(List<SectionImageOutline.OutlinePoint> outlinePoints,
-                              double section,
-                              Atlas.PlaneOfSection plane,
-                              boolean scaling) {
+                              double section, Atlas.PlaneOfSection plane,
+                              boolean scaling, PointMarker marker) {
         points = new ArrayList<>(outlinePoints.size());
 
         for (SectionImageOutline.OutlinePoint pt : outlinePoints) {
@@ -69,6 +78,7 @@ public class SectionImageOutlinePoints extends BdvOverlay{
         }
 
         depthDependentScaling = scaling;
+        this.pointMarker = marker;
     }
 
 //    SectionImageOutlinePoints(List<SectionImageOutline.OutlinePoint> outlinePoints, InvertibleRealTransform t) {
@@ -93,15 +103,25 @@ public class SectionImageOutlinePoints extends BdvOverlay{
             t.apply(lPos, gPos);
 
             final int wh = getSize(gPos[2]);
-            final int x = (int) (gPos[0] - 0.5 * wh);
-            final int y = (int) (gPos[1] - 0.5 * wh);
+            final double d = 0.5 * wh;
+            final int x = (int) (gPos[0] - d);
+            final int y = (int) (gPos[1] - d);
 
             graphics.setColor(getColor(gPos[2]));
-            graphics.fillOval(x, y, wh, wh);
+
+            switch (pointMarker) {
+                case CROSS:
+                    graphics.drawLine((int)(gPos[0]-d), (int)gPos[1], (int)(gPos[0]+d), (int)gPos[1]);
+                    graphics.drawLine((int)gPos[0],(int)(gPos[1]-d),  (int)gPos[0], (int)(gPos[1]+d));
+                    break;
+                case OVAL:
+                    graphics.fillOval(x, y, wh, wh);
+                    break;
+            }
         }
     }
 
-    public void setMaxPointSize(int size) {
+    void setMaxPointSize(int size) {
         MAX_POINT_SIZE = size;
     }
 

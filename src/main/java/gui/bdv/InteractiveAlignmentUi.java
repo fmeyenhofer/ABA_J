@@ -4,6 +4,16 @@ import img.AraImgPlus;
 import img.SectionImageOutline;
 import img.SectionImageTool;
 import img.VolumeSection;
+import net.imglib2.algorithm.morphology.Closing;
+import net.imglib2.algorithm.morphology.Opening;
+import net.imglib2.algorithm.morphology.StructuringElements;
+import net.imglib2.algorithm.neighborhood.DiamondShape;
+import net.imglib2.algorithm.neighborhood.Shape;
+import net.imglib2.exception.IncompatibleTypeException;
+import net.imglib2.img.ImgFactory;
+import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.img.display.imagej.ImgPlusViews;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import rest.AllenRefVol;
 import rest.Atlas;
 
@@ -78,6 +88,7 @@ import org.apache.commons.lang.ArrayUtils;
  * TODO: Make it so that the section volume AND the template volume can be transformed. Currently transforming the section volume results in wrong TPS wraps
  * TODO: shortcuts F1, F10, F11 and F12 do not work (BDV functionality for help, movie recording, and load/save settings). Added workaround/override for F1
  * TODO: The BDV threads are not terminated properly there are 'Fetcher-0' threads remaining after closing the window.
+ * TODO: with the Outlier removal, when re-warping, the bdv series get messed up
  *
  * @author Felix Meyenhofer
  */
@@ -112,6 +123,7 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
     private static BdvSource templateOutlineSrc2 = null;
 
     private final AraImgPlus<V> secImg;
+    private final double secMaxInt;
     private RandomAccessibleInterval secVol;
     private final AllenRefVol refVol;
     private final Dimensions dims;
@@ -140,11 +152,26 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
 
         secVol = secImg.createSectionVolume(refVol);
 
+        V max = ops.stats().max(secImg);
+        secMaxInt = max.getRealDouble() * 0.66;
+
+        // TODO: this might be better in the plugin code instead of here.
         // Extract the outline points of the input section (once!)
         status.showStatus(0, 100, "create section mask");
         RandomAccessibleInterval<BitType> secMsk = SectionImageTool.createMask(secImg, ops);
+        int mskArea = SectionImageTool.getMaskArea(secMsk);
+
+        long seRad = Math.round(Math.sqrt(((double) mskArea * 0.0005) / Math.PI));//TODO: Parameter (expose?)
+        status.showStatus(30, 100, "morph. closing diamond " + seRad);
+        List<Shape> strel = StructuringElements.diamond((int) seRad, 1);
+        Img<BitType> secMskMorph = ops.create().img(secMsk);
+        Closing.close(Views.extendZero(secMsk), secMskMorph, strel, 1);
+        Img<BitType> secMskHol = ops.create().img(secMskMorph);
+        ops.morphology().fillHoles(secMskHol, secMskMorph);
+        ImageJFunctions.show(secMskHol);
+
         status.showStatus(60, 100, "create section outline points");
-        RandomAccessibleInterval<BitType> secOut = ops.morphology().outline(secMsk, false);
+        RandomAccessibleInterval<BitType> secOut = ops.morphology().outline(secMskHol, false);
         secCon = new SectionImageOutline(secOut, triangulationLevels);
         secCon.sample();
         status.showStatus(100, 100, "done loading section image");
@@ -208,8 +235,9 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
         sectionSource = BdvFunctions.show(secVol,
                 "input section",
                 Bdv.options().addTo(bdvHandle).sourceTransform(Ts_init));
-        sectionSource.setColor(new ARGBType(0x0000FF));
+        sectionSource.setColor(new ARGBType(0x6f6f6f));
         sectionSource.setActive(true);
+        sectionSource.setDisplayRange(0, secMaxInt);
 
         // Add section contour points
         double sectionNumber = dims.dimension(0) / 2;
@@ -217,7 +245,8 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
         ArrayList<SectionImageOutline.OutlinePoint> secPts = secCon.getSamples();
 
         BdvSource sectionOutlineSrc1 = BdvFunctions.showOverlay(
-                new SectionImageOutlinePoints(secPts, sectionNumber, plane, false),
+                new SectionImageOutlinePoints(secPts, sectionNumber, plane,
+                        false, SectionImageOutlinePoints.PointMarker.OVAL),
                 "section outline points",
                 Bdv.options().addTo(bdvHandle).sourceTransform(Ts_init));
         sectionOutlineSrc1.setColor(new ARGBType(0x0000FF));
@@ -226,10 +255,10 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
 
         BdvSource sectionOutlineSrc2 = BdvFunctions.showOverlay(
                 new SectionImageOutlinePoints(secCon.getCentroidCoordinates(), secPts.get(0).getCoordinates(),
-                        sectionNumber, plane, false),
+                        sectionNumber, plane, false, SectionImageOutlinePoints.PointMarker.OVAL),
                 "section centroid and 1st",
                 Bdv.options().addTo(bdvHandle).sourceTransform(Ts_init));
-        sectionOutlineSrc2.setColor(new ARGBType(0x00FFFF));
+        sectionOutlineSrc2.setColor(new ARGBType(0xFF00FF));
         sectionOutlineSrc2.setDisplayRangeBounds(1, 1);
         sectionOutlineSrc2.setActive(false);
 
@@ -402,6 +431,9 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
         SectionImageOutline refConMap = refCon.map(Ts_lv, plane);
         refConMap.sample();
 
+//        Img img = ImgView.wrap(refImg, new ArrayImgFactory<>());
+//        ImageJFunctions.show(refConMap.visualise());
+
         ArrayList<SectionImageOutline.OutlinePoint> refPts;
         if (optimizeCorrespondences) {
             refPts = refConMap.getOptimizedCorrespondencePoints(secCon);
@@ -420,13 +452,13 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
                 double[] v1 = secPts.get(i).getCoordinates();
                 double[] v2 = refPts.get(i).getCoordinates();
 
-                distances[i] = Math.sqrt(Math.pow(v1[0] - v2[0], 2) + Math.pow(v1[1] - v2[1], 2));
+                distances[i] = Math.sqrt(Math.pow(v1[0] - v2[0], 2.) + Math.pow(v1[1] - v2[1], 2.));
             }
 
             double m = new Mean().evaluate(distances);
             double sd = new StandardDeviation().evaluate(distances, m);
-            double d_max = m + 2 * sd;
-            double d_min = m - 2 * sd;
+            double d_max = m + 0.5 * sd;
+            double d_min = m - 0.5 * sd;//TODO: Parameter (expose?)
 
             int o = 0;
             for (int i = 0; i < secPts.size(); i++) {
@@ -517,7 +549,7 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
                 new SectionImageOutlinePoints(refPts, section, plane),
                 "template outline points",
                 Bdv.options().addTo(bdvHandle).sourceTransform(t_wl_s));
-        templateOutlineSrc1.setColor(new ARGBType(0xFF0000));
+        templateOutlineSrc1.setColor(new ARGBType(0xbfffe0));
         templateOutlineSrc1.setDisplayRangeBounds(0, 1);
         templateOutlineSrc1.setActive(showPoints);
 
@@ -535,12 +567,14 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
         warpedSectionSource = BdvFunctions.show(secVolWrapped,
                 "warped section",
                 Bdv.options().addTo(bdvHandle).sourceTransform(Ts_init));
-        warpedSectionSource.setColor(new ARGBType(0x0000FF));
+        warpedSectionSource.setColor(new ARGBType(0x6f6f6f));
         warpedSectionSource.setActive(true);
+        warpedSectionSource.setDisplayRange(0, secMaxInt);
 
         // Add outliers visualization
         if (secOut.size() > 0) {
-            SectionImageOutlinePoints outlierPts = new SectionImageOutlinePoints(secOut, section, plane, false);
+            SectionImageOutlinePoints outlierPts = new SectionImageOutlinePoints(secOut, section, plane,
+                    false, SectionImageOutlinePoints.PointMarker.CROSS);
             outlierPts.setMaxPointSize(6);
             templateOutlineSrc1 = BdvFunctions.showOverlay(
                     outlierPts,
