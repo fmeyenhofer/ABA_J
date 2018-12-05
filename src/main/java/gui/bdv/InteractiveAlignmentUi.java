@@ -122,16 +122,16 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
     private static BdvSource templateOutlineSrc1 = null;
     private static BdvSource templateOutlineSrc2 = null;
 
-    private final AraImgPlus<V> secImg;
-    private final double secMaxInt;
+    private AraImgPlus<V> secImg;
+    private double secMaxInt;
     private RandomAccessibleInterval secVol;
-    private final AllenRefVol refVol;
-    private final Dimensions dims;
-    private final AffineTransform3D Tr_init;
+    private AllenRefVol refVol;
+    private Dimensions dims;
+    private AffineTransform3D Tr_init;
     private AffineTransform3D Ts_init;
     private VolumeSection volumeSection;
 
-    private final SectionImageOutline secCon;
+    private SectionImageOutline secCon;
     private TpsTransformWrapper t_tps;
     private TpsTransformWrapper t_tpsi;
 
@@ -153,7 +153,7 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
         secVol = secImg.createSectionVolume(refVol);
 
         V max = ops.stats().max(secImg);
-        secMaxInt = max.getRealDouble() * 0.66;
+        secMaxInt = max.getRealDouble() * 0.66; // TODO: better auto-contrast method
 
         // TODO: this might be better in the plugin code instead of here.
         // Extract the outline points of the input section (once!)
@@ -161,7 +161,7 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
         RandomAccessibleInterval<BitType> secMsk = SectionImageTool.createMask(secImg, ops);
         int mskArea = SectionImageTool.getMaskArea(secMsk);
 
-        long seRad = Math.round(Math.sqrt(((double) mskArea * 0.0005) / Math.PI));//TODO: Parameter (expose?)
+        long seRad = Math.round(Math.sqrt(((double) mskArea * 0.00075) / Math.PI));//TODO: Parameter (expose?)
         status.showStatus(30, 100, "morph. closing diamond " + seRad);
         List<Shape> strel = StructuringElements.diamond((int) seRad, 1);
         Img<BitType> secMskMorph = ops.create().img(secMsk);
@@ -175,6 +175,26 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
         secCon = new SectionImageOutline(secOut, triangulationLevels);
         secCon.sample();
         status.showStatus(100, 100, "done loading section image");
+    }
+
+    private void cleanup() {
+        bdvHandle = null;
+        sectionSource = null;
+        warpedSectionSource = null;
+        sectionOutlierSrc = null;
+        templateOutlineSrc1 = null;
+        templateOutlineSrc2 = null;
+        secImg = null;
+        secVol = null;
+        refVol = null;
+        dims = null;
+        Tr_init = null;
+        Ts_init = null;
+        volumeSection = null;
+        secCon = null;
+        t_tps = null;
+        t_tpsi = null;
+        System.gc();
     }
 
     private void updateInputSection() {
@@ -193,6 +213,7 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
 
                 bdvHandle.getViewerPanel().stop();
                 window.dispose();
+                cleanup();
             }
         });
 
@@ -506,7 +527,7 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
             refVects[d][N] = refConMap.getCentroidCoordinates()[d];
             secVects[d][N] = secCon.getCentroidCoordinates()[d];
         }
-        weights[N] = 1;
+        weights[N] = 0.7;
 
         // Compute the TPS transforms
         ThinPlateR2LogRSplineKernelTransform tps = new ThinPlateR2LogRSplineKernelTransform(2, refVects, secVects, weights);

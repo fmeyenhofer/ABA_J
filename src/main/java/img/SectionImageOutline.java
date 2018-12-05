@@ -428,6 +428,7 @@ public class SectionImageOutline {
             out1.add(p);
         }
 
+        // TODO: sometimes there are different number of points -> put in assert
         ArrayList<OutlinePoint> pts1 = getSamples();
         ArrayList<OutlinePoint> pts2 = soc.getSamples();
 
@@ -437,7 +438,7 @@ public class SectionImageOutline {
 
         double dPhi = 0;
         double dR = 0;
-        for (int i = 0; i < pts1.size(); i++) {
+        for (int i = 0; i < pts2.size(); i++) {
             OutlinePoint p1 = pts1.get(i).duplicate().subtract(cx, cy);
             OutlinePoint p2 = pts2.get(i).duplicate().subtract(soc.cx, soc.cy);
 
