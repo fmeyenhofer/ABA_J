@@ -4,10 +4,13 @@ import table.XYHeaders;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Dialog to select a coordinate columns in a result table
@@ -28,59 +31,64 @@ public class CoordinateColumnHeaderDialog extends JPanel implements ActionListen
     private JComboBox<String> tableSelector;
     private JComboBox<String> xColSelector;
     private JComboBox<String> yColSelector;
+    private final JButton okButton;
 
 
     private CoordinateColumnHeaderDialog(HashMap<String, String[]> tinfo) {
         super();
-
         this.tableInfo = tinfo;
 
-        yColSelector = new JComboBox<>();
-        yColSelector.setName(Y_SELECTOR_NAME);
-        yColSelector.addActionListener(this);
-
-        JPanel panel1 = new JPanel(new FlowLayout());
-        panel1.add(new JLabel(Y_SELECTOR_NAME));
-        panel1.add(yColSelector);
-
-        xColSelector = new JComboBox<>();
-        xColSelector.setName(X_SELECTOR_NAME);
-        xColSelector.addActionListener(this);
-
-        JPanel panel2 = new JPanel(new FlowLayout());
-        panel2.add(new JLabel(X_SELECTOR_NAME));
-        panel2.add(xColSelector);
-
+        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         tableSelector = new JComboBox<>(tableInfo.keySet().toArray(new String[0]));
         tableSelector.setName(TABLE_SELECTOR_NAME);
         tableSelector.addActionListener(this);
+        if (tableInfo.size() > 1) {
+            JPanel panel1 = new JPanel(new FlowLayout());
+            panel1.add(new JLabel(TABLE_SELECTOR_NAME));
+            panel1.add(tableSelector);
+            this.add(panel1);
+        }
 
+        xColSelector = new JComboBox<>();
+        xColSelector.setName(X_SELECTOR_NAME);
+        xColSelector.addActionListener(this);
+        JPanel panel2 = new JPanel(new FlowLayout());
+        panel2.add(new JLabel(X_SELECTOR_NAME));
+        panel2.add(xColSelector);
+        this.add(panel2);
+
+        yColSelector = new JComboBox<>();
+        yColSelector.setName(Y_SELECTOR_NAME);
+        yColSelector.addActionListener(this);
         JPanel panel3 = new JPanel(new FlowLayout());
-        panel3.add(new JLabel(TABLE_SELECTOR_NAME));
-        panel3.add(tableSelector);
+        panel3.add(new JLabel(Y_SELECTOR_NAME));
+        panel3.add(yColSelector);
+        this.add(panel3);
 
-        JButton button1 = new JButton(OK_BUTTON_NAME);
-        button1.setName(OK_BUTTON_NAME);
-        button1.addActionListener(this);
-        JButton button2 = new JButton(CANCEL_BUTTON_NAME);
-        button2.setName(CANCEL_BUTTON_NAME);
-        button2.addActionListener(this);
-
+        okButton = new JButton(OK_BUTTON_NAME);
+        okButton.setName(OK_BUTTON_NAME);
+        okButton.addActionListener(this);
+        JButton cancelButton = new JButton(CANCEL_BUTTON_NAME);
+        cancelButton.setName(CANCEL_BUTTON_NAME);
+        cancelButton.addActionListener(this);
         JPanel panel4 = new JPanel();
         panel4.setBorder(new EmptyBorder(10, 0, 0, 0));
-        panel4.add(button1);
-        panel4.add(button2);
-
-        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        this.setBorder(new EmptyBorder(10, 10, 10, 10));
-        this.add(panel3);
-        this.add(panel2);
-        this.add(panel1);
+        panel4.add(cancelButton);
+        panel4.add(okButton);
         this.add(panel4);
     }
 
+    public static CoordinateColumnHeaderDialog createAndShow(List<String> headers) {
+        HashMap<String, String[]> tableInfo = new HashMap<>();
+        tableInfo.put("Result Table", headers.toArray(new String[0]));
+        return createAndShow(tableInfo);
+    }
+
     public static CoordinateColumnHeaderDialog createAndShow(HashMap<String, String[]> tableInfo) {
+        Dimension dim = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+
         CoordinateColumnHeaderDialog dialog = new CoordinateColumnHeaderDialog(tableInfo);
         dialog.update();
 
@@ -89,7 +97,10 @@ public class CoordinateColumnHeaderDialog extends JPanel implements ActionListen
         frame.add(dialog);
         frame.setModal(true);
         frame.setSize(new Dimension(300,260));
+        frame.setLocation(dim.width / 2 - 150, dim.height / 2 - 130);
         frame.setLocationByPlatform(true);
+        frame.getRootPane().setDefaultButton(dialog.okButton);
+        dialog.okButton.requestFocus();
         frame.setVisible(true);
 
         return dialog;
@@ -181,6 +192,14 @@ public class CoordinateColumnHeaderDialog extends JPanel implements ActionListen
 
     public String getYColumn() {
         return (String) yColSelector.getSelectedItem();
+    }
+
+    public List<String> getColumns() {
+        List<String> cols = new ArrayList<>(2);
+        cols.add(getXColumn());
+        cols.add(getYColumn());
+
+        return cols;
     }
 
     public static void main(String[] args) {

@@ -1,6 +1,7 @@
 package table;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class containing some result table header conventions of ImageJ.
@@ -11,10 +12,13 @@ import java.util.ArrayList;
  *
  * @author Felix Meyenhofer
  */
-public class TableConventions {
+class TableConventions {
 
     public enum Header implements XYHeaders {
+        @SuppressWarnings("unused")
         CENTROID("X", "Y"),
+
+        @SuppressWarnings("unused")
         BARYCENTER("XM", "YM");
 
         private String x;
@@ -25,7 +29,7 @@ public class TableConventions {
             this.y = y;
         }
 
-        public ArrayList<String> getNames() {
+        public List<String> getNames() {
             return new ArrayList<String>() {{
                 add(x);
                 add(y);
@@ -40,7 +44,14 @@ public class TableConventions {
             return y;
         }
 
-        public static Header findContained(ArrayList<String> headers) {
+        public List<String> getColumns() {
+            List<String> cols = new ArrayList<>(2);
+            cols.add(getXColumn());
+            cols.add(getYColumn());
+            return cols;
+        }
+
+        public static Header findContained(List<String> headers) {
             for (Header header : Header.class.getEnumConstants()) {
                 if (headers.containsAll(header.getNames())) {
                     return header;

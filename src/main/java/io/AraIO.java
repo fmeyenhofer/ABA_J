@@ -92,10 +92,9 @@ public class AraIO {
         return displays;
     }
 
-    protected List<String> getMappedImagePaths() {
+    protected List<String> getMappedImagePaths(File inputDir) {
         // Get the map files
-        File inputDirectory = ui.chooseFile(new File(System.getProperty("user.home")), "directory");
-        File[] mapFiles = inputDirectory.listFiles(new FileFilter() {
+        File[] mapFiles = inputDir.listFiles(new FileFilter() {
             @Override
             public boolean accept(File path) {
                 return path.getAbsolutePath().endsWith(MAPPING_FILE_FORMAT);
@@ -105,7 +104,7 @@ public class AraIO {
         // Check if we can find the corresponding image files to the mappings
         List<String> paths = new ArrayList<>();
         if (mapFiles == null) {
-            ui.showDialog("Could not find any " + MAPPING_FILE_FORMAT + " files in " + inputDirectory);
+            ui.showDialog("Could not find any " + MAPPING_FILE_FORMAT + " files in " + inputDir);
             return null;
         } else {
             for (File file : mapFiles) {
@@ -121,7 +120,7 @@ public class AraIO {
         }
 
         if (paths.size() == 0) {
-            ui.showDialog("Could not find any " + FILE_TYPE_NAME + " files in " + inputDirectory);
+            ui.showDialog("Could not find any " + FILE_TYPE_NAME + " files in " + inputDir);
             return null;
         }
 
