@@ -21,7 +21,7 @@ import java.io.FileFilter;
 /**
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > Misc. > Batch Orient + Auto-Crop")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 1. Pre-Processing >  Batch > Orient + Auto-Crop")
 public class  SectionImagePreprocessingBatch<T extends RealType<T> & NativeType<T>> implements Command {
 
     @Parameter
