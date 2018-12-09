@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * @author Felix Meyenhofer
  */
-@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 1. Pre-Processing > Orient + Auto-Crop")
+@Plugin(type = Command.class, menuPath = "Plugins > Allen Brain Atlas > 1. Pre-Processing > Orient + Auto-Crop Section")
 public class SectionImagePreprocessing<T extends RealType<T> & NativeType<T>> implements Command {
 
     @Parameter
