@@ -18,6 +18,8 @@ To use the plugin you need to download and install ImageJ first. We
 recommend the [Fiji][fiji] distribution, shipping with a collection of plugins
 that will be useful in this context.
 
+TODO: indicate minimum ij version
+
 ## Plugin installation from binaries
 You can download the binary version of the plugin as jar-file 
 from [here][bin]. For the installation of the plugin please refer to 
