@@ -1,7 +1,7 @@
 package table;
 
 import img.AraImgPlus;
-import net.imagej.table.*;
+import org.scijava.table.*;
 import rest.*;
 
 import ij.measure.ResultsTable;

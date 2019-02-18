@@ -203,8 +203,8 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
 //        String path = "/Users/turf/switchdrive/SJMCS/data/devel/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-07 - series 2.tif";
 //        String path = "/Users/turf/switchdrive/SJMCS/data/devel/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-10 - Series 3.tif";
 //        String path = "/Users/turf/switchdrive/SJMCS/data/devel/small-deformations/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif";
-//        String path = "/Users/meyenhof/switchdrive/SJMCS/data/devel/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00 - series 3.tif";
-        String path = "/Volumes/Bioimage_1/180410_WT_Insulin_Fos_280318/tif-series-3-selection/170815_Insu1_1_Fos - 2018-04-10 17.26.21-FITC_section-00_FITC.ome.tif";
+        String path = "/Users/meyenhof/switchdrive/SJMCS/data/devel/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00 - series 3.tif";
+//        String path = "/Volumes/Bioimage_1/180410_WT_Insulin_Fos_280318/tif-series-3-selection/170815_Insu1_1_Fos - 2018-04-10 17.26.21-FITC_section-00_FITC.ome.tif";
 
         ImageJ ij = new ImageJ();
         ij.ui().showUI();

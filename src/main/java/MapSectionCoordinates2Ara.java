@@ -1,3 +1,4 @@
+import org.scijava.table.DefaultGenericTable;
 import rest.*;
 import io.AraIO;
 import io.AraMapping;
@@ -17,7 +18,6 @@ import org.scijava.plugin.Plugin;
 import net.imagej.ImgPlus;
 import net.imagej.DefaultDataset;
 import net.imagej.ImageJ;
-import net.imagej.table.*;
 
 import ij.measure.ResultsTable;
 
@@ -91,7 +91,7 @@ public class MapSectionCoordinates2Ara extends AraIO implements Command {
             }
 
             AraResultsTable mappedTable = resTable.mapSectionCoordinates(client, img, header);
-
+            mappedTable.setName(resTable.getName() + " - ARA mapped");
             mappedTable.show();
 
         } catch (TransformerException e) {

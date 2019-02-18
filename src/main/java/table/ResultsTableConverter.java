@@ -1,7 +1,7 @@
 package table;
 
 import ij.measure.ResultsTable;
-import net.imagej.table.*;
+import org.scijava.table.*;
 
 /**
  * Author: Robert Haase, Scientific Computing Facility, MPI-CBG Dresden, rhaase@mpi-cbg.de
@@ -59,28 +59,30 @@ public class ResultsTableConverter {
     public static DefaultGenericTable convertIJ1toIJ2(ResultsTable tableIn) {
         DefaultGenericTable table = new DefaultGenericTable();
 
-        for (int columnIndex = 0; tableIn.columnExists(columnIndex); columnIndex++) {
-            // read header of a column
-            String header = tableIn.getColumnHeading(columnIndex);
+        for (String header : tableIn.getHeadings()) {
+            int columnIndex = tableIn.getColumnIndex(header);
 
-            // determine types of column
+            // copy column wise
             Column column;
-            if (!Double.isNaN(tableIn.getValueAsDouble(columnIndex, 0))){
-                column = new DoubleColumn(header);
-            } else {
+            if (columnIndex == -1) {
                 column = new GenericColumn(header);
-            }
-
-            // copy column to the new table
-            for (int rowIndex = 0; rowIndex < tableIn.getCounter(); rowIndex++) {
-                if (column instanceof GenericColumn) {
-                    String value = tableIn.getStringValue(columnIndex, rowIndex);
-                    column.add(value);
-                } else {
+                for (int rowIndex = 0; rowIndex < tableIn.getCounter(); rowIndex++) {
+                    column.add(tableIn.getLabel(rowIndex));
+                }
+            } else if (!Double.isNaN(tableIn.getValueAsDouble(columnIndex, 0))) {
+                column = new DoubleColumn(header);
+                for (int rowIndex = 0; rowIndex < tableIn.getCounter(); rowIndex++) {
                     double value = tableIn.getValueAsDouble(columnIndex, rowIndex);
                     column.add(value);
                 }
+            } else {
+                column = new GenericColumn(header);
+                for (int rowIndex = 0; rowIndex < tableIn.getCounter(); rowIndex++) {
+                    String value = tableIn.getStringValue(columnIndex, rowIndex);
+                    column.add(value);
+                }
             }
+
             table.add(column);
         }
         return table;
