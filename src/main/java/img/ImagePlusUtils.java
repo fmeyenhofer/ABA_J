@@ -72,18 +72,4 @@ public class ImagePlusUtils {
 
         return msd;
     }
-
-    public static void main(String[] args) throws IOException {
-        final ImageJ ij = new net.imagej.ImageJ();
-        ij.ui().showUI();
-
-        Object img = ij.io().open("/Users/turf/switchdrive/SJMCS/data/devel/section2volume/average_template_25um_coronal_295-315.tif");
-
-        ImagePlus imp = ImageJFunctions.wrap((RandomAccessibleInterval) img, "test");
-        imp.show();
-
-        ImagePlusUtils.adjustContrast(imp.getProcessor(), 0.99);
-
-        imp.updateAndRepaintWindow();
-    }
 }

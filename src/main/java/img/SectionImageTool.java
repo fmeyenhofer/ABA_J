@@ -316,30 +316,4 @@ public class SectionImageTool {
 
         return sectionResolution;
     }
-
-
-    public static void main(String[] args) {
-//        String path = "/Users/turf/switchdrive/SJMCS/data/devel/section2volume/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif";
-        String path = "/Users/turf/switchdrive/SJMCS/data/lamy-lab/floating/160128_crym_gng2/ome/series-3/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.ome.tif";
-//        String path = "/Users/turf/Desktop/new section.tif";
-//        String path = "/Users/turf/Desktop/reference section.tif";
-        ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-
-//        Object vol = ij.io().open(path);
-//        Object vol = ij.io().open("/Users/turf/switchdrive/SJMCS/data/devel/section2volume/average_template_50um_coronal-180.tif");
-
-//        UnsignedByteType type = new UnsignedByteType();
-//        ArrayImgFactory<UnsignedByteType> factory = new ArrayImgFactory<>();
-//        Img<UnsignedByteType> vol = IO.openImgs(path, factory, type).get(0);
-
-        UnsignedShortType type = new UnsignedShortType();
-        ArrayImgFactory<UnsignedShortType> factory = new ArrayImgFactory<>();
-        Img<UnsignedShortType> vol = IO.openImgs(path, factory, type).get(0);
-
-        Img<BitType> msk = SectionImageTool.createMask(vol, ij.op());
-
-        ij.ui().show("input", vol);
-        ij.ui().show("section mask", msk);
-    }
 }

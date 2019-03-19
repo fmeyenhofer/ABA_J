@@ -93,16 +93,4 @@ public class SectionOrientation <T extends RealType<T> & NativeType<T>> implemen
 
         status.showStatus(100,100, "done");
     }
-
-
-    public static void main(String[] args) throws IOException {
-        ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-
-//        Object img = ij.io().open("/Users/turf/switchdrive/SJMCS/data/lamy-lab/floating/160128_crym_gng2/ome/series-2/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-Cy3_ROI-09.ome.tif");
-        Object img = ij.io().open("/Users/turf/switchdrive/SJMCS/data/lamy-lab/floating/160128_crym_gng2/ome/series-3/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-09.ome.tif");
-        ij.ui().show(img);
-
-        ij.command().run(SectionOrientation.class, true);
-    }
 }

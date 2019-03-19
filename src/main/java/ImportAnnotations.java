@@ -306,31 +306,11 @@ public class ImportAnnotations implements Command, Initializable, AtlasStructure
 
     private String[] list2array(List<String> list) {
         String[] array = new String[list.size()];
-        int i =0;
+        int i = 0;
         for (String item : list) {
             array[i++] = item;
         }
 
         return array;
-    }
-
-
-    public static void main(String[] args) throws IOException {
-        ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-
-        String imagePath = "/Users/turf/switchdrive/SJMCS/data/devel/section2volume/26836491_25um_red_300.tif";
-//        int sectionNumber = 300;
-//        String pixelResolution = "25";
-
-        Object section = ij.io().open(imagePath);
-        ij.ui().show(section);
-//
-        ij.command().run(ImportAnnotations.class, true);
-
-//        ImportAnnotations plugin = new ImportAnnotations();
-//        RandomAccessibleInterval<IntType> rai = plugin.getAnnotationSection(sectionNumber, pixelResolution);
-
-//        ij.ui().show(rai);
     }
 }

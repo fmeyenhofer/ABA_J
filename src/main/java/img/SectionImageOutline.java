@@ -727,33 +727,4 @@ public class SectionImageOutline {
                     ", phi=" + twodec.format(phi) + ", r=" + twodec.format(r);
         }
     }
-
-
-    /**
-     * Functionality Testing
-     *
-     * @param args not used
-     */
-    public static void main(String[] args) {
-        ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-
-        String path = "/Users/meyenhof/switchdrive/SJMCS/data/devel/masks/section-mask-outline-2.tif";
-
-        BitType type = new BitType();
-        ArrayImgFactory<BitType> factory = new ArrayImgFactory<>();
-        Img<BitType> out = IO.openImgs(path, factory, type).get(0);
-
-        SectionImageOutline sampler = new SectionImageOutline(out, 3);
-        sampler.sample();
-        RandomAccessibleInterval<UnsignedByteType> vis = sampler.visualise();
-
-//        ImgPlus<UnsignedByteType> img = new ImgPlus<UnsignedByteType>(vis, "Contour sampling", new AxisType[]{Axes.X, Axes.Y, Axes.CHANNEL});
-        ij.ui().show(vis);
-
-        System.out.println(sampler.getRotation());
-        System.out.println("Done");
-
-        System.out.println(ArrayUtils.toString(sampler.getBoundingBox(sampler.getOutlineCoordinates())));
-    }
 }

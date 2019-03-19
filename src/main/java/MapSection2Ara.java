@@ -53,9 +53,4 @@ public class MapSection2Ara<T extends RealType<T> & NativeType<T>> extends AraIO
         Img<T> vol = sec.mapSection2Template();
         warp = new ImgPlus(vol, "Mapped section " + section.getName(), AllenRefVol.getAxes());
     }
-
-    public static void main(String[] args) {
-        ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-    }
 }

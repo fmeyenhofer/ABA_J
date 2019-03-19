@@ -64,9 +64,4 @@ public class LoadAraImg extends AraIO implements Command {
             log.error(e);
         }
     }
-
-    public static void main(String[] args) {
-        ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-    }
 }

@@ -143,40 +143,4 @@ public class MapSectionCoordinates2Ara extends AraIO implements Command {
 
         return null;
     }
-
-    public static void main(String[] args) throws IOException, ClassNotFoundException {
-        ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-
-//        String path = "/Users/turf/switchdrive/SJMCS/data/devel/alignment/ali50/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-13.ome.tif";
-        String path = "/Users/meyenhof/switchdrive/SJMCS/data/devel/coordmap/170815_Insu1_1_Fos - 2018-04-10 17.26.21-FITC_section-00_FITC.ome.tif";
-        Object img = ij.io().open(path);
-        DefaultDataset ds = (DefaultDataset) img;
-        AraIO araIO = new AraIO();
-        File imgFile = new File(path);
-        File mapFile = araIO.deriveMappingFile(imgFile);
-        AraMapping mapping = AraMapping.load(mapFile);
-        AraImgPlus araImg = new AraImgPlus(ds.getImgPlus().getImg(), mapping);
-        araImg.setSource(imgFile.getAbsolutePath());
-        araImg.setName(imgFile.getName());
-        ij.ui().show(araImg);
-
-        ResultsTable table = ResultsTable.open2("/Users/meyenhof/switchdrive/SJMCS/data/devel/coordmap/170815_Insu1_1_Fos - 2018-04-10 17.26.21-FITC_section-00_FITC.txt");
-        table.show("Results");
-
-//        DoubleColumn x = new DoubleColumn("X");
-//        x.add(50.0);
-//        x.add(100.5);
-//        x.add(210.0);
-//        DoubleColumn y = new DoubleColumn("Y");
-//        y.add(70.0);
-//        y.add(110.1);
-//        y.add(300.0);
-//        DefaultGenericTable table = new DefaultGenericTable();
-//        table.add(x);
-//        table.add(y);
-//        ij.ui().show("example coordinates", table);
-
-        ij.command().run(MapSectionCoordinates2Ara.class, true);
-    }
 }

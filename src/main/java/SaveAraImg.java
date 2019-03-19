@@ -83,9 +83,4 @@ public class SaveAraImg extends AraIO implements Command {
                     "Otherwise the file can always be saved in another format.");
         }
     }
-
-    public static void main(String[] args) {
-        ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-    }
 }

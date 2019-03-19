@@ -330,12 +330,4 @@ public class ReferenceSectionDatasetAssembler implements Command {
         ui.show("reconstructed reference section dataset", imgp);
         BdvFunctions.show(imgp, "" + dataset_id );
     }
-
-
-    public static void main(String[] args) {
-        final ImageJ ij =  new net.imagej.ImageJ();
-        // ij.ui().showUI();
-        
-        ij.command().run(ReferenceSectionDatasetAssembler.class, true);
-    }
 }
