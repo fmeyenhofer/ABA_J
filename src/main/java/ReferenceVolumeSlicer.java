@@ -5,14 +5,12 @@ import ij.WindowManager;
 import ij.io.OpenDialog;
 
 import net.imagej.Dataset;
-import net.imagej.ImageJ;
 import net.imagej.legacy.LegacyService;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import io.scif.services.DatasetIOService;
 
-import java.io.File;
 import java.io.IOException;
 
 /**

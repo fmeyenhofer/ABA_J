@@ -8,8 +8,6 @@ import gui.CoordinateColumnHeaderDialog;
 
 import ij.measure.ResultsTable;
 
-import net.imagej.ImageJ;
-
 import org.scijava.command.Command;
 import org.scijava.display.DisplayService;
 import org.scijava.io.IOService;

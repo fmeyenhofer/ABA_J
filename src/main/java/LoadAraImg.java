@@ -3,7 +3,6 @@ import io.AraIO;
 import io.AraMapping;
 
 import net.imagej.Dataset;
-import net.imagej.ImageJ;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
