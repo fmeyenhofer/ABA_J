@@ -13,7 +13,6 @@ import loci.formats.meta.MetadataStore;
 import loci.formats.services.OMEXMLService;
 import ome.xml.meta.IMetadata;
 
-import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;

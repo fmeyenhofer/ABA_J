@@ -6,15 +6,17 @@ import rest.AllenClient;
 import rest.AllenRefVol;
 import rest.Atlas;
 
-import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.ops.OpService;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 
 import mpicbg.spim.data.SpimDataException;
 
 import org.scijava.ui.UIService;
 import org.scijava.Initializable;
 import org.scijava.app.StatusService;
+import org.scijava.display.Display;
+import org.scijava.display.DisplayService;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
@@ -32,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
-
 
 /**
  * TODO: Add multi-channel support
@@ -72,6 +73,9 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
 
     @Parameter
     private StatusService status;
+
+    @Parameter
+    private DisplayService display;
 
     @Parameter
     private LogService log;
@@ -133,15 +137,18 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
                     sectionResolution = volumeResolution.getValue();
             }
 
+            // determine initial transform for the section image
+            AraImgPlus section = new AraImgPlus(secImg.getImg(), sectionResolution, plane, volumeResolution);   // TODO: pass the imgplus
+            section.setName(new File(secImg.getSource()).getName() + " - aligned");
+            section.setSource(secImg.getSource());
+
             Frame secImgDisplay = SwingUtils.grabFrame(secImg.getName());
             if (secImgDisplay != null) {
                 secImgDisplay.dispose();
             }
 
-            // determine initial transform for the section image
-            AraImgPlus section = new AraImgPlus(secImg.getImg(), sectionResolution, plane, volumeResolution);   // TODO: pass the imgplus
-            section.setName(new File(secImg.getSource()).getName() + " - aligned");
-            section.setSource(secImg.getSource());
+//            ImageJFunctions.show(section);
+//            display.createDisplay(section);
             ui.show(section);
 //            Display imgWindow = display.getDisplay(secImg.getName()); // Does not work
 //            imgWindow.close();

@@ -1,7 +1,6 @@
 import ij.IJ;
 import ij.ImagePlus;
 import net.imagej.Dataset;
-import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.ops.OpService;
 import net.imglib2.img.display.imagej.ImageJFunctions;

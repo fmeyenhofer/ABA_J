@@ -2,7 +2,6 @@ import io.AraIO;
 import img.AraImgPlus;
 import rest.AllenRefVol;
 
-import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;

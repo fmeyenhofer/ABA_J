@@ -1,7 +1,6 @@
 import gui.SectionDatasetDownloadDialog;
 import rest.AllenClient;
 
-import net.imagej.ImageJ;
 import org.scijava.Initializable;
 import org.scijava.app.StatusService;
 import org.scijava.command.Command;

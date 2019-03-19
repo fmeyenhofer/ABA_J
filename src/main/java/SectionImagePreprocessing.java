@@ -1,7 +1,6 @@
 import img.SectionImageOutline;
 import img.SectionImageTool;
 
-import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.ops.OpService;
 import net.imglib2.*;
@@ -27,7 +26,6 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 
-import java.io.IOException;
 import java.util.List;
 
 /**

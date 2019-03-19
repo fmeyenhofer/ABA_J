@@ -4,7 +4,6 @@ import io.AraMapping;
 
 import net.imagej.Dataset;
 import net.imagej.DefaultDataset;
-import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
