@@ -29,8 +29,8 @@
 		<maven.test.skip>true</maven.test.skip>
 
 		<!--TODO: simplify versions (remove if possible)-->
-		<clearcl.version>0.4.6</clearcl.version>
-		<cleargl.version>2.0.4</cleargl.version>
+		<!--<clearcl.version>0.4.6</clearcl.version>-->
+		<!--<cleargl.version>2.0.4</cleargl.version>-->
 		<clearvolume.version>1.3.26</clearvolume.version>
 		<imglib.clearvolume.version>1.3.21-SNAPSHOT</imglib.clearvolume.version>
 		<CoreMem.version>0.4.3</CoreMem.version>
@@ -236,39 +236,39 @@
 		</dependency>
 
 		<!--ClearVolume-->
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>imglib-clearvolume</artifactId>
-			<version>${imglib.clearvolume.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>net.clearvolume</groupId>
-			<artifactId>clearvolume</artifactId>
-			<version>${clearvolume.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.apple</groupId>
-					<artifactId>AppleJavaExtensions</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>net.coremem</groupId>
-			<artifactId>CoreMem</artifactId>
-			<version>${CoreMem.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>net.clearvolume</groupId>
-			<artifactId>clearcl</artifactId>
-			<version>${clearcl.version}</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>net.clearvolume</groupId>
-			<artifactId>cleargl</artifactId>
-			<version>${cleargl.version}</version>
-			<scope>runtime</scope>
-		</dependency>
+		<!--<dependency>-->
+			<!--<groupId>sc.fiji</groupId>-->
+			<!--<artifactId>imglib-clearvolume</artifactId>-->
+			<!--<version>${imglib.clearvolume.version}</version>-->
+		<!--</dependency>-->
+		<!--<dependency>-->
+			<!--<groupId>net.clearvolume</groupId>-->
+			<!--<artifactId>clearvolume</artifactId>-->
+			<!--<version>${clearvolume.version}</version>-->
+			<!--<exclusions>-->
+				<!--<exclusion>-->
+					<!--<groupId>com.apple</groupId>-->
+					<!--<artifactId>AppleJavaExtensions</artifactId>-->
+				<!--</exclusion>-->
+			<!--</exclusions>-->
+		<!--</dependency>-->
+		<!--<dependency>-->
+			<!--<groupId>net.coremem</groupId>-->
+			<!--<artifactId>CoreMem</artifactId>-->
+			<!--<version>${CoreMem.version}</version>-->
+		<!--</dependency>-->
+		<!--<dependency>-->
+			<!--<groupId>net.clearvolume</groupId>-->
+			<!--<artifactId>clearcl</artifactId>-->
+			<!--<version>${clearcl.version}</version>-->
+			<!--<scope>runtime</scope>-->
+		<!--</dependency>-->
+		<!--<dependency>-->
+			<!--<groupId>net.clearvolume</groupId>-->
+			<!--<artifactId>cleargl</artifactId>-->
+			<!--<version>${cleargl.version}</version>-->
+			<!--<scope>runtime</scope>-->
+		<!--</dependency>-->
 		
 		<!--SVG format library-->
 		<dependency>
