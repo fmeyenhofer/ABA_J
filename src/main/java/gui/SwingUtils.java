@@ -10,7 +10,8 @@ public class SwingUtils {
 
     public static Frame grabFrame(String name) {
         for (Frame frame : JFrame.getFrames()) {
-            String title = frame.getTitle().replaceAll(" ?[(][0-9]{1,3}%[)]$", "");
+            String title = frame.getTitle().replaceAll(" ?[(][0-9]{1,3}%[)]$", ""); // Zoom suffix
+            title = title.replaceAll(" [(]V[)]$", ""); // Virtual image suffix
             if (title.equals(name)) {
                 return frame;
             }
