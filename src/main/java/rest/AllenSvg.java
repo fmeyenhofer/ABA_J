@@ -1,6 +1,5 @@
 package rest;
 
-import bezier.BezierPath;
 import gui.SvgDisplay;
 
 import org.apache.batik.anim.dom.SAXSVGDocumentFactory;
@@ -233,12 +232,6 @@ class AllenSvg extends AllenFile {
 
         File cfile = new File(home,"100960333_contour.svg");
         svg.createGrayMatterSvg(cfile);
-
-        Node path = svg.findPath(PATH_CONTOUR_ATTRIBUTE, PATH_CONTOUR_VALUE);
-        String d = path.getAttributes().getNamedItem("d").getNodeValue();
-
-        BezierPath bp = new BezierPath();
-        bp.parsePathString(d);
 
         SvgDisplay disp = new SvgDisplay(true);
         disp.setSource(cfile);
