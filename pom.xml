@@ -85,17 +85,16 @@
 		</contributor>
 	</contributors>
 
-	<!--TODO: fill out the scm and issue management-->
 	<scm>
 		<connection>https://github.com/fmeyenhofer</connection>
 		<developerConnection>https://github.com/fmeyenhofer</developerConnection>
         <tag>HEAD</tag>
-		<url>https://github.com/fmeyenhofer/ABA_J.git</url>
+		<url>https://github.com/fmeyenhofer/ABA_J</url>
 	</scm>
 
 	<issueManagement>
 		<system>GitHub Issues</system>
-		<url>https://github.com/fmeyenhofer</url>
+		<url>https://github.com/fmeyenhofer/ABA_J/issues</url>
 	</issueManagement>
 
 	<mailingLists>
