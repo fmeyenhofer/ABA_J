@@ -8,14 +8,12 @@ import rest.Atlas;
 
 import net.imagej.ImgPlus;
 import net.imagej.ops.OpService;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 
 import mpicbg.spim.data.SpimDataException;
 
 import org.scijava.ui.UIService;
 import org.scijava.Initializable;
 import org.scijava.app.StatusService;
-import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
@@ -142,16 +140,16 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
             section.setName(new File(secImg.getSource()).getName() + " - aligned");
             section.setSource(secImg.getSource());
 
+            // TODO this currently (pom-scijava 25.0.0) only works if the "Menu > Edit > Options > ImageJ2... > Use SCIFIO for opening image files" is checked.
+//            display.createDisplay(section);
+            ui.show(section);
+
+//            Display imgWindow = display.getDisplay(secImg.getName()); // Does not work
+//            imgWindow.close();
             Frame secImgDisplay = SwingUtils.grabFrame(secImg.getName());
             if (secImgDisplay != null) {
                 secImgDisplay.dispose();
             }
-
-//            ImageJFunctions.show(section);
-//            display.createDisplay(section);
-            ui.show(section);
-//            Display imgWindow = display.getDisplay(secImg.getName()); // Does not work
-//            imgWindow.close();
 
             // initialize the UI and open it
             InteractiveAlignmentUi ui = new InteractiveAlignmentUi(section, refVol, levels, optimize, outliers, ops, status);
