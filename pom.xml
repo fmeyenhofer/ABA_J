@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-		http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
@@ -13,32 +9,21 @@
 		<relativePath />
 	</parent>
 
-	<packaging>jar</packaging>
 	<groupId>ch.imagej</groupId>
 	<artifactId>aba_j</artifactId>
 	<version>0.0.10-SNAPSHOT</version>
+	<packaging>jar</packaging>
 
-	<properties>
-		<package-name>ch.imagej.abaj</package-name>
-		<!--<main-class>AllenBrainJ2D</main-class>-->
-		<license.copyrightOwners>Felix Meyenhofer</license.copyrightOwners>
-		<license.licenseName>GPLv3</license.licenseName>
-
-		<json.version>20160212</json.version>
-	</properties>
-	
 	<name>ABA-J</name>
-    <description>
+	<description>
 		Toolkit to register histological brain sections using the Allen Brain Atlas.
 	</description>
-
 	<url>https://github.com/fmeyenhofer</url>
 	<inceptionYear>2016</inceptionYear>
 	<organization>
 		<name>University of Fribourg</name>
         <url>www.unifr.ch</url>
 	</organization>
-
 	<licenses>
 		<license>
 			<name>GPL3</name>
@@ -64,25 +49,12 @@
 			</roles>
 		</developer>
 	</developers>
-
 	<contributors>
 		<contributor>
 			<name>Allen Institute</name>
 			<url>http://http://www.brain-map.org</url>
 		</contributor>
 	</contributors>
-
-	<scm>
-		<connection>https://github.com/fmeyenhofer</connection>
-		<developerConnection>https://github.com/fmeyenhofer</developerConnection>
-        <tag>HEAD</tag>
-		<url>https://github.com/fmeyenhofer/ABA_J</url>
-	</scm>
-
-	<issueManagement>
-		<system>GitHub Issues</system>
-		<url>https://github.com/fmeyenhofer/ABA_J/issues</url>
-	</issueManagement>
 
 	<mailingLists>
 		<mailingList>
@@ -91,26 +63,28 @@
 		</mailingList>
 	</mailingLists>
 
+	<scm>
+		<connection>https://github.com/fmeyenhofer</connection>
+		<developerConnection>https://github.com/fmeyenhofer</developerConnection>
+        <tag>HEAD</tag>
+		<url>https://github.com/fmeyenhofer/ABA_J</url>
+	</scm>
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/fmeyenhofer/ABA_J/issues</url>
+	</issueManagement>
 	<ciManagement>
 		<system>None</system>
 	</ciManagement>
 
-	<repositories>
-		<repository>
-			<id>imagej.public</id>
-			<url>http://maven.imagej.net/content/groups/public</url>
-		</repository>
-		<repository>
-			<id>bintray-CoreMem</id>
-			<name>bintray</name>
-			<url>https://dl.bintray.com/clearcontrol/ClearControl</url>
-		</repository>
-		<repository>
-			<id>bintray-clearvolume-ClearVolume</id>
-			<name>bintray</name>
-			<url>https://dl.bintray.com/clearvolume/ClearVolume</url>
-		</repository>
-	</repositories>
+	<properties>
+		<package-name>ch.imagej.abaj</package-name>
+		<!--<main-class>AllenBrainJ2D</main-class>-->
+		<license.copyrightOwners>Felix Meyenhofer</license.copyrightOwners>
+		<license.licenseName>GPLv3</license.licenseName>
+
+		<json.version>20160212</json.version>
+	</properties>
 
 	<dependencies>
 		<dependency>
@@ -199,4 +173,20 @@
 		</dependency>
 	</dependencies>
 
+	<repositories>
+		<repository>
+			<id>imagej.public</id>
+			<url>http://maven.imagej.net/content/groups/public</url>
+		</repository>
+		<repository>
+			<id>bintray-CoreMem</id>
+			<name>bintray</name>
+			<url>https://dl.bintray.com/clearcontrol/ClearControl</url>
+		</repository>
+		<repository>
+			<id>bintray-clearvolume-ClearVolume</id>
+			<name>bintray</name>
+			<url>https://dl.bintray.com/clearvolume/ClearVolume</url>
+		</repository>
+	</repositories>
 </project>
