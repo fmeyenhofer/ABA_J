@@ -115,10 +115,4 @@ public class MapSectionCoordinates2AraBatch extends AraIO implements Command {
             }
         }
     }
-
-    public static void main(String[] args) {
-        ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-        ij.command().run(MapSectionCoordinates2Ara.class, true);
-    }
 }

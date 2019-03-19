@@ -62,10 +62,4 @@ public class DownloadSectionDataset extends DynamicCommand implements Initializa
 
         log.info("Done.");
     }
-
-    public static void main(String[] args) {
-        ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-        ij.command().run(DownloadSectionDataset.class, true);
-    }
 }

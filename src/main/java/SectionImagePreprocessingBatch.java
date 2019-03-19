@@ -97,11 +97,4 @@ public class  SectionImagePreprocessingBatch<T extends RealType<T> & NativeType<
             }
         }
     }
-
-    public static void main(String[] args) {
-        ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-
-        ij.command().run(SectionImagePreprocessingBatch.class, true);
-    }
 }
