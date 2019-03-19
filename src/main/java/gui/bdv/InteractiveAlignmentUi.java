@@ -5,15 +5,8 @@ import img.SectionImageOutline;
 import img.SectionImageTool;
 import img.VolumeSection;
 import net.imglib2.algorithm.morphology.Closing;
-import net.imglib2.algorithm.morphology.Opening;
 import net.imglib2.algorithm.morphology.StructuringElements;
-import net.imglib2.algorithm.neighborhood.DiamondShape;
 import net.imglib2.algorithm.neighborhood.Shape;
-import net.imglib2.exception.IncompatibleTypeException;
-import net.imglib2.img.ImgFactory;
-import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.img.display.imagej.ImgPlusViews;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
 import rest.AllenRefVol;
 import rest.Atlas;
 
@@ -40,7 +33,6 @@ import org.scijava.ui.behaviour.KeyStrokeAdder;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.AbstractNamedAction;
 
-import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.Dimensions;
@@ -168,7 +160,7 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
         Closing.close(Views.extendZero(secMsk), secMskMorph, strel, 1);
         Img<BitType> secMskHol = ops.create().img(secMskMorph);
         ops.morphology().fillHoles(secMskHol, secMskMorph);
-        ImageJFunctions.show(secMskHol);
+//        ImageJFunctions.show(secMskHol);
 
         status.showStatus(60, 100, "create section outline points");
         RandomAccessibleInterval<BitType> secOut = ops.morphology().outline(secMskHol, false);
@@ -490,7 +482,9 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
                 }
             }
 
-            System.out.println("Removed " + o + " outliers in outline correspondence set.");
+            if (debug) {
+                System.out.println("Removed " + o + " outliers in outline correspondence set.");
+            }
         }
 
 
