@@ -728,39 +728,4 @@ public class InteractiveAlignmentUi<V extends RealType<V> & NativeType<V>> {
 //
 //        return bounds;
 //    }
-
-
-    public static void main(String[] args) throws SpimDataException, IOException {
-        ImageJ ij = new ImageJ();
-        ij.ui().showUI();
-        //        String refPath = "/Users/turf/switchdrive/SJMCS/data/aba/mouse-ccf-3/reference-volumes/average_template_25.nrrd";
-        String refPath = "/Users/turf/allen-cache/reference-volumes/average_template_25.nrrd";
-        String secPath = "/Users/turf/switchdrive/SJMCS/data/devel/small-deformations/crym(cy3)_gng2(A488)_IHC(150914)_DGC4_1 - 2016-01-28 05.03.56-FITC_ROI-00.tif";
-
-//        File refFile = new File(refPath);
-//        Nrrd_Reader nrrd = new Nrrd_Reader();
-//        ImagePlus imp = nrrd.load(refFile.getParent(), refFile.getName());
-//        RandomAccessibleInterval rai1 = ImageJFunctions.wrap(imp);
-//        RandomAccessibleInterval refImg = Views.permute(rai1, 0, 2);
-
-        AllenRefVol refVol = new AllenRefVol(new File(refPath));
-//        for (int d = 0; d < refDims.numDimensions(); d++) {
-//            System.out.println(refDims.dimension(d));
-//        }
-//        System.out.println(refDims.toString());
-
-        /*
-        RandomAccessibleInterval rai2 = (RandomAccessibleInterval) ij.io().open(secPath);//ImageJFunctions.wrap(imp);
-        RandomAccessibleInterval secVol = Views.addDimension(rai2, 0, xMax);
-        RandomAccessibleInterval secVol = Views.permute(secVol, 0, 2);
-        */
-
-        Img secImg = (Img) ij.io().open(secPath);
-//        double scale = secImg.dimension(0) / refVol.getDimensions().dimension(0);
-        AraImgPlus ara = new AraImgPlus(secImg, 25, Atlas.PlaneOfSection.CORONAL, Atlas.VoxelResolution.TWENTYFIVE);
-
-//        ij.command().run(InteractiveAlignmentUi.class, true);
-        InteractiveAlignmentUi ui = new InteractiveAlignmentUi(ara, refVol, 4, false, false, ij.op(), ij.status());
-        ui.createAndShow();
-    }
 }

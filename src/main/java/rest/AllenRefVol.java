@@ -304,16 +304,4 @@ public class AllenRefVol {
     public static AxisType[] getAxes() {
         return new AxisType[]{Axes.X, Axes.Y, Axes.Z};
     }
-
-
-    public static void main(String[] args) throws SpimDataException, TransformerException, IOException, URISyntaxException {
-//        File nrrdFile = new File("/Users/turf/allen-cache/reference-volumes/average_template_10.nrrd");
-//        File xmlFile = new File("/Users/turf/Desktop/avg_template_10.xml");
-//
-//        AllenRefVol refVol = new AllenRefVol(nrrdFile, xmlFile);
-//        refVol.show();
-
-        Img<BitType> msk = getSectionMask(Atlas.VoxelResolution.FIFTY, Atlas.PlaneOfSection.CORONAL);
-        ImageJFunctions.show(msk);
-    }
 }
