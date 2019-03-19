@@ -1,0 +1,11 @@
+# Binaries
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea
+*.iml
