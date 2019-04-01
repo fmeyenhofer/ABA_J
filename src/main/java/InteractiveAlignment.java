@@ -45,16 +45,16 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
     private ImgPlus secImg;
 
     @Parameter(label = "Plane of section")
-    private String planeOfSection;
+    private String planeOfSection = Atlas.PlaneOfSection.CORONAL.getLabel();
 
     @Parameter(label = "Reference atlas resolution")
-    private String araResolution;
+    private String araResolution = Atlas.VoxelResolution.TWENTYFIVE.getLabel();
 
     @Parameter(label = "Section resolution", style = ChoiceWidget.RADIO_BUTTON_HORIZONTAL_STYLE, choices = {"estimate", "metadata"})
     private String resolutionMethod;
 
     @Parameter(label = "Reference modality")
-    private String araModality;
+    private String araModality = Atlas.Modality.AUTOFLUO.getName();
 
     @Parameter(label = "Outline sampling levels")
     private int levels = 4;
