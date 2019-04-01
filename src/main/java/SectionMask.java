@@ -1,7 +1,6 @@
 import img.SectionImageTool;
 
 import net.imagej.Dataset;
-import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.ops.OpService;
 import net.imglib2.img.Img;
@@ -11,8 +10,6 @@ import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-
-import java.io.IOException;
 
 /**
  * @author Felix Meyenhofer

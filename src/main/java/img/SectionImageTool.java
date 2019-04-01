@@ -4,10 +4,8 @@ import net.imglib2.type.Type;
 import rest.AllenRefVol;
 import rest.Atlas;
 
-import io.scif.img.IO;
 import mpicbg.spim.data.SpimDataException;
 
-import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccess;

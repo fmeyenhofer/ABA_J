@@ -6,7 +6,6 @@ import rest.AllenClient;
 import rest.AllenRefVol;
 import rest.Atlas;
 
-import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.ops.OpService;
 
@@ -15,6 +14,7 @@ import mpicbg.spim.data.SpimDataException;
 import org.scijava.ui.UIService;
 import org.scijava.Initializable;
 import org.scijava.app.StatusService;
+import org.scijava.display.DisplayService;
 import org.scijava.command.Command;
 import org.scijava.command.DynamicCommand;
 import org.scijava.log.LogService;
@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
 
-
 /**
  * TODO: Add multi-channel support
  *
@@ -46,16 +45,16 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
     private ImgPlus secImg;
 
     @Parameter(label = "Plane of section")
-    private String planeOfSection;
+    private String planeOfSection = Atlas.PlaneOfSection.CORONAL.getLabel();
 
     @Parameter(label = "Reference atlas resolution")
-    private String araResolution;
+    private String araResolution = Atlas.VoxelResolution.TWENTYFIVE.getLabel();
 
     @Parameter(label = "Section resolution", style = ChoiceWidget.RADIO_BUTTON_HORIZONTAL_STYLE, choices = {"estimate", "metadata"})
     private String resolutionMethod;
 
     @Parameter(label = "Reference modality")
-    private String araModality;
+    private String araModality = Atlas.Modality.AUTOFLUO.getName();
 
     @Parameter(label = "Outline sampling levels")
     private int levels = 4;
@@ -72,6 +71,9 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
 
     @Parameter
     private StatusService status;
+
+    @Parameter
+    private DisplayService display;
 
     @Parameter
     private LogService log;
@@ -133,18 +135,21 @@ public class InteractiveAlignment extends DynamicCommand implements Initializabl
                     sectionResolution = volumeResolution.getValue();
             }
 
-            Frame secImgDisplay = SwingUtils.grabFrame(secImg.getName());
-            if (secImgDisplay != null) {
-                secImgDisplay.dispose();
-            }
-
             // determine initial transform for the section image
             AraImgPlus section = new AraImgPlus(secImg.getImg(), sectionResolution, plane, volumeResolution);   // TODO: pass the imgplus
             section.setName(new File(secImg.getSource()).getName() + " - aligned");
             section.setSource(secImg.getSource());
+
+            // TODO this currently (pom-scijava 25.0.0) only works if the "Menu > Edit > Options > ImageJ2... > Use SCIFIO for opening image files" is checked.
+//            display.createDisplay(section);
             ui.show(section);
+
 //            Display imgWindow = display.getDisplay(secImg.getName()); // Does not work
 //            imgWindow.close();
+            Frame secImgDisplay = SwingUtils.grabFrame(secImg.getName());
+            if (secImgDisplay != null) {
+                secImgDisplay.dispose();
+            }
 
             // initialize the UI and open it
             InteractiveAlignmentUi ui = new InteractiveAlignmentUi(section, refVol, levels, optimize, outliers, ops, status);

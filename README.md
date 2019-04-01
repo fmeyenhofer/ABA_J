@@ -47,4 +47,4 @@ that fulfils the following requirements:
 [mvn]: https://maven.apache.org/
 [inst]: http://imagej.net/Installing_3rd_party_plugins
 [fiji]: http://imagej.net/Fiji/Downloads
-[bin]:  https://github.com/fmeyenhofer/ABA_J.git/releases
+[bin]:  https://github.com/fmeyenhofer/ABA_J/releases

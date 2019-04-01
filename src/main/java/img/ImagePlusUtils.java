@@ -6,12 +6,6 @@ import ij.process.ImageProcessor;
 import mpicbg.imagefeatures.FloatArray2D;
 import mpicbg.imagefeatures.ImageArrayConverter;
 
-import net.imagej.ImageJ;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.display.imagej.ImageJFunctions;
-
-import java.io.IOException;
-
 /**
  * Utility functions to deal with ij1 data structures
  * {@link ImagePlus} and {@link ImageProcessor}

@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-
 /**
  * TODO: try to attach the point selection to the current image (do not open a new one)
  *
