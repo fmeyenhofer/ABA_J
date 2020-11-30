@@ -360,12 +360,12 @@
 			<artifactId>formats-gpl</artifactId>
 			<!--<version>5.1.7</version>-->
 		</dependency>
-		<dependency>
-			<groupId>ome</groupId>
-			<artifactId>formats-common</artifactId>
-			<!--<version>${bioformats.version}</version>-->
-			<!--<version>5.1.7</version>-->
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>ome</groupId>-->
+<!--			<artifactId>formats-common</artifactId>-->
+<!--			&lt;!&ndash;<version>${bioformats.version}</version>&ndash;&gt;-->
+<!--			&lt;!&ndash;<version>5.1.7</version>&ndash;&gt;-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>ome</groupId>
 			<artifactId>bio-formats_plugins</artifactId>
