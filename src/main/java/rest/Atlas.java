@@ -249,7 +249,7 @@ public class Atlas implements Serializable {
             return this.filename;
         }
 
-        String getName() {
+        public String getName() {
             return this.name;
         }
 
